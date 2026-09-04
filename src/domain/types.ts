@@ -260,6 +260,8 @@ export interface EvidenceArtifact {
   knownAt: ISODateTime;
   mimeType?: string;
   supersedesEvidenceId?: string;
+  /** Corpus records extracted from this artifact. */
+  recordIds?: string[];
   /** Identifiers the artifact itself carries — the raw material of reconciliation. */
   declaredIdentifiers?: Record<string, string>;
   /** Bounded extracted fields shown as "source context". Never the raw bytes. */
@@ -396,11 +398,20 @@ export interface ReleaseProof {
   releasedAt?: ISODateTime;
 }
 
+/** The corpus release a ruling was evaluated against. The manifest's corpusBuild is this. */
+export interface CorpusBuildRef {
+  releaseId: string;
+  buildId: string;
+  /** The release's knowledge cutoff. */
+  knownAt: ISODateTime;
+}
+
 export interface Ruling {
   rulingId: string;
   caseId: string;
   revision: number;
   status: RulingStatus;
+  corpus: CorpusBuildRef;
   assurance: AssuranceStatus;
   useScope: UseScope;
   profileId: string;
@@ -521,6 +532,9 @@ export interface ClaimCaseBundle {
   evidence: EvidenceArtifact[];
   profileId: string;
   profileVersion: string;
+  /** The corpus this case's evidence is carried in, and its current release. */
+  corpusId: string;
+  corpusReleaseId: string;
   /** Current status of the case, which may differ from the current ruling's status while remediation is in flight. */
   status: RulingStatus;
   currentRuling?: Ruling;

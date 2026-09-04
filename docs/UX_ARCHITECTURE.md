@@ -8,7 +8,22 @@ The corpus and its API are the product (`docs/ECONOMIC_ARCHITECTURE.md`). This w
 
 This document describes the object model the screens are built around, the navigation, the two projections of a case, the component boundaries, and where authority stops.
 
-## Product object model
+## Corpus object model (the product)
+
+`src/domain/corpus.ts`:
+
+| Object | Carries |
+|---|---|
+| `CorpusRelease` | release id, corpus id, knowledge cutoff (`knownAt`), `BuildRecord` (build id, built at, methodology id/version/status, input digests, deterministic), release digest (sha256 over the canonical record set, stamped), supersedes / superseded-by, status, coverage, the `RightsSchedule` of every source |
+| `CorpusRecord` | stable `notation://` identity, subject with its own identity, predicate, value, unit, basis, `UncertaintyBounds` (low, high, semantics, method), validity bounds (`validFrom`, `validTo`), `knownAt`, `observedAt`, `EvidenceClass` on all three axes, provenance (source, artifact, content hash, producer, transform), visibility, supersedes / superseded-by, retracted-by, first release |
+| `Retraction` | correction or withdrawal, issued at, release, affected and replacement records, affected rulings, reason, source |
+| `RightsSchedule` | source, licence, permitted uses (a use not listed is not permitted), explicit non-use statements, redistribution, attribution |
+
+Selectors: `releaseRecords` (everything knowable by the release cutoff), `recordStatusAt` (current, superseded or retracted as of a knowledge time), `queryAsOf` (newest knowable record within validity, reached directly or through an identity-link record, or a typed refusal `NO_RECORD` / `NO_IDENTITY_LINK` / `RETRACTED` / `OUTSIDE_VALIDITY` / `NOT_DELIVERABLE` with a remedy and the candidates set aside), `deliverableRecords` (rights guard, then visibility, with counts withheld), `retractionsSince`.
+
+The feed under `/api/v1` (`src/adapter/feed.ts`, route handlers in `src/app/api/v1`) serves releases, a release with its rights schedule, records, as-of answers, retractions, and the application-layer ruling and manifest. Every response is deterministic, uncached, carries `fixture_only: true` and names the release it was served from.
+
+## Workbench object model (the application layer)
 
 The interaction model is the sequence the left rail of the workspace shows:
 
@@ -34,10 +49,15 @@ Every status, check result and assurance value is read from the bundle. The mani
 
 ## Navigation
 
-Top bar: `Cases`, `Rulings`, `Evidence`, `Replay`, `Profiles`, `API`, and a small vertical-context control (`Caravan` active; `Tradewind` and `Landshark` are disabled module slots declared in `src/domain/domains.ts`). The case and the ruling are the primary objects; the shell is 48 px tall and gets out of the way.
+Top bar, two groups: **Corpus** (`Releases`, `Stream`, `Retractions`, `API`) then **Workbench** (`Cases`, `Rulings`, `Evidence`, `Replay`, `Profiles`), and a small domain-product control (`Caravan` active; `Tradewind` and `Landshark` are disabled module slots declared in `src/domain/domains.ts`). `/` opens the releases. The shell is 48 px tall and gets out of the way.
 
 | Route | Screen | Component |
 |---|---|---|
+| `/releases` | corpora and their release history: status, knowledge cutoff, build, record and retraction counts, digest, supersession | `app/releases/page.tsx` |
+| `/releases/:releaseId` | build record with input digests, sources with the rights schedule, deliverable records with status in that release, retractions knowable in it | `app/releases/[releaseId]/page.tsx` |
+| `/stream` | as-of query: release, subject, predicate, world time, knowledge time → the answering record with bounds, clocks, provenance, class and rights, the identity link used, or a typed refusal with remedy; the feed URL that reproduces it | `components/corpus/StreamExplorer.tsx` |
+| `/retractions` | the push-retraction feed with affected and replacement records and affected rulings | `app/retractions/page.tsx` |
+| `/api` | the feed endpoints with live examples, how to automate against the feed, both adapter contracts | `app/api/page.tsx` |
 | `/cases` | case queue: textual operational summary, filters (status, sponsor/counterparty, profile, visibility, reviewer, valid-time and knowledge-time ranges), search by case / manifest / lot / shipment / claim identifiers | `components/queue/CaseQueue.tsx` |
 | `/cases/new` | staged intake (Subject, Intended use, Claims, Evidence, Time basis, Admission profile, Review and submit); draft is saved in the page and says it is not evaluated; submission is an intent | `components/intake/NewCaseIntake.tsx` |
 | `/cases/:caseId` | the workspace: left rail (structure, claims, evidence, revisions, history), centre (selected object), right decision rail | `components/case/CaseWorkspace.tsx` |
@@ -46,7 +66,6 @@ Top bar: `Cases`, `Rulings`, `Evidence`, `Replay`, `Profiles`, `API`, and a smal
 | `/replay/:caseId` | bitemporal replay with an explicit knowledge-time control | `components/replay/ReplayView.tsx` |
 | `/profiles/:profileId` | invariant register by authority class, use codes, recognition statement | `app/profiles/[profileId]/page.tsx` |
 | `/evidence` | every artifact across cases with producer, classes, hash, known-by | `app/evidence/page.tsx` |
-| `/api` | the adapter contract and an example manifest; states that no endpoint is served | `app/api/page.tsx` |
 
 ## Sponsor and relying-party projections
 
@@ -65,9 +84,11 @@ Ruling components in `src/components/ruling/`: `RulingViewer`, `SupersessionBann
 
 Domain rules live in fixture and profile data (`src/fixtures/caravan/profile.ts`), not in components. No component knows what a lot, a certificate or a moisture value means.
 
+Every ruling names the corpus release and build it was evaluated against (`Ruling.corpus`), the manifest's `corpusBuild` is that build, the workspace and the ruling viewer show it, and evidence detail links each artifact to the corpus records extracted from it.
+
 ## Frontend / backend authority boundary
 
-- Screens read through `CaseSource` (`src/adapter/caseSource.ts`). The only implementation is `FixtureCaseSource`. Its `origin` is rendered as a banner on every fixture-backed screen.
+- Screens read through `CorpusSource` (`src/adapter/corpusSource.ts`) and `CaseSource` (`src/adapter/caseSource.ts`). The only implementations read committed fixtures. Their `origin` is rendered as a banner on every fixture-backed screen, and the `/api/v1` responses carry `fixture_only: true` in the body and `X-Payload-Fixture-Only: true` in the headers.
 - The browser performs presentation validation only: visibility projection, knowledge-time projection, highlight linking from a failed check to its claims, evidence, broken lineage edge and remediation, queue summaries. There is no admission logic, no second gate battery, and no inference of a status from display fields.
 - Every user action (request evidence, replace evidence, correct claim, change use, change tolerance, appeal, resubmit, reviewer intervention, submit) produces an `ActionIntent` shown in an "Action intents (not sent)" panel. Nothing is sent; nothing is re-evaluated. There is no bare "Override": reviewer intervention requires an authority, a reason and a basis before it can be recorded, and it is recorded beside the automatic results, not over them.
 - Digests are computed only in Node (`scripts/stamp-digests.entry.ts`) and committed; the browser never hashes anything.

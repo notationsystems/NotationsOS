@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { FIXTURE_CASES, FIXTURE_PROFILES } from './index';
+import { FIXTURE_CASES, FIXTURE_CORPORA, FIXTURE_PROFILES } from './index';
 import { canonicalJson } from './digest';
 import { computeAllDigests, registerKey } from './digestPlan';
 import digests from './digests.json';
@@ -9,7 +9,7 @@ import { allRulings } from '@/domain/selectors';
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 
 describe('fixture digests are content-addressed and committed', () => {
-  const recomputed = computeAllDigests(FIXTURE_PROFILES, FIXTURE_CASES, (o) => sha256(canonicalJson(o)), sha256);
+  const recomputed = computeAllDigests(FIXTURE_PROFILES, FIXTURE_CASES, (o) => sha256(canonicalJson(o)), sha256, {}, FIXTURE_CORPORA);
   const table = digests as Record<string, string>;
 
   it('every committed digest matches recomputation (no drift)', () => {

@@ -52,6 +52,7 @@ const r1: Ruling = {
   caseId: 'CASE-CAR-7C104',
   revision: 1,
   status: 'SUPERSEDED',
+  corpus: { releaseId: 'REL-CAR-2026.08.25', buildId: 'build-caravan-sc-2026.08.25', knownAt: '2026-08-26T09:30:00Z' },
   transitionReason: 'Superseded by RUL-7C104-r2 after the sponsor attached the bill of lading and a custody record and resubmitted.',
   supersededByRulingId: 'RUL-7C104-r2',
   assurance: {
@@ -121,6 +122,7 @@ const r2: Ruling = {
   caseId: 'CASE-CAR-7C104',
   revision: 2,
   status: 'REFUSED',
+  corpus: { releaseId: 'REL-CAR-2026.08.25', buildId: 'build-caravan-sc-2026.08.25', knownAt: '2026-08-26T09:30:00Z' },
   supersedesRulingId: 'RUL-7C104-r1',
   assurance: {
     class: 'UNVERIFIED_EVALUATION',
@@ -246,6 +248,8 @@ export const CASE_7C104: ClaimCaseBundle = {
   temporalBasis: r2.temporalBasis,
   profileId: CARAVAN_PROFILE.profileId,
   profileVersion: CARAVAN_PROFILE.version,
+  corpusId: 'caravan.specialty-cargo',
+  corpusReleaseId: 'REL-CAR-2026.09.01',
   status: 'REFUSED',
   currentRuling: r2,
   previousRulings: [r1],
@@ -316,6 +320,7 @@ export const CASE_7C104: ClaimCaseBundle = {
   evidence: [
     {
       evidenceId: 'EV-CERT-NIS-4418',
+      recordIds: ['REC-0301'],
       canonicalId: 'notation://artifact/payload-os-demo/NIS-4418',
       title: 'Inspection certificate NIS-4418',
       kind: 'INSPECTION_CERTIFICATE',
@@ -339,6 +344,7 @@ export const CASE_7C104: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-WEIGHT-WB-2291',
+      recordIds: ['REC-0302'],
       canonicalId: 'notation://artifact/payload-os-demo/WB-2291',
       title: 'Weighbridge ticket WB-2291',
       kind: 'WEIGHT_RECORD',
@@ -360,6 +366,7 @@ export const CASE_7C104: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-CONTRACT-HB-3310',
+      recordIds: ['REC-0305'],
       canonicalId: 'notation://artifact/payload-os-demo/HB-3310',
       title: 'Sale contract HB-3310 (specification extract)',
       kind: 'CONTRACT',
@@ -382,6 +389,7 @@ export const CASE_7C104: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-BOL-BAL-77812',
+      recordIds: ['REC-0303'],
       canonicalId: 'notation://artifact/payload-os-demo/BAL-77812',
       title: 'Bill of lading BAL-77812',
       kind: 'BILL_OF_LADING',
@@ -403,6 +411,7 @@ export const CASE_7C104: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-CUSTODY-MER-0931',
+      recordIds: ['REC-0304'],
       canonicalId: 'notation://artifact/payload-os-demo/MER-CL-0931',
       title: 'Claimant custody log MER-CL-0931',
       kind: 'CUSTODY_RECORD',

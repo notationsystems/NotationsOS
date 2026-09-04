@@ -19,12 +19,15 @@
   "evidenceRoot:RUL-5B221-r2": "9edff8d75f111768f94f8f58a04e10ada9e657ab4edfb942017d1e9a3f1c12c7",
   "evidenceRoot:RUL-7C104-r1": "2603eec303b0f7829e84c6d8a35c88f5f2c586135def9e1881a831b11fb4ff69",
   "evidenceRoot:RUL-7C104-r2": "353f9dac700d698a60b0bcf2ad7fb242797bde4ac84f150eaf4aa4c7cff3492f",
-  "manifest:RUL-2E118-r1": "0ab7c849f41e3977676d3c1103dd8fe2f68ecc57f7ab347533299e38d53ce6ae",
-  "manifest:RUL-3F440-r1": "93569df876450f0f56f7ec65af84b9a83f24725085b562bdce1e7db151aea895",
-  "manifest:RUL-5B221-r1": "31ed51c04b2bc312a5d4244083d2b0c46aa34b6d496bcd741cff7a023dde78ba",
-  "manifest:RUL-5B221-r2": "70e9f1790fe3507dd06fa1ec6c10138749455c89a5cf881cc2e4d19504d45096",
-  "manifest:RUL-7C104-r1": "25e0f1fd9a1ba4a506fe3ca0d833dbd102ff54fd450fd7140a0d5e4ec02f29c0",
-  "manifest:RUL-7C104-r2": "4c7f9b2c958c599222a40d565b9cfebbe30f4358a07f59759b9a48824fd74d73",
-  "manifest:RUL-9A017-r1": "7eff5c1744c7fc739ce89abee1f721c74d292803f697754abac84d2a41e475d3",
-  "register:caravan.brokerage.specialty-cargo@0.3.0-demo": "65926d71e42c0e8b2581f3013457ac1f417287a4d02513aecfc10ce7e1e13f80"
+  "manifest:RUL-2E118-r1": "9711817c76551494deaa4c1c070fb17e29d19a09e8eac8689e82441b4e9ab32e",
+  "manifest:RUL-3F440-r1": "d6abb6c0aecf1b535e52f3d6c97597ea8c99724269f3f91d89fb141b868e0b6c",
+  "manifest:RUL-5B221-r1": "f69976bdda83387ad62cf27defe16b79ba1f6537dc21af81b3eaec6fb1414ed2",
+  "manifest:RUL-5B221-r2": "38a0c201d67a9be3952226809984052ce024354e0891fb11b53bd16c9e2faabd",
+  "manifest:RUL-7C104-r1": "ec06c1ad4400477002c480cedd45730948566d990053f1c18dc386a32cb3d597",
+  "manifest:RUL-7C104-r2": "c3af1381470a826552413851d1355a07d8acf9377ecf94f3d7d7044f53e02e2d",
+  "manifest:RUL-9A017-r1": "3b9cbe1ee6e29d4c9dc9615abc720a90437d340630fa20c9158c6f7d5aa52018",
+  "register:caravan.brokerage.specialty-cargo@0.3.0-demo": "65926d71e42c0e8b2581f3013457ac1f417287a4d02513aecfc10ce7e1e13f80",
+  "release:REL-CAR-2026.08.11": "8457276d144e39ac1825cec3024bf755fde88f4189c2bbe786e521abc93d3596",
+  "release:REL-CAR-2026.08.25": "3c311ddee52a9560b1bddeca3b37e63bb424c2bb91dececc96acc45cdc7cf85f",
+  "release:REL-CAR-2026.09.01": "f801f77764328d0fa0a565cef625c0c92bde182fa2a7fce243b7710eb3c11531"
 }

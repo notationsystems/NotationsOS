@@ -8,6 +8,8 @@
  * not change.
  */
 import type { AdmissionProfile, ClaimCaseBundle, Remediation } from '@/domain/types';
+import type { Corpus } from '@/domain/corpus';
+import { CARAVAN_CORPUS } from './caravan/release';
 import { CASE_5B221, REMEDIATIONS_5B221 } from './caravan/admitted-5b221';
 import { CASE_7C104, REMEDIATIONS_7C104 } from './caravan/refused-7c104';
 import { CARAVAN_PROFILE } from './caravan/profile';
@@ -26,6 +28,9 @@ export const FIXTURE_CASES: readonly ClaimCaseBundle[] = [
 ];
 
 export const FIXTURE_PROFILES: readonly AdmissionProfile[] = [CARAVAN_PROFILE];
+
+/** The product: corpora with their releases, records, retractions and rights. */
+export const FIXTURE_CORPORA: readonly Corpus[] = [CARAVAN_CORPUS];
 
 export const FIXTURE_REMEDIATIONS: Record<string, Remediation> = {
   ...REMEDIATIONS_7C104,

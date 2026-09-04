@@ -55,6 +55,8 @@ export function CaseIdentityHeader({ bundle, compact = false }: { bundle: ClaimC
               <Link href={`/profiles/${encodeURIComponent(bundle.profileId)}`} className="id" style={{ color: 'var(--info)' }}>{bundle.profileId}</Link>
               <span className="ver ml-1" style={{ color: 'var(--text-muted)' }}>{bundle.profileVersion}</span>
             </dd>
+            <dt className="label-sm mt-1">Corpus release</dt>
+            <dd className="m-0"><Link href={`/releases/${encodeURIComponent(ruling?.corpus.releaseId ?? bundle.corpusReleaseId)}`} className="id" style={{ color: 'var(--info)' }}>{ruling?.corpus.releaseId ?? bundle.corpusReleaseId}</Link></dd>
             {ruling && (
               <>
                 <dt className="label-sm mt-1">Ruling</dt>

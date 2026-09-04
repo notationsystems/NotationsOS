@@ -2,6 +2,18 @@
 
 Describes the behaviour that exists. Tests in `src/**/*.test.tsx` and `tests/e2e/` assert the points marked with a check number.
 
+## As-of answers (the stream)
+
+`/stream` and `GET /api/v1/releases/:id/as-of` take a release, a subject, a predicate, a world time and a knowledge time. The knowledge time is clamped to the release cutoff. The answer is the newest record knowable by the knowledge time whose validity covers the world time, reached directly or through a current identity-link record (`identity.sample_of_lot`); its status at that knowledge time is stated. Retracted and superseded records are set aside once the retraction or correction is knowable, and listed under "considered and set aside". An absent answer is a typed refusal with a remedy: `NO_RECORD`, `NO_IDENTITY_LINK` (records exist on sample subjects that no link connects to the lot; the corpus never merges on similarity), `RETRACTED`, `OUTSIDE_VALIDITY`, `NOT_DELIVERABLE` (the source's rights schedule forbids customer delivery). The page shows the feed URL and body that reproduce the answer [C-asof].
+
+## Retractions
+
+`/retractions` and `GET /api/v1/retractions?since=` list corrections and withdrawals issued after a cursor, oldest first. A correction names the replacement record; a withdrawal names what must no longer be relied on. Both name the rulings the corpus knows relied on the affected records. Nothing is edited in place: an earlier release still shows the record as it stood, and `recordStatusAt` reports current, superseded or retracted as of any knowledge time [C-retract].
+
+## Rights
+
+Every release carries the rights schedule of every source. The feed applies the rights guard before visibility: a record whose source does not permit customer delivery never leaves the corpus, and the response reports only the count withheld [C-rights].
+
 ## Status transitions
 
 Statuses: `DRAFT → EVALUATING → PENDING_EVIDENCE | ADMITTED | ADMITTED_WITH_CONDITIONS | REFUSED`, then `SUPERSEDED` (replaced by a later ruling) or `REVOKED` (reliance withdrawn after release). Every status renders as glyph + label + colour token, and the scoped meaning is available in the title and, where the status is prominent, as visible text (`STATUS_SEMANTICS` in `src/domain/selectors.ts`). Colour is never the only channel [T1].
@@ -51,4 +63,4 @@ A superseding ruling carries `supersedesRulingId`; the superseded ruling carries
 
 Skip link is the first tab stop; the primary nav uses `aria-current`; every selectable row is a `<button>` with `aria-pressed`; grouped controls use `role="group"` with labels; tables have `<th scope>`; scroll containers are focusable; the workspace grid collapses to decision rail → centre → structure on narrow screens with each landmark intact; `prefers-reduced-motion` disables transitions; the print stylesheet gives the ruling a light background. axe (WCAG 2.2 AA tags) reports no serious or critical violations on the queue, the workspace and the ruling viewer [E-axe]; the mobile ruling viewer does not scroll horizontally [E-mobile].
 
-Check numbers: T1–T7 in `src/components/**/*.test.tsx` and `src/domain/selectors.test.ts`; E-axe, E-mobile and the keyboard walk in `tests/e2e/smoke.spec.ts`.
+Check numbers: T1–T7 in `src/components/**/*.test.tsx` and `src/domain/selectors.test.ts`; C-asof, C-retract and C-rights in `src/domain/corpus.test.ts`, `src/adapter/feed.test.ts`, `src/app/api/v1/routes.test.ts` and `src/components/corpus/StreamExplorer.test.tsx`; E-axe, E-mobile, the keyboard walk and the feed checks in `tests/e2e/smoke.spec.ts`.

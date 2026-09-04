@@ -12,6 +12,7 @@ import { Digest } from '@/components/primitives/ManifestCommitment';
 import { Section } from '@/components/primitives/Section';
 import { InvariantRow } from './InvariantResultView';
 import { REMEDIATION_LABEL } from './RemediationActions';
+import { fmtUtc } from '@/lib/format';
 
 /**
  * The decision rail: use scope, time basis, profile, assurance, ruling,
@@ -108,6 +109,17 @@ export function DecisionRail({
       <Section title="Use scope" id="rail-use"><UseScopeCard useScope={bundle.useScope} /></Section>
       <Section title="Time basis" id="rail-time"><TemporalBasisPanel temporalBasis={ruling?.temporalBasis ?? bundle.temporalBasis} /></Section>
       <Section title="Profile" id="rail-profile"><ProfileReference profileId={bundle.profileId} version={bundle.profileVersion} registerDigest={ruling?.registerDigest} /></Section>
+
+      <Section title="Corpus" id="rail-corpus">
+        <dl className="kv" data-testid="corpus-ref">
+          <dt>Corpus</dt>
+          <dd><span className="id">{bundle.corpusId}</span></dd>
+          <dt>Evaluated against</dt>
+          <dd>{ruling ? <><Link href={`/releases/${encodeURIComponent(ruling.corpus.releaseId)}`} className="id" style={{ color: 'var(--info)' }}>{ruling.corpus.releaseId}</Link><div className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>build <span className="id">{ruling.corpus.buildId}</span> · known by <span className="ts">{fmtUtc(ruling.corpus.knownAt)}</span></div></> : <span style={{ color: 'var(--text-muted)' }}>Not evaluated</span>}</dd>
+          <dt>Current release</dt>
+          <dd><Link href={`/releases/${encodeURIComponent(bundle.corpusReleaseId)}`} className="id" style={{ color: 'var(--info)' }}>{bundle.corpusReleaseId}</Link>{ruling && ruling.corpus.releaseId !== bundle.corpusReleaseId && <div className="text-[11.5px]" style={{ color: 'var(--status-superseded)' }}>A newer release exists; the ruling stands on the release it names.</div>}</dd>
+        </dl>
+      </Section>
 
       <Section title="Assurance" id="rail-assurance">
         {ruling ? (

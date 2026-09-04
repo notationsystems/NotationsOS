@@ -6,8 +6,11 @@
  * Layer 1  artifact hashes      over {evidenceId, kind, declaredIdentifiers, extracted, producerId, capturedAt, validAt}
  * Layer 2  evidence roots       over sorted layer-1 hashes of the evidence a ruling considered
  * Layer 3  manifest commitments over the result manifest, which embeds layers 0 and 2 through the ruling
+ * Layer R  release digests      over the canonical record set a corpus release carries (values, clocks, provenance hashes)
  */
 import type { AdmissionProfile, ClaimCaseBundle, Ruling } from '@/domain/types';
+import type { Corpus } from '@/domain/corpus';
+import { releaseRecords } from '@/domain/corpus';
 import { allRulings } from '@/domain/selectors';
 import { buildResultManifest } from './manifest';
 
@@ -36,14 +39,29 @@ export function artifactCanonical(e: ClaimCaseBundle['evidence'][number]) {
  * first pass those fields read `unstamped:*` and the manifest digests are
  * provisional — the caller runs a second pass.
  */
+export function releaseCanonical(corpus: Corpus, releaseId: string) {
+  const release = corpus.releases.find((r) => r.releaseId === releaseId);
+  if (!release) return null;
+  return releaseRecords(corpus, release)
+    .map((r) => ({ recordId: r.recordId, canonicalId: r.canonicalId, subjectId: r.subjectId, predicate: r.predicate, value: r.value, unit: r.unit ?? null, basis: r.basis ?? null, uncertainty: r.uncertainty ?? null, validFrom: r.validFrom, validTo: r.validTo ?? null, knownAt: r.knownAt, sourceId: r.provenance.sourceId, artifactId: r.provenance.artifactId ?? null }))
+    .sort((a, b) => a.recordId.localeCompare(b.recordId));
+}
+
 export function computeAllDigests(
   profiles: readonly AdmissionProfile[],
   cases: readonly ClaimCaseBundle[],
   hashObject: HashObject,
   hashString: HashString,
   table: Record<string, string> = {},
+  corpora: readonly Corpus[] = [],
 ): Record<string, string> {
   const out: Record<string, string> = {};
+  for (const corpus of corpora) {
+    for (const rel of corpus.releases) {
+      const canon = releaseCanonical(corpus, rel.releaseId);
+      if (canon) out[`release:${rel.releaseId}`] = hashObject({ releaseId: rel.releaseId, corpusId: corpus.corpusId, knownAt: rel.knownAt, records: canon });
+    }
+  }
   for (const p of profiles) out[registerKey(p)] = hashObject(p.invariants);
   const artifact = new Map<string, string>();
   for (const c of cases) {

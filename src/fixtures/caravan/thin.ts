@@ -11,6 +11,16 @@ import { CARAVAN_PROFILE } from './profile';
 
 const AS_OF = '2026-09-01T12:00:00Z';
 const REGISTER = digestOf('register:caravan.brokerage.specialty-cargo@0.3.0-demo');
+const RELEASES = [
+  { releaseId: 'REL-CAR-2026.08.11', buildId: 'build-caravan-sc-2026.08.11', knownAt: '2026-08-12T12:00:00Z' },
+  { releaseId: 'REL-CAR-2026.08.25', buildId: 'build-caravan-sc-2026.08.25', knownAt: '2026-08-26T09:30:00Z' },
+  { releaseId: 'REL-CAR-2026.09.01', buildId: 'build-caravan-sc-2026.09.01', knownAt: '2026-09-01T12:00:00Z' },
+];
+/** The latest release whose cutoff is at or before the ruling's knowledge cutoff, else the earliest. */
+function releaseFor(knownAt: string | undefined) {
+  const eligible = RELEASES.filter((r) => knownAt !== undefined && r.knownAt <= knownAt);
+  return eligible[eligible.length - 1] ?? RELEASES[0];
+}
 const NOTE = 'Synthetic demonstration case. Every party, identifier, figure and timestamp is invented.';
 
 const PARTIES = [
@@ -29,13 +39,14 @@ interface ThinSpec {
   temporal: TemporalBasis;
   createdAt: string;
   lastChangedAt: string;
-  ruling?: Omit<Ruling, 'caseId' | 'useScope' | 'profileId' | 'profileVersion' | 'registerDigest' | 'temporalBasis' | 'ruledClaimIds' | 'consideredEvidenceIds' | 'visibility'>;
+  ruling?: Omit<Ruling, 'caseId' | 'corpus' | 'useScope' | 'profileId' | 'profileVersion' | 'registerDigest' | 'temporalBasis' | 'ruledClaimIds' | 'consideredEvidenceIds' | 'visibility'>;
   events: ClaimCaseBundle['events'];
   evidenceKnownAt: string;
   certNo: string;
   withCertificate?: boolean;
   extraLimitations?: string[];
   sponsorOverride?: string;
+  recordIds?: string[];
 }
 
 function thin(s: ThinSpec): ClaimCaseBundle {
@@ -52,6 +63,7 @@ function thin(s: ThinSpec): ClaimCaseBundle {
     producerId: 'P-PRODUCER-NORTHGATE',
     sourceId: 'northgate-lims',
     contentHash: digestOf(`artifact:${evId}`),
+    recordIds: s.recordIds,
     visibility: 'COUNTERPARTY_SHARED' as const,
     capturedAt: s.evidenceKnownAt,
     validAt: s.temporal.validAt,
@@ -64,6 +76,7 @@ function thin(s: ThinSpec): ClaimCaseBundle {
     ? {
         ...s.ruling,
         caseId,
+        corpus: releaseFor(s.temporal.knownAt),
         useScope,
         profileId: CARAVAN_PROFILE.profileId,
         profileVersion: CARAVAN_PROFILE.version,
@@ -101,6 +114,8 @@ function thin(s: ThinSpec): ClaimCaseBundle {
     evidence,
     profileId: CARAVAN_PROFILE.profileId,
     profileVersion: CARAVAN_PROFILE.version,
+    corpusId: 'caravan.specialty-cargo',
+    corpusReleaseId: 'REL-CAR-2026.09.01',
     status: s.status,
     currentRuling: ruling,
     previousRulings: [],
@@ -171,6 +186,7 @@ export const CASE_3F440 = thin({
   lastChangedAt: '2026-08-30T15:00:00Z',
   evidenceKnownAt: '2026-08-12T08:30:00Z',
   certNo: 'NIS-4390',
+  recordIds: ['REC-0111', 'REC-0112'],
   ruling: {
     rulingId: 'RUL-3F440-r1', revision: 1, status: 'REVOKED',
     transitionReason: 'Revoked 2026-08-30 15:00 UTC: Northgate Inspection Services withdrew certificate NIS-4390 (withdrawal notice NIS-W-0071) citing a sample chain-of-custody defect at the laboratory. The ruling rested on that certificate. Revocation is not a finding about the cargo.',
@@ -202,6 +218,7 @@ export const CASE_8D902 = thin({
   lastChangedAt: '2026-09-01T09:40:00Z',
   evidenceKnownAt: '2026-09-01T09:40:00Z',
   certNo: 'NIS-4436',
+  recordIds: ['REC-0401', 'REC-0402'],
   events: [
     { eventId: 'EVT-8D902-01', kind: 'CASE_CREATED', at: '2026-09-01T09:00:00Z', actorId: 'P-SPONSOR-HARBOURLINE', summary: 'Draft created for lot 8D-902. Knowledge cutoff not yet declared.', visibility: 'PRIVATE_PREFLIGHT' },
     { eventId: 'EVT-8D902-02', kind: 'EVIDENCE_ATTACHED', at: '2026-09-01T09:40:00Z', actorId: 'P-SPONSOR-HARBOURLINE', summary: 'Attached certificate NIS-4436.', refs: ['EV-CERT-NIS-4436'], visibility: 'PRIVATE_PREFLIGHT' },
@@ -220,6 +237,7 @@ export const CASE_2E118 = thin({
   lastChangedAt: '2026-08-05T10:15:00Z',
   evidenceKnownAt: '2026-08-05T08:30:00Z',
   certNo: 'NIS-4377',
+  recordIds: ['REC-0101', 'REC-0102'],
   ruling: {
     rulingId: 'RUL-2E118-r1', revision: 1, status: 'ADMITTED',
     assurance: { class: 'UNVERIFIED_EVALUATION', basis: 'Deterministic evaluation completed 2026-08-05 10:00 UTC. No review, verifier run or external anchor.', manifestVerification: 'unverified', manifestCheckedAt: '2026-08-05T10:00:00Z', anchor: 'internal', proofSystem: 'none', notAvailable: ['External verification not available', 'Human review not recorded'] },
@@ -250,6 +268,7 @@ export const CASE_6C305 = thin({
   lastChangedAt: '2026-09-01T11:40:00Z',
   evidenceKnownAt: '2026-09-01T10:20:00Z',
   certNo: 'NIS-4434',
+  recordIds: ['REC-0411', 'REC-0412'],
   events: [
     { eventId: 'EVT-6C305-01', kind: 'CASE_CREATED', at: '2026-09-01T10:00:00Z', actorId: 'P-SPONSOR-HARBOURLINE', summary: 'Case created for lot 6C-305.', visibility: 'COUNTERPARTY_SHARED' },
     { eventId: 'EVT-6C305-02', kind: 'EVIDENCE_ATTACHED', at: '2026-09-01T10:20:00Z', actorId: 'P-SPONSOR-HARBOURLINE', summary: 'Attached certificate NIS-4434.', refs: ['EV-CERT-NIS-4434'], visibility: 'COUNTERPARTY_SHARED' },

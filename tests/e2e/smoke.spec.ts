@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const ROUTES = ['/cases', '/cases/CASE-CAR-7C104', '/cases/CASE-CAR-5B221', '/cases/new', '/rulings', '/rulings/RUL-7C104-r2', '/rulings/RUL-5B221-r1', '/replay/CASE-CAR-7C104', '/profiles/caravan.brokerage.specialty-cargo', '/evidence', '/api'];
+const ROUTES = ['/releases', '/releases/REL-CAR-2026.09.01', '/stream', '/stream?subject=LOT-5B-221&predicate=quantity.gross&validAt=2026-08-17T16:00:00Z&knownAt=2026-08-20T00:00:00Z', '/retractions', '/cases', '/cases/CASE-CAR-7C104', '/cases/CASE-CAR-5B221', '/cases/new', '/rulings', '/rulings/RUL-7C104-r2', '/rulings/RUL-5B221-r1', '/replay/CASE-CAR-7C104', '/profiles/caravan.brokerage.specialty-cargo', '/evidence', '/api'];
 
 for (const route of ROUTES) {
   test(`renders ${route} without console errors`, async ({ page }) => {
@@ -16,8 +16,8 @@ for (const route of ROUTES) {
   });
 }
 
-test('axe: case workspace and ruling viewer have no serious or critical violations', async ({ page }) => {
-  for (const route of ['/cases/CASE-CAR-7C104', '/rulings/RUL-7C104-r2', '/cases']) {
+test('axe: releases, stream, case workspace and ruling viewer have no serious or critical violations', async ({ page }) => {
+  for (const route of ['/releases', '/stream', '/cases/CASE-CAR-7C104', '/rulings/RUL-7C104-r2', '/cases']) {
     await page.goto(route);
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze();
     const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
@@ -48,4 +48,34 @@ test('mobile: the ruling viewer remains legible and does not scroll horizontally
   await expect(page.getByText('Refused').first()).toBeVisible();
   await expect(page.locator('[data-clock="validAt"]').first()).toBeVisible();
   await expect(page.locator('[data-clock="knownAt"]').first()).toBeVisible();
+});
+
+test('the feed serves fixture-only JSON with release, bounds, refusals and retractions', async ({ request }) => {
+  const releases = await request.get('/api/v1/releases');
+  expect(releases.status()).toBe(200);
+  expect(releases.headers()['x-payload-fixture-only']).toBe('true');
+  const list = await releases.json();
+  expect(list.fixture_only).toBe(true);
+  expect(list.releases[0].status).toBe('CURRENT');
+  const asOf = await request.get('/api/v1/releases/REL-CAR-2026.09.01/as-of?subject=LOT-5B-221&predicate=quantity.gross&validAt=2026-08-17T16:00:00Z&knownAt=2026-08-20T00:00:00Z');
+  const a = await asOf.json();
+  expect(a.answer.value).toBe(40);
+  const later = await (await request.get('/api/v1/releases/REL-CAR-2026.09.01/as-of?subject=LOT-5B-221&predicate=quantity.gross&validAt=2026-08-17T16:00:00Z&knownAt=2026-09-01T12:00:00Z')).json();
+  expect(later.answer.value).toBe(40.12);
+  expect(later.answer.uncertainty).toEqual({ low: 40.08, high: 40.16, semantics: 'Weighbridge stated accuracy ±0.040 t' });
+  const refused = await (await request.get('/api/v1/releases/REL-CAR-2026.09.01/as-of?subject=LOT-7C-104&predicate=condition.moisture&validAt=2026-08-28T14:00:00Z&knownAt=2026-09-01T12:00:00Z')).json();
+  expect(refused.answer).toBeNull();
+  expect(refused.refusal.code).toBe('NO_IDENTITY_LINK');
+  const retractions = await (await request.get('/api/v1/retractions?since=2026-08-26T00:00:00Z')).json();
+  expect(retractions.retractions[0].retractionId).toBe('RET-0002');
+  const bad = await request.get('/api/v1/releases/REL-CAR-2026.09.01/as-of?subject=x');
+  expect(bad.status()).toBe(400);
+});
+
+test('stream: changing the knowledge time changes the answer, in the page and in the feed link', async ({ page }) => {
+  await page.goto('/stream?subject=LOT-5B-221&predicate=quantity.gross&validAt=2026-08-17T16:00:00Z&knownAt=2026-08-20T00:00:00Z');
+  await expect(page.getByRole('article', { name: 'Record REC-0203' })).toBeVisible();
+  await page.getByLabel('Known by').fill('2026-09-01T12:00');
+  await expect(page.getByRole('article', { name: 'Record REC-0204' })).toBeVisible();
+  await expect(page.getByTestId('asof-url')).toContainText('knownAt=2026-09-01T12%3A00%3A00Z');
 });

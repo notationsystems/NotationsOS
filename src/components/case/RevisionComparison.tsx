@@ -18,6 +18,7 @@ export function RevisionComparison({ bundle, a, b }: { bundle: ClaimCaseBundle; 
     { label: 'Ruling issued on', av: fmtUtc(a.temporalBasis.ruledAt), bv: fmtUtc(b.temporalBasis.ruledAt) },
     { label: 'Reliance ends', av: fmtUtc(a.temporalBasis.expiresAt), bv: fmtUtc(b.temporalBasis.expiresAt) },
     { label: 'Profile version', av: a.profileVersion, bv: b.profileVersion },
+    { label: 'Corpus release', av: a.corpus.releaseId, bv: b.corpus.releaseId },
     { label: 'Assurance', av: ASSURANCE_SEMANTICS[a.assurance.class].label, bv: ASSURANCE_SEMANTICS[b.assurance.class].label },
     { label: 'Evidence considered', av: `${a.consideredEvidenceIds.length} artifacts`, bv: `${b.consideredEvidenceIds.length} artifacts` },
     { label: 'Conditions', av: String(a.conditions?.length ?? 0), bv: String(b.conditions?.length ?? 0) },

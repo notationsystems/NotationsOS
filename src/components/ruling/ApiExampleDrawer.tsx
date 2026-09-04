@@ -1,12 +1,13 @@
+import Link from 'next/link';
 import type { Ruling } from '@/domain/types';
 import { CopyButton } from '@/components/primitives/CopyButton';
 
 /**
- * How a machine would ask for this ruling. Illustrative of the adapter
- * contract only: this repository serves no endpoint, and says so.
+ * How a machine would ask for this ruling. The request below is served by
+ * the fixture feed under /api/v1; the response shown is its shape.
  */
 export function ApiExampleDrawer({ ruling }: { ruling: Ruling }) {
-  const request = `GET /v1/rulings/${ruling.rulingId}\nAccept: application/json\nX-Payload-Visibility: ${ruling.visibility}`;
+  const request = `GET /api/v1/rulings/${ruling.rulingId}?projection=${ruling.visibility === 'PUBLIC_RULING' ? 'PUBLIC_RULING' : 'COUNTERPARTY_SHARED'}\nAccept: application/json`;
   const response = JSON.stringify(
     {
       rulingId: ruling.rulingId,
@@ -24,7 +25,8 @@ export function ApiExampleDrawer({ ruling }: { ruling: Ruling }) {
       evidenceRoot: ruling.release?.evidenceRoot ?? null,
       supersedesRulingId: ruling.supersedesRulingId ?? null,
       supersededByRulingId: ruling.supersededByRulingId ?? null,
-      links: { manifest: `/v1/rulings/${ruling.rulingId}/manifest`, case: `/v1/cases/${ruling.caseId}` },
+      corpus: ruling.corpus,
+      links: { manifest: `/api/v1/rulings/${ruling.rulingId}/manifest`, release: `/api/v1/releases/${ruling.corpus.releaseId}` },
     },
     null,
     2,
@@ -33,7 +35,7 @@ export function ApiExampleDrawer({ ruling }: { ruling: Ruling }) {
     <details className="surface-inset p-3" data-testid="api-example">
       <summary className="text-[13px] font-medium" style={{ color: 'var(--text-secondary)' }}>API request and response example</summary>
       <p className="m-0 mt-2 text-[12px]" style={{ color: 'var(--text-muted)' }}>
-        Illustrative. No endpoint is served by this repository; the shape mirrors what the adapter boundary would return for this ruling at this visibility.
+        Served by the demonstration feed (fixture_only: true): <Link href={`/api/v1/rulings/${encodeURIComponent(ruling.rulingId)}`} className="id" style={{ color: 'var(--info)' }}>GET /api/v1/rulings/{ruling.rulingId}</Link> and <Link href={`/api/v1/rulings/${encodeURIComponent(ruling.rulingId)}/manifest`} className="id" style={{ color: 'var(--info)' }}>…/manifest</Link>. The application layer sits beside the corpus feed at <Link href="/api" style={{ color: 'var(--info)' }}>/api</Link>.
       </p>
       <div className="mt-2 flex flex-col gap-2">
         <div className="flex items-center justify-between"><span className="label-sm">Request</span><CopyButton value={request} /></div>

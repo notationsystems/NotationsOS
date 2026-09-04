@@ -17,12 +17,12 @@ import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { canonicalJson } from '@/fixtures/digest';
 import { computeAllDigests } from '@/fixtures/digestPlan';
-import { FIXTURE_CASES, FIXTURE_PROFILES } from '@/fixtures/index';
+import { FIXTURE_CASES, FIXTURE_CORPORA, FIXTURE_PROFILES } from '@/fixtures/index';
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 const OUT = new URL('../src/fixtures/digests.json', import.meta.url);
 
-const table = computeAllDigests(FIXTURE_PROFILES, FIXTURE_CASES, (obj) => sha256(canonicalJson(obj)), sha256);
+const table = computeAllDigests(FIXTURE_PROFILES, FIXTURE_CASES, (obj) => sha256(canonicalJson(obj)), sha256, {}, FIXTURE_CORPORA);
 const sorted = Object.fromEntries(Object.entries(table).sort(([a], [b]) => a.localeCompare(b)));
 writeFileSync(OUT, JSON.stringify(sorted, null, 2) + '\n');
 console.log(`stamped ${Object.keys(sorted).length} digests → src/fixtures/digests.json`);
