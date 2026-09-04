@@ -1,0 +1,294 @@
+/* Fonts: Inter and JetBrains Mono are used when installed locally; the stacks below fall back to system fonts.
+   A network font import is deliberately NOT used: a blocked font host must never block the instrument. */
+@import 'tailwindcss';
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Payload OS — token layer
+   Derived from Payload Terminal V0 (src/app/globals.css): the void/near-black
+   workspace, restrained gold for primary state and action, Inter for
+   explanatory text and JetBrains Mono for operational values. Glass surfaces,
+   glow, scanlines and looping animation are deliberately NOT carried over:
+   this instrument is an industrial ledger, not a HUD.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: dark;
+
+  /* ── Surfaces ── */
+  --bg-void: #04040a;
+  --bg-primary: #06060c;
+  --bg-secondary: #0c0e1a;
+  --bg-tertiary: #121628;
+  --bg-raised: #171b30;
+  --bg-inset: #030308;
+
+  /* ── Text (all ≥ 4.5:1 on --bg-primary) ── */
+  --text-primary: #e8e6e0;
+  --text-secondary: #a8a49a;
+  --text-muted: #8e8b83;
+  --text-heading: #f5f0e0;
+  --text-inverse: #06060c;
+
+  /* ── Brand accent (Payload gold, used sparingly) ── */
+  --accent: #d4af37;
+  --accent-strong: #f0d060;
+  --accent-dim: #8b7325;
+  --accent-rgb: 212, 175, 55;
+
+  /* ── Information / identifiers (desaturated from Terminal cyan) ── */
+  --info: #6fc3d0;
+  --info-rgb: 111, 195, 208;
+
+  /* ── Borders ── */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.11);
+  --border-strong: rgba(255, 255, 255, 0.2);
+  --border-accent: rgba(var(--accent-rgb), 0.45);
+
+  /* ── Ruling status semantics (never the only channel: every status also
+        carries a text label and a glyph) ── */
+  --status-draft: #9b978e;
+  --status-evaluating: #6fc3d0;
+  --status-pending: #7fb0ff;
+  --status-admitted: #4cc48a;
+  --status-conditional: #d4af37;
+  --status-refused: #e26b5c;
+  --status-superseded: #a89ccd;
+  --status-revoked: #d7647f;
+
+  /* ── Assurance semantics ── */
+  --assurance-unverified: #9b978e;
+  --assurance-reviewed: #d4af37;
+  --assurance-verified: #4cc48a;
+  --assurance-witnessed: #6fc3d0;
+
+  /* ── Invariant result semantics ── */
+  --check-passed: #4cc48a;
+  --check-failed: #e26b5c;
+  --check-na: #8e8b83;
+  --check-not-evaluated: #7fb0ff;
+
+  /* ── Highlight (selection linking failed check → claim → evidence) ── */
+  --highlight-bg: rgba(var(--accent-rgb), 0.1);
+  --highlight-border: rgba(var(--accent-rgb), 0.55);
+
+  /* ── Typography ── */
+  --font-body: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  /* ── Density / spacing (4px base) ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --row-h: 36px;
+  --rail-w: 272px;
+  --decision-rail-w: 320px;
+  --topbar-h: 48px;
+
+  /* ── Radii ── */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+
+  /* ── Motion ── */
+  --motion-fast: 120ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ── Focus ── */
+  --focus-ring: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent);
+}
+
+@theme inline {
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body { overflow-x: hidden; }
+
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+button:disabled { cursor: not-allowed; opacity: 0.55; }
+
+/* Visible focus on everything, keyboard-only where the browser supports it */
+:focus { outline: none; }
+:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+
+/* Skip link — first tab stop on every page */
+.skip-link {
+  position: absolute; left: -9999px; top: 8px; z-index: 1000;
+  padding: 8px 12px; background: var(--accent); color: var(--text-inverse);
+  font-weight: 600; border-radius: var(--radius-md);
+}
+.skip-link:focus { left: 8px; }
+
+/* ── Monospaced operational values: identifiers, hashes, versions, units,
+      timestamps, payloads. Never body copy. ── */
+.mono, .id, .hash, .ts, .unit, .ver {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+.id { font-size: 12.5px; }
+.hash { font-size: 12px; word-break: break-all; }
+.ts { font-size: 12.5px; }
+
+/* ── Labels ── */
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.label-sm { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+
+/* ── Surfaces ── */
+.surface {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+.surface-raised {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+.surface-inset {
+  background: var(--bg-inset);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.hairline { border-color: var(--border-subtle); }
+
+/* ── Tables ── */
+.ledger-table { width: 100%; border-collapse: collapse; }
+.ledger-table th {
+  text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--text-muted);
+  padding: 8px 10px; border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+}
+.ledger-table td {
+  padding: 8px 10px; border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+.ledger-table tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
+.ledger-table tbody tr[aria-selected='true'] { background: var(--highlight-bg); }
+
+/* ── Key/value rows ── */
+.kv { display: grid; grid-template-columns: minmax(96px, 128px) 1fr; column-gap: 12px; row-gap: 6px; align-items: baseline; }
+.kv dt { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: var(--radius-md);
+  border: 1px solid var(--border-default); background: var(--bg-tertiary);
+  font-size: 13px; font-weight: 500; color: var(--text-primary);
+  transition: border-color var(--motion-fast) var(--motion-ease), background var(--motion-fast) var(--motion-ease);
+  min-height: 32px;
+}
+.btn:hover { border-color: var(--border-strong); background: var(--bg-raised); text-decoration: none; }
+.btn-primary { border-color: var(--border-accent); background: rgba(var(--accent-rgb), 0.12); color: var(--accent-strong); }
+.btn-primary:hover { background: rgba(var(--accent-rgb), 0.2); }
+.btn-sm { padding: 3px 8px; min-height: 26px; font-size: 12px; }
+.btn-quiet { border-color: transparent; background: transparent; color: var(--text-secondary); }
+.btn-quiet:hover { border-color: var(--border-default); }
+
+/* ── Highlight linking (failed check → claim → evidence) ── */
+.is-highlighted {
+  background: var(--highlight-bg);
+  box-shadow: inset 3px 0 0 var(--highlight-border);
+}
+
+/* ── Status pill base: colour + glyph + text, always ── */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 8px; border-radius: 999px;
+  border: 1px solid currentColor; font-size: 11.5px; font-weight: 600;
+  letter-spacing: 0.04em; white-space: nowrap; line-height: 1.5;
+}
+.pill-lg { font-size: 13px; padding: 4px 12px; }
+
+/* ── Motion discipline ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+/* ── Details/summary announce state via native semantics; style only ── */
+details > summary { cursor: pointer; list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before {
+  content: '▸'; display: inline-block; width: 12px; margin-right: 4px;
+  color: var(--text-muted); transition: transform var(--motion-fast) var(--motion-ease);
+}
+details[open] > summary::before { transform: rotate(90deg); }
+
+/* ── Scrollbars (thin, quiet) ── */
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.12) transparent; }
+
+/* ── Print: the ruling must survive paper ── */
+@media print {
+  :root {
+    --bg-void: #ffffff; --bg-primary: #ffffff; --bg-secondary: #ffffff; --bg-tertiary: #f4f4f2; --bg-raised: #f4f4f2; --bg-inset: #f7f7f5;
+    --text-primary: #111111; --text-secondary: #333333; --text-muted: #555555; --text-heading: #000000;
+    --border-subtle: #dddddd; --border-default: #bbbbbb; --border-strong: #888888;
+    --status-admitted: #1f7a4d; --status-conditional: #8a6d1a; --status-refused: #a63a2e; --status-pending: #2c5aa0; --status-superseded: #5f5385; --status-revoked: #8a2c22; --status-draft: #555; --status-evaluating: #256b76;
+    --assurance-unverified: #555; --assurance-reviewed: #8a6d1a; --assurance-verified: #1f7a4d; --assurance-witnessed: #256b76;
+  }
+  .no-print { display: none !important; }
+  body { font-size: 12px; }
+  a { text-decoration: none; }
+}
+
+/* ── Workspace grid: left rail / centre / decision rail.
+      Collapses to a single column with the decision rail FIRST (the
+      ten-second information) and the structure rail last; each region keeps
+      its landmark. ── */
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas: 'right' 'center' 'left';
+}
+.workspace-left { grid-area: left; }
+.workspace-center { grid-area: center; }
+.workspace-right { grid-area: right; }
+@media (min-width: 1024px) {
+  .workspace-grid {
+    grid-template-columns: var(--rail-w) minmax(0, 1fr);
+    grid-template-areas: 'left center' 'right right';
+  }
+}
+@media (min-width: 1280px) {
+  .workspace-grid {
+    grid-template-columns: var(--rail-w) minmax(0, 1fr) var(--decision-rail-w);
+    grid-template-areas: 'left center right';
+  }
+  .workspace-left, .workspace-right { position: sticky; top: var(--topbar-h); align-self: start; max-height: calc(100vh - var(--topbar-h)); overflow-y: auto; }
+}
