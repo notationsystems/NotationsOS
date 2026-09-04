@@ -65,7 +65,7 @@ export default function ProductPage() {
       <Section title="Domain products" id="pm-domains">
         <ul className="m-0 p-0 list-none grid gap-2 sm:grid-cols-3">
           {DOMAIN_PRODUCTS.map((d) => (
-            <li key={d.id} className="surface-inset p-3 text-[12.5px]" style={{ opacity: d.enabled ? 1 : 0.7 }}>
+            <li key={d.id} className="surface-inset p-3 text-[12.5px]" style={{ borderStyle: d.enabled ? 'solid' : 'dashed' }}>
               <div className="font-medium" style={{ color: d.enabled ? 'var(--text-heading)' : 'var(--text-muted)' }}>{d.label} {!d.enabled && <span className="label-sm">slot</span>}</div>
               <div style={{ color: 'var(--text-secondary)' }}>{d.scope}</div>
             </li>
