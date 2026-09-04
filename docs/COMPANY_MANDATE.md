@@ -58,7 +58,9 @@ OS into a fourth customer-facing API or a universal domain database.
 
 The Notations Bench prototype is the reference implementation of the shared
 corpus, provenance, policy, release, and verification machinery. This
-repository is a distribution workbench prototype. Its current case/ruling
-fixtures are an interface experiment over synthetic Caravan material; they are
-not the company mandate, a canonical corpus, a customer data stream, or a
-customer inference service.
+repository is a fixture-only corpus product surface and an optional
+distribution-workbench prototype. Its current Caravan corpus and case/ruling
+fixtures are synthetic; they are not production canonical state, deployed
+customer delivery, managed customer computation, or a customer inference
+service. `docs/ECONOMIC_ARCHITECTURE.md` is authoritative for the detailed
+repository status and its stated absences.

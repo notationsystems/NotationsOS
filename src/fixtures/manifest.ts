@@ -54,7 +54,7 @@ export function buildResultManifest(bundle: ClaimCaseBundle, ruling: Ruling): Re
     schema: 'notations.result-manifest.v1',
     manifestId: `rm:${ruling.rulingId}`,
     queryId: `case:${bundle.caseId}:r${ruling.revision}`,
-    corpusBuild: { buildId: 'payload-os-demo-fixtures', knownAt: ruling.temporalBasis.knownAt ?? bundle.temporalBasis.knownAt ?? bundle.asOf },
+    corpusBuild: { buildId: ruling.corpus.buildId, knownAt: ruling.corpus.knownAt },
     methodology: { methodologyId: 'payload-methodology', version: '0.1.0' },
     knownAt: ruling.temporalBasis.knownAt ?? bundle.asOf,
     result: {

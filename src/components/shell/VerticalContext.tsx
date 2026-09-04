@@ -6,8 +6,8 @@ import { DOMAINS } from '@/domain/domains';
 
 export function VerticalContext({ active = 'CARAVAN' as Domain }: { active?: Domain }) {
   return (
-    <div className="shrink-0 flex items-center gap-1" role="group" aria-label="Vertical context">
-      <span className="label-sm hidden md:inline mr-1">Vertical</span>
+    <div className="shrink-0 flex items-center gap-1" role="group" aria-label="Domain product">
+      <span className="label-sm hidden md:inline mr-1">Domain product</span>
       {DOMAINS.map((d) => (
         <button
           key={d.id}

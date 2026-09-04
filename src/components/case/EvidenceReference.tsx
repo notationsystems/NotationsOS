@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { ClaimCaseBundle, EvidenceArtifact } from '@/domain/types';
 import { partyName } from '@/domain/selectors';
 import { EvidenceClassBadge } from '@/components/primitives/EvidenceClassBadge';
@@ -97,6 +98,8 @@ export function EvidenceDetail({ evidence, bundle, highlighted }: { evidence: Ev
         <dd className="mono text-[12px]">{evidence.mimeType ?? 'Not recorded'}</dd>
         {supersedes && (<><dt>Supersedes</dt><dd><span className="id">{supersedes.evidenceId}</span> — {supersedes.title}</dd></>)}
         {supersededBy && (<><dt>Superseded by</dt><dd><span className="id">{supersededBy.evidenceId}</span> — {supersededBy.title}</dd></>)}
+        <dt>Corpus records</dt>
+        <dd className="flex flex-wrap gap-1">{evidence.recordIds?.length ? evidence.recordIds.map((id) => <Link key={id} href={`/stream?record=${encodeURIComponent(id)}&release=${encodeURIComponent(bundle.corpusReleaseId)}`} className="id" style={{ color: 'var(--info)' }}>{id}</Link>) : <span style={{ color: 'var(--text-muted)' }}>None extracted into the corpus</span>}</dd>
         <dt>Supports claims</dt>
         <dd className="flex flex-wrap gap-1">{usedByClaims.length ? usedByClaims.map((c) => <span key={c.claimId} className="id">{c.claimId}</span>) : <span style={{ color: 'var(--text-muted)' }}>None</span>}</dd>
       </dl>

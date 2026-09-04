@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: '%s · Payload OS',
   },
   description:
-    'Payload OS is the shared information-production system of Notation Systems. This fixture-only workbench inspects provenance-bearing Caravan material; it is not a customer inference service or canonical data system.',
+    'Payload OS — a fixture-only corpus product surface and optional ruling workbench over Notation Systems provenance-bearing computational corpora. It does not execute customer inference or construct production canonical state.',
   robots: { index: false, follow: false },
   authors: [{ name: 'Notation Systems' }],
 };

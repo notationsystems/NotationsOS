@@ -49,6 +49,7 @@ const r1: Ruling = {
   caseId: 'CASE-CAR-5B221',
   revision: 1,
   status: 'SUPERSEDED',
+  corpus: { releaseId: 'REL-CAR-2026.08.11', buildId: 'build-caravan-sc-2026.08.11', knownAt: '2026-08-12T12:00:00Z' },
   supersededByRulingId: 'RUL-5B221-r2',
   transitionReason: 'Superseded by RUL-5B221-r2: the sponsor changed the declared use from indicative offer to provisional settlement and replaced the carrier draft survey with a terminal weighbridge ticket.',
   assurance: {
@@ -115,6 +116,7 @@ const r2: Ruling = {
   caseId: 'CASE-CAR-5B221',
   revision: 2,
   status: 'ADMITTED_WITH_CONDITIONS',
+  corpus: { releaseId: 'REL-CAR-2026.08.25', buildId: 'build-caravan-sc-2026.08.25', knownAt: '2026-08-26T09:30:00Z' },
   supersedesRulingId: 'RUL-5B221-r1',
   assurance: {
     class: 'HUMAN_REVIEWED',
@@ -228,6 +230,8 @@ export const CASE_5B221: ClaimCaseBundle = {
   temporalBasis: r2.temporalBasis,
   profileId: CARAVAN_PROFILE.profileId,
   profileVersion: CARAVAN_PROFILE.version,
+  corpusId: 'caravan.specialty-cargo',
+  corpusReleaseId: 'REL-CAR-2026.09.01',
   status: 'ADMITTED_WITH_CONDITIONS',
   currentRuling: r2,
   previousRulings: [r1],
@@ -284,6 +288,7 @@ export const CASE_5B221: ClaimCaseBundle = {
   evidence: [
     {
       evidenceId: 'EV-CERT-NIS-4402',
+      recordIds: ['REC-0201'],
       canonicalId: 'notation://artifact/payload-os-demo/NIS-4402',
       title: 'Inspection certificate NIS-4402',
       kind: 'INSPECTION_CERTIFICATE',
@@ -305,6 +310,7 @@ export const CASE_5B221: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-CUSTODY-PCO-5102',
+      recordIds: ['REC-0202', 'REC-0206'],
       canonicalId: 'notation://artifact/payload-os-demo/PCO-5102',
       title: 'Port custody record PCO-5102',
       kind: 'CUSTODY_RECORD',
@@ -326,6 +332,7 @@ export const CASE_5B221: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-BOL-BAL-77790',
+      recordIds: ['REC-0205'],
       canonicalId: 'notation://artifact/payload-os-demo/BAL-77790',
       title: 'Bill of lading BAL-77790',
       kind: 'BILL_OF_LADING',
@@ -343,6 +350,7 @@ export const CASE_5B221: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-DRAFT-BAL-DS-118',
+      recordIds: ['REC-0203'],
       canonicalId: 'notation://artifact/payload-os-demo/BAL-DS-118',
       title: 'Carrier draft survey DS-118 (replaced)',
       kind: 'WEIGHT_RECORD',
@@ -361,6 +369,7 @@ export const CASE_5B221: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-WEIGHT-WB-2277',
+      recordIds: ['REC-0204'],
       canonicalId: 'notation://artifact/payload-os-demo/WB-2277',
       title: 'Terminal weighbridge ticket WB-2277',
       kind: 'WEIGHT_RECORD',

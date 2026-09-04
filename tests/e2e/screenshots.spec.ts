@@ -5,6 +5,24 @@ const OUT = 'docs/screenshots';
 mkdirSync(OUT, { recursive: true });
 
 test('desktop screenshots', async ({ page }) => {
+  await page.goto('/product');
+  await page.getByRole('heading', { level: 1 }).waitFor();
+  await page.screenshot({ path: `${OUT}/000-product-model.png`, fullPage: true });
+  await page.goto('/releases');
+  await page.getByRole('table', { name: /Releases of/ }).waitFor();
+  await page.screenshot({ path: `${OUT}/00a-releases.png`, fullPage: true });
+  await page.goto('/releases/REL-CAR-2026.09.01');
+  await page.getByTestId('certification').waitFor();
+  await page.screenshot({ path: `${OUT}/00a2-release-certified.png`, fullPage: true });
+  await page.goto('/stream?subject=LOT-5B-221&predicate=quantity.gross&validAt=2026-08-17T16:00:00Z&knownAt=2026-08-20T00:00:00Z');
+  await page.getByTestId('asof-banner').waitFor();
+  await page.screenshot({ path: `${OUT}/00b-stream-asof.png`, fullPage: true });
+  await page.goto('/stream');
+  await page.getByTestId('asof-banner').waitFor();
+  await page.screenshot({ path: `${OUT}/00c-stream-refusal.png`, fullPage: false });
+  await page.goto('/retractions');
+  await page.getByRole('list', { name: 'Retraction feed' }).waitFor();
+  await page.screenshot({ path: `${OUT}/00d-retractions.png`, fullPage: true });
   await page.goto('/cases');
   await page.getByRole('table', { name: 'Case queue' }).waitFor();
   await page.screenshot({ path: `${OUT}/01-case-queue.png`, fullPage: true });

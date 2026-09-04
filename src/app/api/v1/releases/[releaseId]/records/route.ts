@@ -1,0 +1,12 @@
+import type { NextRequest } from 'next/server';
+import { recordsPayload, viewerFromParam } from '@/adapter/feed';
+import { json, refusal } from '../../../_lib';
+
+/** GET /api/v1/releases/:releaseId/records[?subject=&predicate=&projection=] — deliverable records. */
+export async function GET(req: NextRequest, ctx: { params: Promise<{ releaseId: string }> }) {
+  const { releaseId } = await ctx.params;
+  const p = req.nextUrl.searchParams;
+  const body = await recordsPayload(decodeURIComponent(releaseId), viewerFromParam(p.get('projection')), { subjectId: p.get('subject') ?? undefined, predicate: p.get('predicate') ?? undefined });
+  if (!body) return refusal(404, 'release_not_found', `No release ${releaseId} in the current source.`, 'List releases at /api/v1/releases.');
+  return json(body);
+}
