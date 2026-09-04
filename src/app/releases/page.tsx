@@ -30,7 +30,7 @@ export default async function ReleasesPage() {
               </header>
               <div className="surface overflow-x-auto" tabIndex={0}>
                 <table className="ledger-table" aria-label={`Releases of ${corpus.corpusId}`}>
-                  <thead><tr><th scope="col">Release</th><th scope="col">Status</th><th scope="col">Information known by</th><th scope="col">Build</th><th scope="col">Records</th><th scope="col">Retractions</th><th scope="col">Release digest</th><th scope="col">Supersedes</th></tr></thead>
+                  <thead><tr><th scope="col">Release</th><th scope="col">Status</th><th scope="col">Information known by</th><th scope="col">Build</th><th scope="col">Records</th><th scope="col">Retractions</th><th scope="col">Certification</th><th scope="col">Release digest</th><th scope="col">Supersedes</th></tr></thead>
                   <tbody>
                     {releases.map((r) => (
                       <tr key={r.releaseId} data-release-id={r.releaseId}>
@@ -40,6 +40,7 @@ export default async function ReleasesPage() {
                         <td><span className="id">{r.build.buildId}</span><div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{r.build.methodology.methodologyId} {r.build.methodology.version} · {r.build.methodology.status}</div></td>
                         <td className="mono">{releaseRecords(corpus, r).length}</td>
                         <td className="mono">{releaseRetractions(corpus, r).length}</td>
+                        <td><span style={{ color: r.certification.status === 'CERTIFIED' ? 'var(--status-admitted)' : r.certification.status === 'CANDIDATE' ? 'var(--status-pending)' : 'var(--status-revoked)' }}>{r.certification.status === 'CERTIFIED' ? '◉ Certified' : r.certification.status === 'CANDIDATE' ? '◌ Candidate' : '⊗ Withdrawn'}</span><div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{r.certification.verification.replace('_', ' ')}</div></td>
                         <td><Digest value={r.releaseDigest} copy={false} /></td>
                         <td className="id">{r.supersedesReleaseId ?? '—'}</td>
                       </tr>
@@ -52,7 +53,7 @@ export default async function ReleasesPage() {
         })}
         <section aria-label="What a release is" className="surface-inset p-3 text-[12.5px] flex flex-col gap-1" style={{ color: 'var(--text-secondary)' }}>
           <p className="m-0">A release is governed, time-bounded information inventory: every record knowable by its cutoff, with value, unit, basis, uncertainty bounds, validity bounds, both clocks, provenance, evidence class, rights and a stable identity. A later release never edits an earlier one; corrections and withdrawals arrive as retractions, and the earlier release still shows what it said.</p>
-          <p className="m-0" style={{ color: 'var(--text-muted)' }}>A customer applies their own inference to the feed. The ruling workbench under Workbench is one optional application over the same releases.</p>
+          <p className="m-0" style={{ color: 'var(--text-muted)' }}>A customer applies their own inference to the feed. The ruling workbench under Workbench is one optional application over the same releases. The operating model is stated at <Link href="/product" style={{ color: 'var(--info)' }}>Notation Systems · product model</Link>.</p>
         </section>
       </div>
     </>

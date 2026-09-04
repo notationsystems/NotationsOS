@@ -12,7 +12,11 @@ Describes the behaviour that exists. Tests in `src/**/*.test.tsx` and `tests/e2e
 
 ## Rights
 
-Every release carries the rights schedule of every source. The feed applies the rights guard before visibility: a record whose source does not permit customer delivery never leaves the corpus, and the response reports only the count withheld [C-rights].
+Every release carries the rights schedule of every source, shown as a matrix of source against use (acquisition, normalization, customer delivery, aggregation, model training, internal research, redistribution, proprietary strategy, trading). A use absent from a source's schedule is prohibited and the cell says so in text. The feed applies the rights guard before visibility: a record whose source does not permit customer delivery never leaves the corpus, and the response reports only the count withheld. Every delivered record carries its source's rights and, where required, an attribution string [C-rights]. Governance (tenant isolation, information barrier, release timing, non-use, enforcement) is shown on every release page and in the release manifest as policy.
+
+## Certification
+
+A release is `CERTIFIED`, `CANDIDATE` or `WITHDRAWN`. Certification names its basis and its verification (`internal_recompute`, `independent` or `none`) and carries the commitment of the certified release manifest, which the release page shows and `GET /api/v1/releases/:id/manifest` serves. The production record lists every stage of the shared production system with its state for that build; a stage that did not run says so [C-cert].
 
 ## Status transitions
 
@@ -63,4 +67,4 @@ A superseding ruling carries `supersedesRulingId`; the superseded ruling carries
 
 Skip link is the first tab stop; the primary nav uses `aria-current`; every selectable row is a `<button>` with `aria-pressed`; grouped controls use `role="group"` with labels; tables have `<th scope>`; scroll containers are focusable; the workspace grid collapses to decision rail → centre → structure on narrow screens with each landmark intact; `prefers-reduced-motion` disables transitions; the print stylesheet gives the ruling a light background. axe (WCAG 2.2 AA tags) reports no serious or critical violations on the queue, the workspace and the ruling viewer [E-axe]; the mobile ruling viewer does not scroll horizontally [E-mobile].
 
-Check numbers: T1–T7 in `src/components/**/*.test.tsx` and `src/domain/selectors.test.ts`; C-asof, C-retract and C-rights in `src/domain/corpus.test.ts`, `src/adapter/feed.test.ts`, `src/app/api/v1/routes.test.ts` and `src/components/corpus/StreamExplorer.test.tsx`; E-axe, E-mobile, the keyboard walk and the feed checks in `tests/e2e/smoke.spec.ts`.
+Check numbers: T1–T7 in `src/components/**/*.test.tsx` and `src/domain/selectors.test.ts`; C-asof, C-retract, C-rights and C-cert in `src/domain/corpus.test.ts`, `src/adapter/feed.test.ts`, `src/app/api/v1/routes.test.ts` and `src/components/corpus/StreamExplorer.test.tsx`; E-axe, E-mobile, the keyboard walk and the feed checks in `tests/e2e/smoke.spec.ts`.

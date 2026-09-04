@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const ROUTES = ['/releases', '/releases/REL-CAR-2026.09.01', '/stream', '/stream?subject=LOT-5B-221&predicate=quantity.gross&validAt=2026-08-17T16:00:00Z&knownAt=2026-08-20T00:00:00Z', '/retractions', '/cases', '/cases/CASE-CAR-7C104', '/cases/CASE-CAR-5B221', '/cases/new', '/rulings', '/rulings/RUL-7C104-r2', '/rulings/RUL-5B221-r1', '/replay/CASE-CAR-7C104', '/profiles/caravan.brokerage.specialty-cargo', '/evidence', '/api'];
+const ROUTES = ['/product', '/releases', '/releases/REL-CAR-2026.09.01', '/stream', '/stream?subject=LOT-5B-221&predicate=quantity.gross&validAt=2026-08-17T16:00:00Z&knownAt=2026-08-20T00:00:00Z', '/retractions', '/cases', '/cases/CASE-CAR-7C104', '/cases/CASE-CAR-5B221', '/cases/new', '/rulings', '/rulings/RUL-7C104-r2', '/rulings/RUL-5B221-r1', '/replay/CASE-CAR-7C104', '/profiles/caravan.brokerage.specialty-cargo', '/evidence', '/api'];
 
 for (const route of ROUTES) {
   test(`renders ${route} without console errors`, async ({ page }) => {
@@ -17,7 +17,7 @@ for (const route of ROUTES) {
 }
 
 test('axe: releases, stream, case workspace and ruling viewer have no serious or critical violations', async ({ page }) => {
-  for (const route of ['/releases', '/stream', '/cases/CASE-CAR-7C104', '/rulings/RUL-7C104-r2', '/cases']) {
+  for (const route of ['/product', '/releases', '/releases/REL-CAR-2026.09.01', '/stream', '/cases/CASE-CAR-7C104', '/rulings/RUL-7C104-r2', '/cases']) {
     await page.goto(route);
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze();
     const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
@@ -70,6 +70,19 @@ test('the feed serves fixture-only JSON with release, bounds, refusals and retra
   expect(retractions.retractions[0].retractionId).toBe('RET-0002');
   const bad = await request.get('/api/v1/releases/REL-CAR-2026.09.01/as-of?subject=x');
   expect(bad.status()).toBe(400);
+});
+
+test('a release page states certification, the production record and the rights matrix with trading prohibited', async ({ page }) => {
+  await page.goto('/releases/REL-CAR-2026.09.01');
+  await expect(page.getByTestId('certification')).toContainText('Certified release');
+  await expect(page.getByTestId('certification')).toContainText('internal recompute');
+  await expect(page.getByRole('table', { name: 'Production record' })).toContainText('Release certification');
+  const matrix = page.getByRole('table', { name: 'Intelligence-rights schedule' });
+  await expect(matrix.locator('[data-use="trading"][data-permitted="true"]')).toHaveCount(0);
+  await expect(matrix.locator('[data-use="proprietary_strategy"][data-permitted="true"]')).toHaveCount(0);
+  await expect(matrix.locator('[data-use="customer_delivery"][data-permitted="false"]')).toHaveCount(1);
+  const manifest = await (await page.request.get('/api/v1/releases/REL-CAR-2026.09.01/manifest')).json();
+  expect(manifest.manifest.certification.status).toBe('CERTIFIED');
 });
 
 test('stream: changing the knowledge time changes the answer, in the page and in the feed link', async ({ page }) => {

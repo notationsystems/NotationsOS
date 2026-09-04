@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { asOfPayload, recordsPayload, releasePayload, releasesPayload, retractionsPayload, rulingManifestPayload, rulingPayload } from './feed';
+import { asOfPayload, recordsPayload, releaseManifestPayload, releasePayload, releasesPayload, retractionsPayload, rulingManifestPayload, rulingPayload } from './feed';
 
 const CURRENT = 'REL-CAR-2026.09.01';
 
@@ -71,5 +71,36 @@ describe('feed payloads', () => {
     const manifest = await rulingManifestPayload('RUL-7C104-r2', 'COUNTERPARTY_SHARED');
     expect(manifest && 'manifest' in manifest && manifest.manifest.corpusBuild).toEqual({ buildId: 'build-caravan-sc-2026.08.25', knownAt: '2026-08-26T09:30:00Z' });
     expect(manifest && 'withheld' in manifest && manifest.withheld.evidenceIdentities).toBe(1);
+  });
+});
+
+describe('certification, rights and attribution', () => {
+  it('every release is certified with a manifest commitment, and the manifest carries stages, rights and governance', async () => {
+    const list = await releasesPayload();
+    for (const r of list.releases) {
+      expect(r.certification.status).toBe('CERTIFIED');
+      expect(r.certification.manifestCommitment).toMatch(/^[0-9a-f]{64}$/);
+      expect(r.certification.verification).toBe('internal_recompute');
+    }
+    const m = await releaseManifestPayload(CURRENT);
+    expect(m?.manifest.schema).toBe('payload-os.release-manifest.v0-demo');
+    expect(m?.manifest.build.stages.map((s) => s.stage)).toContain('release_certification');
+    expect(m?.manifest.build.stages.find((s) => s.stage === 'scientific_computation')?.status).toBe('NOT_APPLICABLE');
+    expect(m?.manifest.governance.informationBarrier).toMatch(/prohibited by construction/);
+    expect(m?.manifestCommitment).toBe(list.releases[0].certification.manifestCommitment);
+  });
+
+  it('no source in the corpus permits proprietary strategy or trading; attribution travels with delivered records', async () => {
+    const rel = await releasePayload(CURRENT);
+    for (const s of rel!.sources) {
+      expect(s.permittedUses).not.toContain('proprietary_strategy');
+      expect(s.permittedUses).not.toContain('trading');
+    }
+    const p = await recordsPayload(CURRENT, 'COUNTERPARTY_SHARED', { subjectId: 'SAMPLE-S-4402' });
+    const rec = p!.records.find((r) => r.recordId === 'REC-0201')!;
+    expect(rec.rights?.attribution).toBe('Northgate Inspection Services LIMS — Inspection-certificate licence (demonstration)');
+    expect(rec.rights?.permittedUses).toContain('customer_delivery');
+    const a = await asOfPayload(CURRENT, { subjectId: 'LOT-5B-221', predicate: 'quantity.gross', validAt: '2026-08-17T16:00:00Z', knownAt: '2026-09-01T12:00:00Z' });
+    expect(a?.answer?.rights?.sourceName).toBe('Terminal weighbridge');
   });
 });

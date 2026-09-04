@@ -50,3 +50,21 @@ Payload OS is the shared production and assurance layer. It is not a fourth publ
 - Lead with data systems and compute. Public-facing text does not lead with principal capital.
 - Do not call any output a warrant. Ruling, assurance or admission decision describes what the current system can sell.
 - The honest present tense: this repository holds a fixture-only ruling workbench, an optional application over the corpus. It has no live source connectors, production storage or identity, deployed customer delivery, or completed pilot.
+
+## How this repository reflects it
+
+| Statement | Where it is implemented | Presence |
+|---|---|---|
+| Governed, time-bounded information inventory with evidence, method lineage, rights, uncertainty and release history intact | `src/domain/corpus.ts`, `src/fixtures/caravan/release.ts`; `/releases` | Demonstration fixture |
+| The shared production system: acquisition, normalization, identity resolution, ontology alignment, canonical state, scientific computation, indexing, verification, release certification, correction | `BuildRecord.stages` on every release; `/releases/:id` production record; `/product` | Demonstration fixture (stage records state what ran and what did not) |
+| Certified release manifests | `src/fixtures/releaseManifest.ts`, `Certification` on every release, commitment stamped and drift-tested; `GET /api/v1/releases/:id/manifest` | Demonstration fixture; verification is internal recompute, never independent |
+| Push retractions when a fact changes | `Retraction`, `/retractions`, `GET /api/v1/retractions?since=` | Demonstration fixture |
+| As-of answers | `queryAsOf`, `/stream`, `GET /api/v1/releases/:id/as-of` | Demonstration fixture |
+| Machine-readable uncertainty and validity bounds | `CorpusRecord.uncertainty`, `validFrom` / `validTo` on every record and in every payload | Demonstration fixture |
+| Provenance that survives downstream use, audit and resale | provenance, evidence class, identity and `rights` (with attribution) on every delivered record | Demonstration fixture |
+| A customer can automate a decision against the feed | the decision-rule example on `/api`; every answer names release, build, both clocks and bounds | Demonstration fixture |
+| The intelligence-rights schedule: for every source, whether it may be used for acquisition, normalization, customer delivery, aggregation, model training, internal research, redistribution, proprietary strategy, trading | `RightsSchedule.permittedUses` (a use not listed is prohibited), the rights matrix on every release page, `customer_delivery` enforced by the feed's rights guard | Fixture schedule; delivery enforced, the rest recorded as policy |
+| Tenant isolation, information barrier, release timing, non-use | `Corpus.governance`, shown on every release page and in the release manifest | Recorded as policy only |
+| Payload OS is the shared production and assurance layer; Caravan, Tradewind and Landshark are the domain products | `src/domain/domains.ts`, the domain-product control in the shell, `/product` | Caravan as fixture; the others as disabled slots |
+| Data systems and intelligence products; provenance-preserving compute; separately governed principal capital | `src/domain/product.ts`, `/product` | Stated with presence flags; managed compute and principal capital absent |
+| Live source connectors, production storage and identity, deployed customer delivery, a completed pilot | — | Absent, and stated as absent on `/product` |

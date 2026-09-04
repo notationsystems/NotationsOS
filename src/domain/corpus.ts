@@ -17,6 +17,12 @@ import type { CanonicalURI, Domain, EvidenceClass, Hash, ISODateTime, Visibility
 
 /* ── Rights ── */
 
+/**
+ * The intelligence-rights vocabulary. For every source and customer
+ * contribution the schedule states whether the material may be used for
+ * each of these. A use not listed in `permittedUses` is prohibited; the
+ * feed enforces `customer_delivery` and the workbench never sees the rest.
+ */
 export type PermittedUse =
   | 'acquisition'
   | 'normalization'
@@ -24,11 +30,29 @@ export type PermittedUse =
   | 'aggregation'
   | 'model_training'
   | 'internal_research'
-  | 'redistribution';
+  | 'redistribution'
+  | 'proprietary_strategy'
+  | 'trading';
 
 export const PERMITTED_USES: readonly PermittedUse[] = [
-  'acquisition', 'normalization', 'customer_delivery', 'aggregation', 'model_training', 'internal_research', 'redistribution',
+  'acquisition', 'normalization', 'customer_delivery', 'aggregation', 'model_training', 'internal_research', 'redistribution', 'proprietary_strategy', 'trading',
 ];
+
+export const USE_LABEL: Record<PermittedUse, string> = {
+  acquisition: 'Acquisition',
+  normalization: 'Normalization',
+  customer_delivery: 'Customer delivery',
+  aggregation: 'Aggregation',
+  model_training: 'Model training',
+  internal_research: 'Internal research',
+  redistribution: 'Redistribution',
+  proprietary_strategy: 'Proprietary strategy',
+  trading: 'Trading',
+};
+
+export function isUsePermitted(rights: RightsSchedule, use: PermittedUse): boolean {
+  return rights.permittedUses.includes(use);
+}
 
 export type Redistribution = 'internal_only' | 'licensed' | 'public';
 
@@ -117,6 +141,44 @@ export interface Retraction {
 
 /* ── Releases ── */
 
+/** The shared production system, stage by stage. */
+export type ProductionStage =
+  | 'source_acquisition'
+  | 'normalization'
+  | 'identity_resolution'
+  | 'ontology_alignment'
+  | 'canonical_state'
+  | 'scientific_computation'
+  | 'indexing'
+  | 'verification'
+  | 'release_certification'
+  | 'correction';
+
+export const PRODUCTION_STAGES: readonly ProductionStage[] = [
+  'source_acquisition', 'normalization', 'identity_resolution', 'ontology_alignment', 'canonical_state', 'scientific_computation', 'indexing', 'verification', 'release_certification', 'correction',
+];
+
+export const STAGE_LABEL: Record<ProductionStage, string> = {
+  source_acquisition: 'Source acquisition',
+  normalization: 'Normalization',
+  identity_resolution: 'Identity resolution',
+  ontology_alignment: 'Ontology alignment',
+  canonical_state: 'Canonical state',
+  scientific_computation: 'Scientific computation',
+  indexing: 'Indexing',
+  verification: 'Verification',
+  release_certification: 'Release certification',
+  correction: 'Correction',
+};
+
+export interface StageRecord {
+  stage: ProductionStage;
+  status: 'COMPLETED' | 'NOT_RUN' | 'NOT_APPLICABLE';
+  /** What the stage did for this build, or why it did not run. Rendered verbatim. */
+  note: string;
+  at?: ISODateTime;
+}
+
 export interface BuildRecord {
   buildId: string;
   builtAt: ISODateTime;
@@ -124,6 +186,29 @@ export interface BuildRecord {
   /** Reproducibility: the inputs the build read, by digest. */
   inputDigests: Array<{ label: string; sha256: Hash }>;
   deterministic: boolean;
+  /** The production record: every stage of the shared production system, with its state for this build. */
+  stages: StageRecord[];
+}
+
+/** Release certification: the release manifest was produced and committed, and by what verification. */
+export interface Certification {
+  status: 'CERTIFIED' | 'CANDIDATE' | 'WITHDRAWN';
+  certifiedAt?: ISODateTime;
+  /** What certification rests on for THIS release, stated plainly. */
+  basis: string;
+  /** How the manifest was verified: recomputed by this system, by an independent verifier, or not at all. */
+  verification: 'internal_recompute' | 'independent' | 'none';
+  /** sha256 of the canonical release manifest (stamped). */
+  manifestCommitment: Hash;
+}
+
+/** Governance the corpus operates under. Policy statements, rendered verbatim; this repository records them and does not enforce them beyond the rights guard. */
+export interface CorpusGovernance {
+  tenantIsolation: string;
+  informationBarrier: string;
+  releaseTiming: string;
+  nonUse: string[];
+  enforcement: string;
 }
 
 export interface CorpusRelease {
@@ -142,6 +227,7 @@ export interface CorpusRelease {
   status: 'CURRENT' | 'SUPERSEDED';
   coverage: string;
   sources: RightsSchedule[];
+  certification: Certification;
   note: string;
 }
 
@@ -154,6 +240,7 @@ export interface Corpus {
   releases: CorpusRelease[];
   records: CorpusRecord[];
   retractions: Retraction[];
+  governance: CorpusGovernance;
 }
 
 /* ── Selectors ── */

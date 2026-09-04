@@ -7,12 +7,14 @@
  * Layer 2  evidence roots       over sorted layer-1 hashes of the evidence a ruling considered
  * Layer 3  manifest commitments over the result manifest, which embeds layers 0 and 2 through the ruling
  * Layer R  release digests      over the canonical record set a corpus release carries (values, clocks, provenance hashes)
+ * Layer M  release manifests    over the certified release manifest, which embeds layer R
  */
 import type { AdmissionProfile, ClaimCaseBundle, Ruling } from '@/domain/types';
 import type { Corpus } from '@/domain/corpus';
 import { releaseRecords } from '@/domain/corpus';
 import { allRulings } from '@/domain/selectors';
 import { buildResultManifest } from './manifest';
+import { buildReleaseManifest } from './releaseManifest';
 
 export type HashObject = (obj: unknown) => string;
 export type HashString = (s: string) => string;
@@ -60,6 +62,11 @@ export function computeAllDigests(
     for (const rel of corpus.releases) {
       const canon = releaseCanonical(corpus, rel.releaseId);
       if (canon) out[`release:${rel.releaseId}`] = hashObject({ releaseId: rel.releaseId, corpusId: corpus.corpusId, knownAt: rel.knownAt, records: canon });
+    }
+    for (const rel of corpus.releases) {
+      // The manifest embeds the release digest computed above, never a placeholder.
+      const manifest = buildReleaseManifest(corpus, { ...rel, releaseDigest: out[`release:${rel.releaseId}`] ?? rel.releaseDigest });
+      out[`releaseManifest:${rel.releaseId}`] = hashObject(manifest);
     }
   }
   for (const p of profiles) out[registerKey(p)] = hashObject(p.invariants);

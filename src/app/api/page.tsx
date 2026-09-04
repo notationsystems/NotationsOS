@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getCorpusSource } from '@/adapter/corpusSource';
-import { asOfPayload, recordsPayload, releasesPayload, retractionsPayload, rulingManifestPayload } from '@/adapter/feed';
+import { asOfPayload, recordsPayload, releaseManifestPayload, releasesPayload, retractionsPayload, rulingManifestPayload } from '@/adapter/feed';
 import { FixtureBanner } from '@/components/primitives/FixtureBanner';
 import { Section } from '@/components/primitives/Section';
 import { CopyButton } from '@/components/primitives/CopyButton';
@@ -17,6 +17,15 @@ const CORPUS_CONTRACT = `interface CorpusSource {
   asOf(releaseId, { subjectId, predicate, validAt, knownAt }): Promise<AsOfAnswer>;
   retractions(since?, viewer): Promise<Retraction[]>;
 }`;
+
+const DECISION_RULE = `// customer-side, any language: settle provisionally if the measured gross weight,
+// including its stated bound, is within 0.5 % of the declared quantity
+const a = await get(\`/api/v1/releases/\${release}/as-of?subject=LOT-5B-221&predicate=quantity.gross&validAt=\${validAt}&knownAt=\${knownAt}\`);
+if (a.refusal) return { decision: 'hold', because: a.refusal.code, remedy: a.refusal.remedy };
+if (a.answer.evidenceClass.claimStrength === 'estimated') return { decision: 'hold', because: 'estimate, not a measurement' };
+const { low, high } = a.answer.uncertainty;
+const withinTolerance = Math.abs(low - declared) / declared <= 0.005 && Math.abs(high - declared) / declared <= 0.005;
+return { decision: withinTolerance ? 'settle_provisionally' : 'hold', release: a.release.releaseId, knownAt: a.query.knownAt, record: a.answer.recordId };`;
 
 const CASE_CONTRACT = `interface CaseSource {            // application layer
   listCases(): Promise<ClaimCaseBundle[]>;
@@ -47,6 +56,7 @@ export default async function ApiPage() {
   const asOfHit = await asOfPayload(current, { subjectId: 'LOT-5B-221', predicate: 'quantity.gross', validAt: '2026-08-17T16:00:00Z', knownAt: '2026-08-20T00:00:00Z' });
   const retractions = await retractionsPayload('2026-08-26T00:00:00Z', 'COUNTERPARTY_SHARED');
   const manifest = await rulingManifestPayload('RUL-7C104-r2', 'COUNTERPARTY_SHARED');
+  const releaseManifest = await releaseManifestPayload(current);
   return (
     <>
       {source.origin.kind === 'FIXTURE' && <FixtureBanner note={source.origin.label} />}
@@ -62,6 +72,7 @@ export default async function ApiPage() {
             <tbody>
               <tr><td className="id">GET /api/v1/releases[?corpus=]</td><td>Release history: id, status, knowledge cutoff, build, methodology, digest, supersession.</td></tr>
               <tr><td className="id">GET /api/v1/releases/:id</td><td>Build record with input digests, coverage, sources with their rights schedule, links.</td></tr>
+              <tr><td className="id">GET /api/v1/releases/:id/manifest</td><td>The certified release manifest and its commitment: build record with stages and input digests, release digest, sources with rights, certification and governance.</td></tr>
               <tr><td className="id">GET /api/v1/releases/:id/records[?subject=&amp;predicate=&amp;projection=]</td><td>Deliverable records after the rights guard and the visibility projection, with withheld counts.</td></tr>
               <tr><td className="id">GET /api/v1/releases/:id/as-of?subject=&amp;predicate=&amp;validAt=&amp;knownAt=</td><td>One reconstructed answer with status at the knowledge time, the identity link used if any, or a typed refusal with a remedy and the candidates set aside.</td></tr>
               <tr><td className="id">GET /api/v1/retractions[?since=&amp;projection=]</td><td>Push retractions: corrections and withdrawals, oldest first, with affected and replacement records and affected rulings.</td></tr>
@@ -74,6 +85,7 @@ export default async function ApiPage() {
 
         <Section title="Examples from the demonstration corpus" id="api-examples">
           <Example title="Releases" url="/api/v1/releases" body={releases} />
+          <Example title="Certified release manifest of the current release" url={`/api/v1/releases/${current}/manifest`} body={releaseManifest} />
           <Example title="Records for lot 5B-221 in the current release" url={`/api/v1/releases/${current}/records?subject=LOT-5B-221`} body={records} />
           <Example title="As-of: lot 5B-221 quantity as knowable on 2026-08-20 (before the correction)" url={`/api/v1/releases/${current}/as-of?subject=LOT-5B-221&predicate=quantity.gross&validAt=2026-08-17T16:00:00Z&knownAt=2026-08-20T00:00:00Z`} body={asOfHit} />
           <Example title="As-of: lot 7C-104 moisture — a typed refusal (no identity link)" url={`/api/v1/releases/${current}/as-of?subject=LOT-7C-104&predicate=condition.moisture&validAt=2026-08-28T14:00:00Z&knownAt=2026-09-01T12:00:00Z`} body={asOf} />
@@ -82,6 +94,8 @@ export default async function ApiPage() {
         </Section>
 
         <Section title="Automating against the feed" id="api-automate">
+          <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>Inference is the customer&apos;s. A decision rule over an as-of answer needs only what the answer states:</p>
+          <pre tabIndex={0} className="m-0 surface-inset p-3 overflow-x-auto text-[11.5px] mono" style={{ color: 'var(--text-secondary)' }}>{DECISION_RULE}</pre>
           <ol className="m-0 pl-4 text-[13px] flex flex-col gap-1" style={{ color: 'var(--text-primary)' }}>
             <li>Hold a release id and its knowledge cutoff. Query records or as-of answers against it; every answer states the release, both clocks and the bounds, so the decision rule runs on stated inputs, not on a black box.</li>
             <li>Poll <span className="id">/api/v1/retractions?since=&lt;cutoff&gt;</span>. A correction names the replacement record; a withdrawal names what to stop relying on and which rulings it touched.</li>
@@ -103,7 +117,8 @@ export default async function ApiPage() {
               <tr><td>knownAt distinct from valid time</td><td className="id">payload-methodology.js temporalSemantics</td><td className="id">knownAt, validity.validFrom / validTo</td></tr>
               <tr><td>Result manifest</td><td className="id">control-plane/src/governance/result-manifest.js</td><td className="id">/rulings/:id/manifest → notations.result-manifest.v1</td></tr>
               <tr><td>Capability maturity</td><td className="id">control-plane/src/governance/maturity.js</td><td className="id">release.methodology.status</td></tr>
-              <tr><td>Source policy: permitted use and redistribution</td><td className="id">payload-methodology.js licensing</td><td className="id">sources[].permittedUses / nonUse / redistribution</td></tr>
+              <tr><td>Source policy: permitted use and redistribution</td><td className="id">payload-methodology.js licensing</td><td className="id">sources[].permittedUses / nonUse / redistribution; record.rights.attribution</td></tr>
+              <tr><td>Build record</td><td className="id">notations-corpus-graph ncg/platform/build.py</td><td className="id">release.build (inputDigests, deterministic, stages)</td></tr>
               <tr><td>Refusal with remedy</td><td className="id">controlTower.ts {'{'}kind:&apos;refusal&apos;, code, detail, remedy{'}'}</td><td className="id">refusal.code / reason / remedy</td></tr>
             </tbody>
           </table>

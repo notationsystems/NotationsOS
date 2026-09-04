@@ -109,11 +109,29 @@ const release = (r: Omit<CorpusRelease, 'fixture_only' | 'corpusId' | 'corpusTit
   ...r,
 });
 
+const BUILT_AT_2026_08_11 = '2026-08-12T12:05:00Z';
+const INPUTS_2026_08_11 = [{ label: 'northgate-lims export 2026-08-12', sha256: digestOf('artifact:EV-CERT-NIS-4390') }, { label: 'northgate-lims export 2026-08-05', sha256: digestOf('artifact:EV-CERT-NIS-4377') }];
+const BUILT_AT_2026_08_25 = '2026-08-26T09:35:00Z';
+const INPUTS_2026_08_25 = [{ label: 'terminal-weighbridge tickets to 2026-08-25', sha256: digestOf('artifact:EV-WEIGHT-WB-2277') }, { label: 'port-weighbridge tickets to 2026-08-26', sha256: digestOf('artifact:EV-WEIGHT-WB-2291') }, { label: 'northgate-lims export 2026-08-26', sha256: digestOf('artifact:EV-CERT-NIS-4418') }, { label: 'port-custody-system to 2026-08-18', sha256: digestOf('artifact:EV-CUSTODY-PCO-5102') }];
+const BUILT_AT_2026_09_01 = '2026-09-01T12:05:00Z';
+const INPUTS_2026_09_01 = [{ label: 'blue-anchor-docs to 2026-08-28', sha256: digestOf('artifact:EV-BOL-BAL-77812') }, { label: 'meridian-yard-log to 2026-08-29', sha256: digestOf('artifact:EV-CUSTODY-MER-0931') }, { label: 'northgate-lims export 2026-09-01', sha256: digestOf('artifact:EV-CERT-NIS-4434') }];
 export const CARAVAN_RELEASES: CorpusRelease[] = [
   release({
     releaseId: REL_1,
     knownAt: '2026-08-12T12:00:00Z',
-    build: { buildId: 'build-caravan-sc-2026.08.11', builtAt: '2026-08-12T12:05:00Z', methodology: { methodologyId: 'payload-methodology', version: '0.1.0', status: 'research' }, inputDigests: [{ label: 'northgate-lims export 2026-08-12', sha256: digestOf('artifact:EV-CERT-NIS-4390') }, { label: 'northgate-lims export 2026-08-05', sha256: digestOf('artifact:EV-CERT-NIS-4377') }], deterministic: true },
+    build: { buildId: 'build-caravan-sc-2026.08.11', builtAt: BUILT_AT_2026_08_11, methodology: { methodologyId: 'payload-methodology', version: '0.1.0', status: 'research' }, inputDigests: INPUTS_2026_08_11, deterministic: true, stages: [
+      { stage: 'source_acquisition', status: 'COMPLETED', note: 'Artifacts read from the authorized sources named in the rights schedule; each content-addressed on ingest.', at: BUILT_AT_2026_08_11 },
+      { stage: 'normalization', status: 'COMPLETED', note: 'Units and bases normalized; transform quantity.gross.normalize 0.3.0 recorded as lineage where applied.', at: BUILT_AT_2026_08_11 },
+      { stage: 'identity_resolution', status: 'COMPLETED', note: 'Samples and lots kept distinct; a sample reaches a lot only through an identity-link record supplied by evidence. Similarity never merges.', at: BUILT_AT_2026_08_11 },
+      { stage: 'ontology_alignment', status: 'COMPLETED', note: 'Predicates aligned to the demonstration vocabulary (quantity.gross, condition.moisture, custody.*, identity.sample_of_lot).', at: BUILT_AT_2026_08_11 },
+      { stage: 'canonical_state', status: 'COMPLETED', note: 'Records materialized with both clocks, bounds, evidence class, rights and notation:// identity.', at: BUILT_AT_2026_08_11 },
+      { stage: 'scientific_computation', status: 'NOT_APPLICABLE', note: 'No derived quantities in this corpus beyond unit normalization.' },
+      { stage: 'indexing', status: 'COMPLETED', note: 'Subject and predicate index built for as-of queries.', at: BUILT_AT_2026_08_11 },
+      { stage: 'verification', status: 'COMPLETED', note: 'Every record recomputed from its artifact and compared; no divergence. Internal recompute only.', at: BUILT_AT_2026_08_11 },
+      { stage: 'release_certification', status: 'COMPLETED', note: 'Release manifest produced and committed; commitment recorded in the certification.', at: '2026-08-12T12:10:00Z' },
+      { stage: 'correction', status: 'NOT_APPLICABLE', note: 'No retraction issued against this release.' },
+    ] },
+    certification: { status: 'CERTIFIED', certifiedAt: '2026-08-12T12:10:00Z', basis: 'Release digest recomputed by this system over the canonical record set and the manifest committed. Demonstration corpus: not audited, not independently verified.', verification: 'internal_recompute', manifestCommitment: digestOf('releaseManifest:REL-CAR-2026.08.11') },
     supersededByReleaseId: REL_2,
     status: 'SUPERSEDED',
     coverage: 'Lots 2E-118 and 3F-440. Certificates only; no weight or custody records yet.',
@@ -122,7 +140,19 @@ export const CARAVAN_RELEASES: CorpusRelease[] = [
   release({
     releaseId: REL_2,
     knownAt: '2026-08-26T09:30:00Z',
-    build: { buildId: 'build-caravan-sc-2026.08.25', builtAt: '2026-08-26T09:35:00Z', methodology: { methodologyId: 'payload-methodology', version: '0.1.0', status: 'research' }, inputDigests: [{ label: 'terminal-weighbridge tickets to 2026-08-25', sha256: digestOf('artifact:EV-WEIGHT-WB-2277') }, { label: 'port-weighbridge tickets to 2026-08-26', sha256: digestOf('artifact:EV-WEIGHT-WB-2291') }, { label: 'northgate-lims export 2026-08-26', sha256: digestOf('artifact:EV-CERT-NIS-4418') }, { label: 'port-custody-system to 2026-08-18', sha256: digestOf('artifact:EV-CUSTODY-PCO-5102') }], deterministic: true },
+    build: { buildId: 'build-caravan-sc-2026.08.25', builtAt: BUILT_AT_2026_08_25, methodology: { methodologyId: 'payload-methodology', version: '0.1.0', status: 'research' }, inputDigests: INPUTS_2026_08_25, deterministic: true, stages: [
+      { stage: 'source_acquisition', status: 'COMPLETED', note: 'Artifacts read from the authorized sources named in the rights schedule; each content-addressed on ingest.', at: BUILT_AT_2026_08_25 },
+      { stage: 'normalization', status: 'COMPLETED', note: 'Units and bases normalized; transform quantity.gross.normalize 0.3.0 recorded as lineage where applied.', at: BUILT_AT_2026_08_25 },
+      { stage: 'identity_resolution', status: 'COMPLETED', note: 'Samples and lots kept distinct; a sample reaches a lot only through an identity-link record supplied by evidence. Similarity never merges.', at: BUILT_AT_2026_08_25 },
+      { stage: 'ontology_alignment', status: 'COMPLETED', note: 'Predicates aligned to the demonstration vocabulary (quantity.gross, condition.moisture, custody.*, identity.sample_of_lot).', at: BUILT_AT_2026_08_25 },
+      { stage: 'canonical_state', status: 'COMPLETED', note: 'Records materialized with both clocks, bounds, evidence class, rights and notation:// identity.', at: BUILT_AT_2026_08_25 },
+      { stage: 'scientific_computation', status: 'NOT_APPLICABLE', note: 'No derived quantities in this corpus beyond unit normalization.' },
+      { stage: 'indexing', status: 'COMPLETED', note: 'Subject and predicate index built for as-of queries.', at: BUILT_AT_2026_08_25 },
+      { stage: 'verification', status: 'COMPLETED', note: 'Every record recomputed from its artifact and compared; the draft-survey quantity was found superseded by a measured ticket and RET-0001 issued. Internal recompute only.', at: BUILT_AT_2026_08_25 },
+      { stage: 'release_certification', status: 'COMPLETED', note: 'Release manifest produced and committed; commitment recorded in the certification.', at: '2026-08-26T09:40:00Z' },
+      { stage: 'correction', status: 'COMPLETED', note: 'Retractions issued against this release applied; earlier releases untouched.', at: BUILT_AT_2026_08_25 },
+    ] },
+    certification: { status: 'CERTIFIED', certifiedAt: '2026-08-26T09:40:00Z', basis: 'Release digest recomputed by this system over the canonical record set and the manifest committed. Demonstration corpus: not audited, not independently verified.', verification: 'internal_recompute', manifestCommitment: digestOf('releaseManifest:REL-CAR-2026.08.25') },
     supersedesReleaseId: REL_1,
     supersededByReleaseId: REL_3,
     status: 'SUPERSEDED',
@@ -132,7 +162,19 @@ export const CARAVAN_RELEASES: CorpusRelease[] = [
   release({
     releaseId: REL_3,
     knownAt: '2026-09-01T12:00:00Z',
-    build: { buildId: 'build-caravan-sc-2026.09.01', builtAt: '2026-09-01T12:05:00Z', methodology: { methodologyId: 'payload-methodology', version: '0.1.0', status: 'research' }, inputDigests: [{ label: 'blue-anchor-docs to 2026-08-28', sha256: digestOf('artifact:EV-BOL-BAL-77812') }, { label: 'meridian-yard-log to 2026-08-29', sha256: digestOf('artifact:EV-CUSTODY-MER-0931') }, { label: 'northgate-lims export 2026-09-01', sha256: digestOf('artifact:EV-CERT-NIS-4434') }], deterministic: true },
+    build: { buildId: 'build-caravan-sc-2026.09.01', builtAt: BUILT_AT_2026_09_01, methodology: { methodologyId: 'payload-methodology', version: '0.1.0', status: 'research' }, inputDigests: INPUTS_2026_09_01, deterministic: true, stages: [
+      { stage: 'source_acquisition', status: 'COMPLETED', note: 'Artifacts read from the authorized sources named in the rights schedule; each content-addressed on ingest.', at: BUILT_AT_2026_09_01 },
+      { stage: 'normalization', status: 'COMPLETED', note: 'Units and bases normalized; transform quantity.gross.normalize 0.3.0 recorded as lineage where applied.', at: BUILT_AT_2026_09_01 },
+      { stage: 'identity_resolution', status: 'COMPLETED', note: 'Samples and lots kept distinct; a sample reaches a lot only through an identity-link record supplied by evidence. Similarity never merges.', at: BUILT_AT_2026_09_01 },
+      { stage: 'ontology_alignment', status: 'COMPLETED', note: 'Predicates aligned to the demonstration vocabulary (quantity.gross, condition.moisture, custody.*, identity.sample_of_lot).', at: BUILT_AT_2026_09_01 },
+      { stage: 'canonical_state', status: 'COMPLETED', note: 'Records materialized with both clocks, bounds, evidence class, rights and notation:// identity.', at: BUILT_AT_2026_09_01 },
+      { stage: 'scientific_computation', status: 'NOT_APPLICABLE', note: 'No derived quantities in this corpus beyond unit normalization.' },
+      { stage: 'indexing', status: 'COMPLETED', note: 'Subject and predicate index built for as-of queries.', at: BUILT_AT_2026_09_01 },
+      { stage: 'verification', status: 'COMPLETED', note: 'Every record recomputed from its artifact and compared; certificate NIS-4390 found withdrawn by its producer and RET-0002 issued. Internal recompute only.', at: BUILT_AT_2026_09_01 },
+      { stage: 'release_certification', status: 'COMPLETED', note: 'Release manifest produced and committed; commitment recorded in the certification.', at: '2026-09-01T12:10:00Z' },
+      { stage: 'correction', status: 'COMPLETED', note: 'Retractions issued against this release applied; earlier releases untouched.', at: BUILT_AT_2026_09_01 },
+    ] },
+    certification: { status: 'CERTIFIED', certifiedAt: '2026-09-01T12:10:00Z', basis: 'Release digest recomputed by this system over the canonical record set and the manifest committed. Demonstration corpus: not audited, not independently verified.', verification: 'internal_recompute', manifestCommitment: digestOf('releaseManifest:REL-CAR-2026.09.01') },
     supersedesReleaseId: REL_2,
     status: 'CURRENT',
     coverage: 'All seven demonstration lots. Includes the RET-0002 withdrawal of certificate NIS-4390.',
@@ -149,4 +191,11 @@ export const CARAVAN_CORPUS: Corpus = {
   releases: CARAVAN_RELEASES,
   records: CARAVAN_RECORDS,
   retractions: CARAVAN_RETRACTIONS,
+  governance: {
+    tenantIsolation: 'Customer evidence and customer contributions are tenant-isolated. A claimant-supplied artifact is delivered only to the parties named on its case.',
+    informationBarrier: 'No source or customer contribution may be drawn on for proprietary strategy or trading. Neither use appears in any rights schedule in this corpus, so both are prohibited by construction.',
+    releaseTiming: 'Nothing derived from a release may be acted on in a principal capacity before that release is delivered to the customers entitled to it. Recorded as policy; not enforced by this repository.',
+    nonUse: ['No model training on any source that does not list model_training.', 'No aggregation across sources that do not list aggregation.', 'No redistribution beyond what each licence permits.'],
+    enforcement: 'This repository enforces customer_delivery at the feed (rights guard before visibility) and records the rest as policy.',
+  },
 };

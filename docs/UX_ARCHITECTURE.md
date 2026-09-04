@@ -14,14 +14,16 @@ This document describes the object model the screens are built around, the navig
 
 | Object | Carries |
 |---|---|
-| `CorpusRelease` | release id, corpus id, knowledge cutoff (`knownAt`), `BuildRecord` (build id, built at, methodology id/version/status, input digests, deterministic), release digest (sha256 over the canonical record set, stamped), supersedes / superseded-by, status, coverage, the `RightsSchedule` of every source |
+| `CorpusRelease` | release id, corpus id, knowledge cutoff (`knownAt`), `BuildRecord` (build id, built at, methodology id/version/status, input digests, deterministic, and the production record: every stage of the shared production system with its state for this build), release digest (sha256 over the canonical record set, stamped), `Certification` (status, certified at, basis, verification, manifest commitment), supersedes / superseded-by, status, coverage, the `RightsSchedule` of every source |
+| `ReleaseManifestV0` | the certified release manifest (`src/fixtures/releaseManifest.ts`): build, release digest, record count, retractions applied, sources with rights, certification, governance; its commitment is stamped and drift-tested |
+| `CorpusGovernance` | tenant isolation, information barrier, release timing, non-use, enforcement: policy statements shown on every release page and in the manifest |
 | `CorpusRecord` | stable `notation://` identity, subject with its own identity, predicate, value, unit, basis, `UncertaintyBounds` (low, high, semantics, method), validity bounds (`validFrom`, `validTo`), `knownAt`, `observedAt`, `EvidenceClass` on all three axes, provenance (source, artifact, content hash, producer, transform), visibility, supersedes / superseded-by, retracted-by, first release |
 | `Retraction` | correction or withdrawal, issued at, release, affected and replacement records, affected rulings, reason, source |
-| `RightsSchedule` | source, licence, permitted uses (a use not listed is not permitted), explicit non-use statements, redistribution, attribution |
+| `RightsSchedule` | source, licence, permitted uses over acquisition, normalization, customer delivery, aggregation, model training, internal research, redistribution, proprietary strategy and trading (a use not listed is prohibited), explicit non-use statements, redistribution, attribution |
 
 Selectors: `releaseRecords` (everything knowable by the release cutoff), `recordStatusAt` (current, superseded or retracted as of a knowledge time), `queryAsOf` (newest knowable record within validity, reached directly or through an identity-link record, or a typed refusal `NO_RECORD` / `NO_IDENTITY_LINK` / `RETRACTED` / `OUTSIDE_VALIDITY` / `NOT_DELIVERABLE` with a remedy and the candidates set aside), `deliverableRecords` (rights guard, then visibility, with counts withheld), `retractionsSince`.
 
-The feed under `/api/v1` (`src/adapter/feed.ts`, route handlers in `src/app/api/v1`) serves releases, a release with its rights schedule, records, as-of answers, retractions, and the application-layer ruling and manifest. Every response is deterministic, uncached, carries `fixture_only: true` and names the release it was served from.
+The feed under `/api/v1` (`src/adapter/feed.ts`, route handlers in `src/app/api/v1`) serves releases, a release with its rights schedule and governance, the certified release manifest, records (each carrying its source's rights and attribution so provenance survives downstream use), as-of answers, retractions, and the application-layer ruling and manifest. Every response is deterministic, uncached, carries `fixture_only: true` and names the release it was served from.
 
 ## Workbench object model (the application layer)
 
@@ -53,8 +55,9 @@ Top bar, two groups: **Corpus** (`Releases`, `Stream`, `Retractions`, `API`) the
 
 | Route | Screen | Component |
 |---|---|---|
-| `/releases` | corpora and their release history: status, knowledge cutoff, build, record and retraction counts, digest, supersession | `app/releases/page.tsx` |
-| `/releases/:releaseId` | build record with input digests, sources with the rights schedule, deliverable records with status in that release, retractions knowable in it | `app/releases/[releaseId]/page.tsx` |
+| `/product` | the operating model as data: the thesis, the three layers, the two operating businesses with what is present, fixture, policy-only or absent here, the production system, the value proposition, the domain products, the principal-capital activity as future and ring-fenced | `app/product/page.tsx` |
+| `/releases` | corpora and their release history: status, knowledge cutoff, build, record and retraction counts, certification, digest, supersession | `app/releases/page.tsx` |
+| `/releases/:releaseId` | certification with the manifest commitment and the certified release manifest, the production record stage by stage, build inputs, the rights matrix and governance, deliverable records with status in that release, retractions knowable in it | `app/releases/[releaseId]/page.tsx` |
 | `/stream` | as-of query: release, subject, predicate, world time, knowledge time → the answering record with bounds, clocks, provenance, class and rights, the identity link used, or a typed refusal with remedy; the feed URL that reproduces it | `components/corpus/StreamExplorer.tsx` |
 | `/retractions` | the push-retraction feed with affected and replacement records and affected rulings | `app/retractions/page.tsx` |
 | `/api` | the feed endpoints with live examples, how to automate against the feed, both adapter contracts | `app/api/page.tsx` |

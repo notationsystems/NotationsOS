@@ -8,7 +8,11 @@ import { Digest } from '@/components/primitives/ManifestCommitment';
 import { Section } from '@/components/primitives/Section';
 import { EvidenceClassBadge } from '@/components/primitives/EvidenceClassBadge';
 import { RecordStatusPill } from '@/components/corpus/RecordCard';
-import { fmtNumber, fmtUtc, humanize } from '@/lib/format';
+import { RightsMatrix } from '@/components/corpus/RightsMatrix';
+import { ProductionRecord } from '@/components/corpus/ProductionRecord';
+import { CopyButton } from '@/components/primitives/CopyButton';
+import { buildReleaseManifest } from '@/fixtures/releaseManifest';
+import { fmtNumber, fmtUtc } from '@/lib/format';
 
 export async function generateMetadata({ params }: { params: Promise<{ releaseId: string }> }): Promise<Metadata> {
   const { releaseId } = await params;
@@ -22,6 +26,10 @@ export default async function ReleasePage({ params }: { params: Promise<{ releas
   const { corpus, release } = hit;
   const delivered = deliverableRecords(corpus, release, 'COUNTERPARTY_SHARED');
   const retractions = releaseRetractions(corpus, release);
+  const manifest = buildReleaseManifest(corpus, release);
+  const manifestText = JSON.stringify(manifest, null, 2);
+  const cert = release.certification;
+  const certColor = cert.status === 'CERTIFIED' ? 'var(--status-admitted)' : cert.status === 'CANDIDATE' ? 'var(--status-pending)' : 'var(--status-revoked)';
   return (
     <>
       <FixtureBanner note={release.note} />
@@ -48,30 +56,52 @@ export default async function ReleasePage({ params }: { params: Promise<{ releas
           </p>
         </header>
 
+        <Section title="Certification" id="rl-cert">
+          <div className="surface p-3 flex flex-col gap-2" data-testid="certification">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="pill pill-lg" style={{ color: certColor, borderColor: certColor }} data-certification={cert.status}><span aria-hidden="true">{cert.status === 'CERTIFIED' ? '◉' : cert.status === 'CANDIDATE' ? '◌' : '⊗'}</span> {cert.status === 'CERTIFIED' ? 'Certified release' : cert.status === 'CANDIDATE' ? 'Candidate release' : 'Certification withdrawn'}</span>
+              <span className="text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>verification: <span className="mono">{cert.verification.replace('_', ' ')}</span>{cert.certifiedAt && <> · certified <span className="ts">{fmtUtc(cert.certifiedAt)}</span></>}</span>
+            </div>
+            <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>{cert.basis}</p>
+            <dl className="kv">
+              <dt>Manifest commitment</dt><dd><Digest value={cert.manifestCommitment} /></dd>
+              <dt>Manifest</dt><dd><Link href={`/api/v1/releases/${encodeURIComponent(release.releaseId)}/manifest`} className="id" style={{ color: 'var(--info)' }}>GET /api/v1/releases/{release.releaseId}/manifest</Link></dd>
+            </dl>
+            <details>
+              <summary className="text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>Certified release manifest ({manifest.schema})</summary>
+              <div className="mt-2 flex items-center justify-end"><CopyButton value={manifestText} label="Copy JSON" /></div>
+              <pre tabIndex={0} className="m-0 mt-1 surface-inset p-2 overflow-x-auto text-[11.5px] mono" style={{ color: 'var(--text-secondary)', maxHeight: 360 }}>{manifestText}</pre>
+              <p className="m-0 mt-1 text-[11.5px]" style={{ color: 'var(--text-muted)' }}>The commitment above is the sha256 of this manifest in canonical JSON. A release manifest contract does not yet exist upstream; the schema id says so.</p>
+            </details>
+          </div>
+        </Section>
+
+        <Section title="Production record" id="rl-production">
+          <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>The shared production system as it ran for this build. Stages that did not run say so.</p>
+          <ProductionRecord build={release.build} />
+        </Section>
+
         <Section title="Build inputs" id="rl-inputs">
           <table className="ledger-table text-[12.5px]"><thead><tr><th scope="col">Input</th><th scope="col">sha256</th></tr></thead>
             <tbody>{release.build.inputDigests.map((i) => <tr key={i.label}><td>{i.label}</td><td><Digest value={i.sha256} copy={false} /></td></tr>)}</tbody></table>
         </Section>
 
-        <Section title={`Sources and rights (${release.sources.length})`} id="rl-rights">
-          <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>The intelligence-rights schedule. A use not listed is not permitted; the feed applies this before visibility.</p>
-          <div className="surface overflow-x-auto" tabIndex={0}>
-            <table className="ledger-table text-[12.5px]" aria-label="Rights schedule">
-              <thead><tr><th scope="col">Source</th><th scope="col">Licence</th><th scope="col">Permitted uses</th><th scope="col">Non-use</th><th scope="col">Redistribution</th><th scope="col">Attribution</th></tr></thead>
-              <tbody>
-                {release.sources.map((s) => (
-                  <tr key={s.sourceId}>
-                    <td><span className="id">{s.sourceId}</span><div style={{ color: 'var(--text-secondary)' }}>{s.sourceName}</div></td>
-                    <td>{s.licence}</td>
-                    <td>{s.permittedUses.map(humanize).join(', ')}</td>
-                    <td style={{ color: 'var(--text-muted)' }}>{s.nonUse.join('; ')}</td>
-                    <td className="mono">{s.redistribution}</td>
-                    <td>{s.attributionRequired ? 'Required' : 'Not required'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <Section title={`Authorized sources and the intelligence-rights schedule (${release.sources.length})`} id="rl-rights">
+          <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>For every source, whether the material may be used for each purpose. A use not listed is prohibited. The feed enforces customer delivery before visibility; the rest is recorded as policy.</p>
+          <RightsMatrix sources={release.sources} />
+          <details className="surface-inset p-2">
+            <summary className="text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>Explicit non-use statements, by source</summary>
+            <ul className="m-0 mt-1 pl-4 text-[12px]" style={{ color: 'var(--text-secondary)' }}>
+              {release.sources.map((s) => <li key={s.sourceId}><span className="id">{s.sourceId}</span>: {s.nonUse.join('; ')}</li>)}
+            </ul>
+          </details>
+          <dl className="kv text-[12.5px] surface-inset p-3" data-testid="governance">
+            <dt>Tenant isolation</dt><dd>{corpus.governance.tenantIsolation}</dd>
+            <dt>Information barrier</dt><dd>{corpus.governance.informationBarrier}</dd>
+            <dt>Release timing</dt><dd>{corpus.governance.releaseTiming}</dd>
+            <dt>Non-use</dt><dd><ul className="m-0 pl-4">{corpus.governance.nonUse.map((n) => <li key={n}>{n}</li>)}</ul></dd>
+            <dt>Enforcement</dt><dd style={{ color: 'var(--text-muted)' }}>{corpus.governance.enforcement}</dd>
+          </dl>
         </Section>
 
         <Section title={`Records deliverable to named counterparties (${delivered.records.length})`} id="rl-records">

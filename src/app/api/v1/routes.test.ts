@@ -6,6 +6,7 @@ import { GET as records } from './releases/[releaseId]/records/route';
 import { GET as asOf } from './releases/[releaseId]/as-of/route';
 import { GET as retractions } from './retractions/route';
 import { GET as ruling } from './rulings/[rulingId]/route';
+import { GET as releaseManifest } from './releases/[releaseId]/manifest/route';
 
 const req = (url: string) => new NextRequest(`http://127.0.0.1:3111${url}`);
 const params = <T extends object>(p: T) => ({ params: Promise.resolve(p) });
@@ -26,6 +27,15 @@ describe('/api/v1 route handlers (fixture feed)', () => {
     const body = await res.json();
     expect(body.sources.find((s: { sourceId: string }) => s.sourceId === 'harbourline-deals').redistribution).toBe('internal_only');
     expect(body.build.deterministic).toBe(true);
+  });
+
+  it('serves the certified release manifest with its commitment', async () => {
+    const res = await releaseManifest(req('/api/v1/releases/REL-CAR-2026.08.25/manifest'), params({ releaseId: 'REL-CAR-2026.08.25' }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.manifest.releaseId).toBe('REL-CAR-2026.08.25');
+    expect(body.manifest.retractionsApplied).toEqual(['RET-0001']);
+    expect(body.manifestCommitment).toMatch(/^[0-9a-f]{64}$/);
   });
 
   it('refuses an unknown release with a remedy', async () => {

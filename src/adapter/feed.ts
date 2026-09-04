@@ -12,6 +12,7 @@ import type { AsOfQuery } from '@/domain/corpus';
 import { getCorpusSource } from './corpusSource';
 import { getCaseSource } from './caseSource';
 import { buildResultManifest } from '@/fixtures/manifest';
+import { buildReleaseManifest } from '@/fixtures/releaseManifest';
 import { projectForViewer } from '@/domain/selectors';
 
 import { FEED_VERSION, asOfBody, envelope, recordPayload, releaseSummary, retractionPayload } from './feedShapes';
@@ -44,7 +45,9 @@ export async function releasePayload(releaseId: string) {
       coverage: release.coverage,
       note: release.note,
       sources: release.sources.map((s) => ({ sourceId: s.sourceId, sourceName: s.sourceName, licence: s.licence, permittedUses: s.permittedUses, nonUse: s.nonUse, redistribution: s.redistribution, attributionRequired: s.attributionRequired })),
-      links: { records: `/api/v1/releases/${release.releaseId}/records`, retractions: `/api/v1/retractions?since=${encodeURIComponent(release.supersedesReleaseId ? (corpus.releases.find((r) => r.releaseId === release.supersedesReleaseId)?.knownAt ?? '') : '')}` },
+      certification: release.certification,
+      governance: corpus.governance,
+      links: { manifest: `/api/v1/releases/${release.releaseId}/manifest`, records: `/api/v1/releases/${release.releaseId}/records`, retractions: `/api/v1/retractions?since=${encodeURIComponent(release.supersedesReleaseId ? (corpus.releases.find((r) => r.releaseId === release.supersedesReleaseId)?.knownAt ?? '') : '')}` },
     },
     release,
   );
@@ -62,10 +65,17 @@ export async function recordsPayload(releaseId: string, viewer: VisibilityClass,
       filter: { subjectId: filter.subjectId ?? null, predicate: filter.predicate ?? null },
       count: records.length,
       withheld: { byRights: all.withheldByRights, byVisibility: all.withheldByVisibility, note: 'Counts only. Withheld identities are not disclosed.' },
-      records: records.map(recordPayload),
+      records: records.map((r) => recordPayload(r, hit.release.sources.find((s) => s.sourceId === r.provenance.sourceId))),
     },
     hit.release,
   );
+}
+
+/** The certified release manifest and its commitment. */
+export async function releaseManifestPayload(releaseId: string) {
+  const hit = await getCorpusSource().getRelease(releaseId);
+  if (!hit) return undefined;
+  return envelope({ manifestCommitment: hit.release.certification.manifestCommitment, manifest: buildReleaseManifest(hit.corpus, hit.release) }, hit.release);
 }
 
 export async function asOfPayload(releaseId: string, q: AsOfQuery) {
@@ -73,7 +83,7 @@ export async function asOfPayload(releaseId: string, q: AsOfQuery) {
   if (!hit) return undefined;
   const a = await getCorpusSource().asOf(releaseId, q);
   if (!a) return undefined;
-  return envelope(asOfBody(a), hit.release);
+  return envelope(asOfBody(a, (sourceId) => hit.release.sources.find((s) => s.sourceId === sourceId)), hit.release);
 }
 
 export async function retractionsPayload(since: string | undefined, viewer: VisibilityClass) {

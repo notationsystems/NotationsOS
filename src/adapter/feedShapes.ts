@@ -2,13 +2,14 @@
  * Pure payload shapes shared by the feed adapter (server) and the stream
  * explorer (client). No fixture or adapter imports: safe in any bundle.
  */
-import type { AsOfAnswer, CorpusRecord, CorpusRelease, Retraction } from '@/domain/corpus';
+import type { AsOfAnswer, CorpusRecord, CorpusRelease, Retraction, RightsSchedule } from '@/domain/corpus';
 
 export const FEED_VERSION = 'payload-os.feed.v0-demo';
 
 export function releaseSummary(r: CorpusRelease) {
   return {
     releaseId: r.releaseId,
+    certification: { status: r.certification.status, certifiedAt: r.certification.certifiedAt ?? null, verification: r.certification.verification, manifestCommitment: r.certification.manifestCommitment },
     corpusId: r.corpusId,
     domain: r.domain,
     status: r.status,
@@ -22,7 +23,22 @@ export function releaseSummary(r: CorpusRelease) {
   };
 }
 
-export function recordPayload(r: CorpusRecord) {
+/** Rights travel with the record so provenance survives downstream use, audit and resale. */
+export function rightsPayload(rights: RightsSchedule | undefined) {
+  if (!rights) return null;
+  return {
+    sourceId: rights.sourceId,
+    sourceName: rights.sourceName,
+    licence: rights.licence,
+    permittedUses: rights.permittedUses,
+    nonUse: rights.nonUse,
+    redistribution: rights.redistribution,
+    attributionRequired: rights.attributionRequired,
+    attribution: rights.attributionRequired ? `${rights.sourceName} — ${rights.licence}` : null,
+  };
+}
+
+export function recordPayload(r: CorpusRecord, rights?: RightsSchedule) {
   return {
     recordId: r.recordId,
     canonicalId: r.canonicalId,
@@ -43,6 +59,7 @@ export function recordPayload(r: CorpusRecord) {
     supersededByRecordId: r.supersededByRecordId ?? null,
     retractedByRetractionId: r.retractedByRetractionId ?? null,
     firstReleaseId: r.firstReleaseId,
+    rights: rightsPayload(rights),
   };
 }
 
@@ -60,12 +77,12 @@ export function retractionPayload(r: Retraction) {
   };
 }
 
-export function asOfBody(a: AsOfAnswer) {
+export function asOfBody(a: AsOfAnswer, rightsOf: (sourceId: string) => RightsSchedule | undefined = () => undefined) {
   return {
     query: a.query,
     resolution: a.resolution,
-    answer: a.record ? { ...recordPayload(a.record), statusAtKnownAt: a.status } : null,
-    identityLink: a.identityLink ? recordPayload(a.identityLink) : null,
+    answer: a.record ? { ...recordPayload(a.record, rightsOf(a.record.provenance.sourceId)), statusAtKnownAt: a.status } : null,
+    identityLink: a.identityLink ? recordPayload(a.identityLink, rightsOf(a.identityLink.provenance.sourceId)) : null,
     refusal: a.refusal ?? null,
     candidates: a.candidates.map((c) => c.recordId),
   };

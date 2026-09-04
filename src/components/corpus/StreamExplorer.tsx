@@ -43,8 +43,8 @@ export function StreamExplorer({ corpus, initial }: { corpus: Corpus; initial: S
 
   const answer = useMemo(() => queryAsOf(corpus, release, { subjectId, predicate, validAt, knownAt }, { enforceRights: true }), [corpus, release, subjectId, predicate, validAt, knownAt]);
   const url = asOfUrl(release.releaseId, answer.query);
-  const body = JSON.stringify({ fixture_only: true, release: { releaseId: release.releaseId, buildId: release.build.buildId, knownAt: release.knownAt }, ...asOfBody(answer) }, null, 2);
   const rights = (sourceId: string) => release.sources.find((s) => s.sourceId === sourceId);
+  const body = JSON.stringify({ fixture_only: true, release: { releaseId: release.releaseId, buildId: release.build.buildId, knownAt: release.knownAt, certification: release.certification }, ...asOfBody(answer, rights) }, null, 2);
   const subjects = index.subjects.some((s) => s.subjectId === subjectId) ? index.subjects : [...index.subjects, { subjectId, subjectType: '—' }];
   const predicates = index.predicates.includes(predicate) ? index.predicates : [...index.predicates, predicate];
 

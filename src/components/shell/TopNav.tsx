@@ -39,10 +39,10 @@ export function TopNav() {
       className="sticky top-0 z-40 flex items-center gap-3 px-3 sm:px-4 border-b"
       style={{ height: 'var(--topbar-h)', background: 'var(--bg-void)', borderColor: 'var(--border-default)' }}
     >
-      <Link href="/releases" className="flex items-baseline gap-2 shrink-0" aria-label="Payload OS home">
-        <span className="font-semibold tracking-tight" style={{ color: 'var(--text-heading)' }}>Payload OS</span>
-        <span className="label-sm hidden sm:inline" aria-hidden="true">Notation Systems</span>
-      </Link>
+      <span className="flex items-baseline gap-2 shrink-0">
+        <Link href="/releases" className="font-semibold tracking-tight" style={{ color: 'var(--text-heading)' }} aria-label="Payload OS home">Payload OS</Link>
+        <Link href="/product" className="label-sm hidden sm:inline" aria-label="Notation Systems product model">Notation Systems</Link>
+      </span>
       <nav aria-label="Primary" className="flex-1 min-w-0 overflow-x-auto">
         <ul className="flex items-center gap-1 list-none m-0 p-0">
           {NAV_GROUPS.map((g, gi) => (
