@@ -15,7 +15,7 @@ export function VerticalContext({ active = 'CARAVAN' as Domain }: { active?: Dom
           disabled={!d.enabled}
           aria-pressed={d.id === active}
           title={d.scope}
-          className="px-2 py-1 rounded-[var(--radius-md)] text-[12px] font-medium border"
+          className={`px-2 py-1 rounded-[var(--radius-md)] text-[12px] font-medium border ${d.enabled ? "" : "hidden sm:inline-flex"}`}
           style={{
             borderColor: d.id === active ? 'var(--border-accent)' : 'var(--border-subtle)',
             color: d.id === active ? 'var(--accent-strong)' : 'var(--text-muted)',
