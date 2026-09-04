@@ -27,7 +27,7 @@ export default async function ApiPage() {
       <div className="p-3 sm:p-5 max-w-[1000px] mx-auto w-full flex flex-col gap-5">
         <header className="flex flex-col gap-1">
           <h1 className="m-0 text-[18px] font-semibold" style={{ color: 'var(--text-heading)' }}>API and adapter boundary</h1>
-          <p className="m-0 text-[13px]" style={{ color: 'var(--text-secondary)' }}>This repository serves no adjudication endpoint. Screens read through one adapter interface; the only implementation is the fixture source. A live source maps substrate objects to the same view model and never re-implements a gate.</p>
+          <p className="m-0 text-[13px]" style={{ color: 'var(--text-secondary)' }}>The product is the corpus and its API: point-in-time state, lineage, uncertainty, rights, corrections and stable identity, exposed as a data stream a customer applies their own inference to. This workbench is an optional application over that stream. It serves no endpoint: screens read through one adapter interface, the only implementation is the fixture source, and a live source maps corpus objects to the same view model without re-implementing a gate.</p>
         </header>
 
         <Section title="Authority boundary" id="api-authority">

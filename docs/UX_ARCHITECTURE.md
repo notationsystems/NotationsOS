@@ -1,6 +1,12 @@
 # UX architecture
 
-What exists in this repository, not what might. Payload OS is the human-facing instrument over the Notation Systems claim, evidence, ruling, refusal, remediation, release and supersession system. This document describes the object model the screens are built around, the navigation, the two projections of a case, the component boundaries, and where authority stops.
+What exists in this repository, not what might.
+
+## Position in the product
+
+The corpus and its API are the product (`docs/ECONOMIC_ARCHITECTURE.md`). This workbench is an optional application layer over the corpus for customers who want a prescribed control: it takes a claim, a declared use, a tolerance, two clocks and evidence, and renders the ruling the substrate returns. Payload OS is the shared production and assurance layer, not a fourth public API; Caravan, Tradewind and Landshark are the bounded domain products, and the shell always shows which one is active. Nothing here is required for a customer to apply their own inference to the data stream.
+
+This document describes the object model the screens are built around, the navigation, the two projections of a case, the component boundaries, and where authority stops.
 
 ## Product object model
 

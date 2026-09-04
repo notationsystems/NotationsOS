@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: '%s · Payload OS',
   },
   description:
-    'Payload OS — claim admissibility and adjudication for intermediaries that must rely on facts they did not originate. A case, its declared use, its evidence, its checks, its ruling, its remediation, its release, its history.',
+    'Payload OS ruling workbench — an optional application layer over Notation Systems provenance-bearing computational corpora. A case, its declared use, its evidence, its checks, its ruling, its remediation, its release, its history.',
   robots: { index: false, follow: false },
   authors: [{ name: 'Notation Systems' }],
 };

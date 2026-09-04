@@ -1,5 +1,7 @@
 # Demonstration cases
 
+These cases exercise the optional ruling workbench. They are not the product; the corpus and its API are (`docs/ECONOMIC_ARCHITECTURE.md`).
+
 ## Which fixtures are used
 
 `src/fixtures/caravan/` holds one admission profile and seven cases, all `fixture_only: true`, all deterministic, all committed with sha256 digests in `src/fixtures/digests.json` (`npm run stamp:digests` recomputes them; `src/fixtures/digest.test.ts` fails on drift).
