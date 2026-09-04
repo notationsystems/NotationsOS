@@ -26,13 +26,13 @@ export default async function ApiPage() {
       {source.origin.kind === 'FIXTURE' && <FixtureBanner note={source.origin.label} />}
       <div className="p-3 sm:p-5 max-w-[1000px] mx-auto w-full flex flex-col gap-5">
         <header className="flex flex-col gap-1">
-          <h1 className="m-0 text-[18px] font-semibold" style={{ color: 'var(--text-heading)' }}>API and adapter boundary</h1>
-          <p className="m-0 text-[13px]" style={{ color: 'var(--text-secondary)' }}>This repository serves no adjudication endpoint. Screens read through one adapter interface; the only implementation is the fixture source. A live source maps substrate objects to the same view model and never re-implements a gate.</p>
+          <h1 className="m-0 text-[18px] font-semibold" style={{ color: 'var(--text-heading)' }}>Distribution-workbench adapter boundary</h1>
+          <p className="m-0 text-[13px]" style={{ color: 'var(--text-secondary)' }}>This repository serves no distribution endpoint. Screens read through one adapter interface; the only implementation is the fixture source. A live adapter maps release-bound Payload OS responses to the workbench view model and does not create another corpus, policy, or verification system.</p>
         </header>
 
         <Section title="Authority boundary" id="api-authority">
           <ul className="m-0 pl-4 text-[13px] flex flex-col gap-1" style={{ color: 'var(--text-primary)' }}>
-            <li>The browser renders rulings; it does not compute them. No admission logic, no second gate battery, no inference of a status from display fields.</li>
+            <li>The browser renders fixture inspection views; it does not compute canonical corpus state, apply customer inference, or issue a customer decision. No second gate battery or inference from display fields.</li>
             <li>Presentation validation only: projections by visibility class, by knowledge time, and highlight linking from a failed check to its claims, evidence and remediation.</li>
             <li>Every action in the interface produces an action intent that a live adapter would send. Nothing is sent here.</li>
           </ul>

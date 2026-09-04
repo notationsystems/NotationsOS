@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: '%s · Payload OS',
   },
   description:
-    'Payload OS — claim admissibility and adjudication for intermediaries that must rely on facts they did not originate. A case, its declared use, its evidence, its checks, its ruling, its remediation, its release, its history.',
+    'Payload OS is the shared information-production system of Notation Systems. This fixture-only workbench inspects provenance-bearing Caravan material; it is not a customer inference service or canonical data system.',
   robots: { index: false, follow: false },
   authors: [{ name: 'Notation Systems' }],
 };

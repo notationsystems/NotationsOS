@@ -1,6 +1,19 @@
 # UX architecture
 
-What exists in this repository, not what might. Payload OS is the human-facing instrument over the Notation Systems claim, evidence, ruling, refusal, remediation, release and supersession system. This document describes the object model the screens are built around, the navigation, the two projections of a case, the component boundaries, and where authority stops.
+What exists in this repository, not what might. Payload OS is the shared
+information-production system of Notation Systems. This repository is a
+fixture-only distribution workbench prototype over that system, not the
+definition of the company or a second canonical Data OS. Its current case,
+evidence, ruling, remediation, release, and supersession screens are a
+synthetic Caravan workbench experiment. This document describes that view
+model, navigation, two projections of a case, component boundaries, and where
+authority stops.
+
+The corpora—not these screens—are the firm's finished information inventory.
+APIs, feeds, reports, workbenches, and MCP tools distribute that inventory.
+Customers apply inference, models, agents, and workflows to distributed data
+streams; this browser neither supplies a customer inference service nor
+constructs canonical corpus state.
 
 ## Product object model
 
@@ -61,8 +74,8 @@ Domain rules live in fixture and profile data (`src/fixtures/caravan/profile.ts`
 
 ## Frontend / backend authority boundary
 
-- Screens read through `CaseSource` (`src/adapter/caseSource.ts`). The only implementation is `FixtureCaseSource`. Its `origin` is rendered as a banner on every fixture-backed screen.
-- The browser performs presentation validation only: visibility projection, knowledge-time projection, highlight linking from a failed check to its claims, evidence, broken lineage edge and remediation, queue summaries. There is no admission logic, no second gate battery, and no inference of a status from display fields.
+- Screens read through `CaseSource` (`src/adapter/caseSource.ts`). The only implementation is `FixtureCaseSource`. Its `origin` is rendered as a banner on every fixture-backed screen. This is a workbench adapter, not a Payload OS corpus API.
+- The browser performs presentation validation only: visibility projection, knowledge-time projection, highlight linking from a failed check to its claims, evidence, broken lineage edge and remediation, queue summaries. There is no corpus construction, source-policy execution, second gate battery, or inference from display fields.
 - Every user action (request evidence, replace evidence, correct claim, change use, change tolerance, appeal, resubmit, reviewer intervention, submit) produces an `ActionIntent` shown in an "Action intents (not sent)" panel. Nothing is sent; nothing is re-evaluated. There is no bare "Override": reviewer intervention requires an authority, a reason and a basis before it can be recorded, and it is recorded beside the automatic results, not over them.
 - Digests are computed only in Node (`scripts/stamp-digests.entry.ts`) and committed; the browser never hashes anything.
 - The brief's assurance classes are a presentation vocabulary. The mapping recorded in this repository, applied by the fixture author and to be applied by any live adapter, is: `UNVERIFIED_EVALUATION` when the manifest verification status is `unverified` and no review or external anchor exists; `HUMAN_REVIEWED` when a named reviewer approved with a recorded basis; `VERIFIED_ATTESTATION` when a verifier checked the manifest (`verified`) with a real proof; `EXTERNALLY_WITNESSED` when the anchor kind is `counterparty_cosigned`, `timestamp_authority` or `public_chain`. The substrate values are carried beside the class so the interface never shows the class without its basis.
