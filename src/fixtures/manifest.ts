@@ -9,6 +9,8 @@
  *
  * The manifest commitment shown in the UI is sha256(canonicalJson(manifest)).
  * The browser only renders it; the digest is stamped and tested in node.
+ * Conformance to the contract is asserted by manifest.contract.test.ts
+ * against a vendored, digest-pinned copy of the control plane's parser.
  */
 import type { ClaimCaseBundle, Ruling } from '@/domain/types';
 
@@ -41,9 +43,12 @@ export function buildResultManifest(bundle: ClaimCaseBundle, ruling: Ruling): Re
       if (!u) return [];
       return [{ kind: 'confidence_interval', summary: `${c.claimId}: ±${u.value ?? '?'} ${u.unit ?? ''} (${u.semantics ?? 'unstated'})`.trim() }];
     });
-  const contradictions = ruling.invariantResults
-    .flatMap((r) => r.contradictoryEvidenceIds ?? [])
-    .map((id) => bundle.evidence.find((e) => e.evidenceId === id)?.canonicalId ?? `notation://artifact/payload-os-demo/${id}`)
+  // The contract restricts `contradictions` to claim | observation | state
+  // identities. Contested claims are the contradiction the ruling saw;
+  // contradictory ARTIFACTS stay on the invariant result, not here.
+  const contradictions = claims
+    .filter((c) => c.status === 'CONTESTED')
+    .map((c) => c.canonicalId ?? `notation://claim/payload-os-demo/${c.claimId}`)
     .filter((v, i, a) => a.indexOf(v) === i);
   return {
     schema: 'notations.result-manifest.v1',

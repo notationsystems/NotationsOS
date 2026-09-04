@@ -24,7 +24,7 @@ The view model (`src/domain/types.ts`) is one `ClaimCaseBundle` per case:
 | `AdmissionProfile` | invariants with authority class, purpose, applicability, input requirements, refusal code, implementation maturity; use codes with default tolerances; recognition statement; register digest | `CAPABILITY_MATURITIES` |
 | `CaseEvent`, lineage nodes and edges | the history and the path from source artifact to ruling | — |
 
-Every status, check result and assurance value is read from the bundle. The manifest a ruling commits to is built by `src/fixtures/manifest.ts` to the control plane's `notations.result-manifest.v1` contract, and its commitment is `sha256(canonicalJson(manifest))`, stamped by `npm run stamp:digests` and asserted by `src/fixtures/digest.test.ts`.
+Every status, check result and assurance value is read from the bundle. The manifest a ruling commits to is built by `src/fixtures/manifest.ts` to the control plane's `notations.result-manifest.v1` contract, and its commitment is `sha256(canonicalJson(manifest))`, stamped by `npm run stamp:digests` and asserted by `src/fixtures/digest.test.ts`. Every fixture manifest is parsed by a vendored, digest-pinned copy of the control plane's `parseResultManifest` in `src/fixtures/manifest.contract.test.ts`.
 
 ## Navigation
 
