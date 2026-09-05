@@ -93,6 +93,10 @@ An identical request, including a reordered member list or source-class list, re
 
 Inspection is read-only. It reconstructs the request, reopens every normalization and its source bytes, then recomputes membership, definition, contract, roots and member-policy decisions at the original saved `builtAt`. Acquisition and normalization checks retain their own original times. The complete result must match the stored build. This reconstructs historical declared permission; it grants no current access or retention permission and checks no subsequent external revocation. Missing dependencies, changed contracts and corruption remain errors. Files are preserved rather than silently repaired, deleted or migrated.
 
+## Optional board inspection
+
+A separately launched [candidate-build review worker](CANDIDATE_BUILD_REVIEW_WORKER.md) now uses this same read-only inspector. Its board request names an exact build id and expected full `build.digest`, with `context: null`; a fixture release context does not identify these local candidate builds. The evidence root is fixed by the operator at startup, never by a message. The worker posts only a bounded build-level summary or redacted error, reads back the saved result and then acknowledges its input. It does not build candidates, return source/member data or grant current retrieval rights. Retrying a failed acknowledgement reuses the historical result; post a new request for a fresh inspection.
+
 ## Status and Bench grounding
 
 Every saved build explicitly declares `state: "UNADMITTED"`, `mode: "LOCAL_DEVELOPMENT"` and `policyAuthority: "OPERATOR_DECLARATION"`. Its flags `canonicalAdmission`, `canonicalStateMutated`, `identityResolved`, `releaseActivated`, `sourceTruthClaimed`, `independentlyVerified` and `completenessClaimed` are all false. Local recomputation establishes consistency with the stored declarations and bytes, not authenticated authorship, source truth, field accuracy or independent verification.

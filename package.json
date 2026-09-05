@@ -7,6 +7,7 @@
     "dev": "next dev",
     "dev:coordination": "node scripts/coordination-dev.mjs",
     "agent:contract-review": "esbuild scripts/contract-review.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/contract-review-agent.mjs --log-level=warning && node .stamp/contract-review-agent.mjs",
+    "agent:candidate-build-review": "esbuild scripts/candidate-build-review.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/candidate-build-review-agent.mjs --log-level=warning && node .stamp/candidate-build-review-agent.mjs",
     "evidence": "esbuild scripts/evidence.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/evidence.mjs --log-level=warning && node .stamp/evidence.mjs",
     "build": "next build",
     "start": "next start",
