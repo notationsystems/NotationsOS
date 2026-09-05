@@ -10,15 +10,20 @@ A separate local evidence intake command evaluates an operator-declared source p
 
 The [synthesized architecture](docs/SYNTHESIZED_ARCHITECTURE.md) organizes the system into Acquisition, Corpus, State, Compute/Decision and Projection fabrics without changing Payload OS or its domain products. Read-only `GET /api/projections/sources/[releaseId]` supplies an exact fixture source descriptor, including a full snapshot digest; `POST /api/projections/preview` consumes it with explicit record selection, both times and viewer. It returns rights-filtered evidence records or a record-to-subject incidence graph with stable identities; spatial requests declare kepler.gl, CesiumJS or Three.js routing but return missing geometry explicitly. No renderer dependency, instance or new visual workbench is installed. Local unadmitted evidence and builds are not served by this fixture path.
 
+A small [Rust notation state kernel](docs/LOCAL_NOTATION_STATE_KERNEL.md) now backs `/notations`: create a stable-ID notation, update it, undo/redo, save a local version and reload it through the frontend. Explicit notation relationships use the same command contract. Rust validates and replays the full history; TypeScript mediates the loopback API and create-only versioned storage. This is authored local workspace state, not canonical corpus state or the Bench's immutable entity registry. Bevy remains optional and uninstalled.
+
 ## Run
 
 ```
 npm install
 npm run dev            # http://localhost:3000 → /releases; coordination is read-only
 npm run dev:coordination # http://127.0.0.1:3000; local stable and board writes enabled
+npm run dev:state-kernel # http://127.0.0.1:3000/notations; requires Rust, local notation state enabled
 npm run agent:contract-review -- --once # in a second terminal; register and run a local review pass
 npm run build && npm start
 ```
+
+The state-kernel launcher builds the locked Rust crate before enabling the loopback workspace. Preview does not save; Save revalidates against the exact saved base version, and Reload checks every stored version through Rust. Local notation history lives separately in `.payload/notation-state`. No production identity, permissions service, corpus admission or customer delivery is supplied by this milestone.
 
 The coordination launcher binds to `127.0.0.1` and uses `PORT` when set, otherwise port 3000. Visit `/agents` to inspect and register definitions and `/board` to post, reply and acknowledge. Local history persists in the git-ignored `.payload/coordination/events.json`. Selecting an author simulates an identity; it is not authentication. The same `GET` / `POST /api/coordination` JSON interface and `GET /api/coordination/inbox` are available to C++, Rust, Python and JavaScript clients; dependency-free JavaScript and Python clients are included under `clients/`.
 
@@ -84,6 +89,7 @@ Playwright uses the environment's Chromium when `PW_CHROMIUM_PATH` is set (for e
 - `docs/LOCAL_NORMALIZATION.md` — fixed Caravan Carrier parsing, separate derivation permission, source-scoped candidates, quarantine and read-only recomputation.
 - `docs/LOCAL_CANDIDATE_BUILDS.md` — explicit time-bounded candidate membership, build-time derivation permission, reference roots and historical inspection; no canonical admission.
 - `docs/LOCAL_CANDIDATE_COMPARISON.md` — read-only exact local build comparison, source-scoped reference changes and deterministic ephemeral reports; no semantic diff or released change feed.
+- `docs/LOCAL_NOTATION_STATE_KERNEL.md` — Rust notation commands, undo/redo, versioned local storage and the complete frontend save/reload milestone; no Bevy or canonical admission.
 - `docs/CANDIDATE_BUILD_REVIEW_WORKER.md` — manually launched board-to-local-build inspection, bounded results, result-before-receipt recovery and authority limits.
 - `docs/INTERACTION_SPEC.md` — status transitions, refusal interaction, replay, supersession, visibility.
 - `docs/DEMO_CASE.md` — the fixtures, why they are synthetic, what they demonstrate, what is unvalidated.
@@ -94,6 +100,8 @@ Playwright uses the environment's Chromium when `PW_CHROMIUM_PATH` is set (for e
 src/domain      corpus types and as-of selectors (corpus.ts); the operating model as data (product.ts); workbench view model and selectors; domains
 src/adapter     CorpusSource and CaseSource seams; feed payload builders; fixture implementations only
 src/projection  closed ProjectionSpec, full fixture-source snapshot descriptor and replaceable records/graph compiler; engine routing only, no renderer dependencies
+native/state-kernel small Rust notation command/replay kernel; stable IDs, explicit relations and inverse history, no renderer or filesystem
+src/state-kernel fixed native-process adapter, loopback contract and immutable local saved versions; not domain canonical state
 src/data-os     Bench-derived source policy/capture, local evidence store, fixed Carrier parser, candidate builds and read-only reference comparison; no canonical corpus admission
 src/coordination agent/apparatus definitions, scope and message rules, contract matching, participant inbox, deterministic contract/build-inspection workers and opt-in local event log
 clients         dependency-free JavaScript and Python coordination clients

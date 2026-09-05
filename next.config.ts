@@ -3,6 +3,11 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   // Type errors block the build. Same policy as Payload Terminal V0.
   typescript: { ignoreBuildErrors: false },
+  // Local runtime stores and host-specific Rust builds are operator-managed,
+  // never deployment assets inferred from dynamic local filesystem paths.
+  outputFileTracingExcludes: {
+    '/*': ['./.payload/**/*', './.stamp/**/*', './.git/**/*', './.env*', './native/state-kernel/target/**/*', './next.config.ts'],
+  },
   async headers() {
     return [
       {
