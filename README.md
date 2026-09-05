@@ -8,6 +8,8 @@ The corpus and ruling workbench are fixture only. The `/api/v1` endpoints serve 
 
 A separate local evidence intake command evaluates an operator-declared source policy for exact `INTERNAL INGEST`, stores content-addressed bytes and an acquisition receipt, and reopens them for integrity checks. A subsequent local normalization command separately evaluates `INTERNAL DERIVE` and parses one fixed Caravan Carrier JSON contract into an unresolved, unadmitted candidate or a recorded quarantine. A local candidate builder now assembles an explicit, bounded set of those candidates under a definition and knowledge cutoff, with a separate build-time DERIVE check and recomputable membership root. These commands create no canonical domain state or corpus admission, activate no release and do not change the fixture API.
 
+The [synthesized architecture](docs/SYNTHESIZED_ARCHITECTURE.md) organizes the system into Acquisition, Corpus, State, Compute/Decision and Projection fabrics without changing Payload OS or its domain products. Read-only `GET /api/projections/sources/[releaseId]` supplies an exact fixture source descriptor, including a full snapshot digest; `POST /api/projections/preview` consumes it with explicit record selection, both times and viewer. It returns rights-filtered evidence records or a record-to-subject incidence graph with stable identities; spatial requests declare kepler.gl, CesiumJS or Three.js routing but return missing geometry explicitly. No renderer dependency, instance or new visual workbench is installed. Local unadmitted evidence and builds are not served by this fixture path.
+
 ## Run
 
 ```
@@ -71,6 +73,8 @@ Playwright uses the environment's Chromium when `PW_CHROMIUM_PATH` is set (for e
 - `docs/ECONOMIC_ARCHITECTURE.md` — authoritative positioning: the information manufacturer, two operating businesses, a separately governed principal-capital activity, and how this repository reflects each.
 - `docs/PHASE0_RECON.md` — what the sibling repositories contain, verbatim vocabulary, conflicts, recorded ambiguities.
 - `docs/COMPANY_MANDATE.md` — the company mandate, customer categories, economic architecture, and Payload OS product structure.
+- `docs/SYNTHESIZED_ARCHITECTURE.md` — five fabrics, seven doctrine invariants, historical concept mapping and target runtime/projection responsibilities; implemented boundaries are explicit.
+- `docs/PROJECTION_FABRIC.md` — exact fixture ProjectionSpec, read-only preview example, identity-preserving records/graph, rights/time gates and explicit missing geometry; no renderer implementation.
 - `docs/UX_ARCHITECTURE.md` — object model, navigation, projections, component boundaries, the authority boundary.
 - `docs/AGENT_COORDINATION.md` — the shared agent/apparatus stable, scoped board and inbox, contract synastry, JavaScript/Python clients, local worker and Bench references.
 - `docs/LOCAL_EVIDENCE_INTAKE.md` — local source-policy evaluation, content-addressed evidence, acquisition receipts, inspection and Bench-derived boundaries.
@@ -85,6 +89,7 @@ Playwright uses the environment's Chromium when `PW_CHROMIUM_PATH` is set (for e
 ```
 src/domain      corpus types and as-of selectors (corpus.ts); the operating model as data (product.ts); workbench view model and selectors; domains
 src/adapter     CorpusSource and CaseSource seams; feed payload builders; fixture implementations only
+src/projection  closed ProjectionSpec, full fixture-source snapshot descriptor and replaceable records/graph compiler; engine routing only, no renderer dependencies
 src/data-os     Bench-derived source policy and capture contracts; local evidence store, fixed Carrier parser, candidate/quarantine and explicit candidate-build CLI; no canonical corpus admission
 src/coordination agent/apparatus definitions, scope and message rules, contract matching, participant inbox, deterministic contract/build-inspection workers and opt-in local event log
 clients         dependency-free JavaScript and Python coordination clients
@@ -97,5 +102,6 @@ src/app         product model: /product
                 corpus: /releases, /releases/[releaseId], /stream, /retractions, /api, /api/v1/* (fixture feed)
                 workbench: /cases, /cases/new, /cases/[caseId], /rulings, /rulings/[rulingId], /replay/[caseId], /profiles, /evidence
                 coordination: /agents, /board, /api/coordination, /api/coordination/inbox (read-only fixtures or local sandbox)
+                projection: /api/projections/sources/[releaseId] (descriptor GET), /api/projections/preview (read-only POST over pinned fixture releases)
 tests/e2e       Playwright smoke, accessibility, keyboard, mobile, screenshots
 ```
