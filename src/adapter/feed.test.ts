@@ -26,6 +26,11 @@ describe('feed payloads', () => {
     expect(rec.supersedesRecordId).toBe('REC-0203');
     const all = await recordsPayload(CURRENT, 'COUNTERPARTY_SHARED');
     expect(all?.withheld.byRights).toBe(1);
+    expect(all?.withheld.reasons).toEqual({ AUDIENCE_NOT_PERMITTED: 1, OPERATION_NOT_PERMITTED: 1 });
+    expect(rec.rights?.deliveryDecision?.state).toBe('ALLOWED');
+    expect(rec.rights?.deliveryDecision?.request).toEqual({ purpose: 'CARAVAN_CORPUS', operation: 'EXPORT', audience: 'CUSTOMER', requestedAt: '2026-09-01T12:00:00Z' });
+    expect(rec.rights?.registration.prohibitedPurposes).toEqual(['PROPRIETARY_STRATEGY', 'TRADING']);
+    expect(rec.provenance.contentDigest).toBe(`sha256:${rec.provenance.contentHash}`);
     expect(JSON.stringify(all)).not.toContain('harbourline-deals');
     expect(JSON.stringify(all)).not.toContain('contract.moisture_max');
   });
@@ -95,8 +100,9 @@ describe('certification, rights and attribution', () => {
   it('no source in the corpus permits proprietary strategy or trading; attribution travels with delivered records', async () => {
     const rel = await releasePayload(CURRENT);
     for (const s of rel!.sources) {
-      expect(s.permittedUses).not.toContain('proprietary_strategy');
-      expect(s.permittedUses).not.toContain('trading');
+      expect(s?.permittedUses).not.toContain('proprietary_strategy');
+      expect(s?.permittedUses).not.toContain('trading');
+      expect(s?.registration.prohibitedPurposes).toEqual(expect.arrayContaining(['PROPRIETARY_STRATEGY', 'TRADING']));
     }
     const p = await recordsPayload(CURRENT, 'COUNTERPARTY_SHARED', { subjectId: 'SAMPLE-S-4402' });
     const rec = p!.records.find((r) => r.recordId === 'REC-0201')!;

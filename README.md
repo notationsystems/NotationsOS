@@ -42,6 +42,7 @@ Playwright uses the environment's Chromium when `PW_CHROMIUM_PATH` is set (for e
 ```
 src/domain      corpus types and as-of selectors (corpus.ts); the operating model as data (product.ts); workbench view model and selectors; domains
 src/adapter     CorpusSource and CaseSource seams; feed payload builders; fixture implementations only
+src/data-os     Bench-derived source-use policy and immutable-evidence capture contracts (Codex); the corpus layer evaluates rights and binds evidence through them
 src/mcp         MCP tools over the same feed payloads, and the stdio server
 src/fixtures    Caravan corpus releases, records, retractions and rights; profile and cases; manifest builder; digest plan; committed digests
 src/components  primitives, case workspace, ruling viewer, replay, queue, intake, shell

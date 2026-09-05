@@ -14,6 +14,7 @@
  */
 import type { ClaimCaseBundle, InvariantResult, Remediation, Ruling } from '@/domain/types';
 import { digestOf } from '../digestLookup';
+import { captureFor } from '../capture';
 import { CARAVAN_PROFILE } from './profile';
 
 const AS_OF = '2026-09-01T12:00:00Z';
@@ -288,6 +289,7 @@ export const CASE_5B221: ClaimCaseBundle = {
   evidence: [
     {
       evidenceId: 'EV-CERT-NIS-4402',
+      capture: captureFor('EV-CERT-NIS-4402'),
       recordIds: ['REC-0201'],
       canonicalId: 'notation://artifact/payload-os-demo/NIS-4402',
       title: 'Inspection certificate NIS-4402',
@@ -310,6 +312,7 @@ export const CASE_5B221: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-CUSTODY-PCO-5102',
+      capture: captureFor('EV-CUSTODY-PCO-5102'),
       recordIds: ['REC-0202', 'REC-0206'],
       canonicalId: 'notation://artifact/payload-os-demo/PCO-5102',
       title: 'Port custody record PCO-5102',
@@ -332,6 +335,7 @@ export const CASE_5B221: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-BOL-BAL-77790',
+      capture: captureFor('EV-BOL-BAL-77790'),
       recordIds: ['REC-0205'],
       canonicalId: 'notation://artifact/payload-os-demo/BAL-77790',
       title: 'Bill of lading BAL-77790',
@@ -350,6 +354,7 @@ export const CASE_5B221: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-DRAFT-BAL-DS-118',
+      capture: captureFor('EV-DRAFT-BAL-DS-118'),
       recordIds: ['REC-0203'],
       canonicalId: 'notation://artifact/payload-os-demo/BAL-DS-118',
       title: 'Carrier draft survey DS-118 (replaced)',
@@ -369,6 +374,7 @@ export const CASE_5B221: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-WEIGHT-WB-2277',
+      capture: captureFor('EV-WEIGHT-WB-2277'),
       recordIds: ['REC-0204'],
       canonicalId: 'notation://artifact/payload-os-demo/WB-2277',
       title: 'Terminal weighbridge ticket WB-2277',

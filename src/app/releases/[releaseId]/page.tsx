@@ -88,7 +88,31 @@ export default async function ReleasePage({ params }: { params: Promise<{ releas
 
         <Section title={`Authorized sources and the intelligence-rights schedule (${release.sources.length})`} id="rl-rights">
           <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>For every source, whether the material may be used for each purpose. A use not listed is prohibited. The feed enforces customer delivery before visibility; the rest is recorded as policy.</p>
-          <RightsMatrix sources={release.sources} />
+          <RightsMatrix sources={release.sources} at={release.knownAt} />
+          <details className="surface-inset p-2">
+            <summary className="text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>Source registrations of record (data-os SourceRegistration)</summary>
+            <div className="overflow-x-auto mt-2" tabIndex={0}>
+              <table className="ledger-table text-[12px]" aria-label="Source registrations">
+                <thead><tr><th scope="col">Registration</th><th scope="col">Source class</th><th scope="col">Policy</th><th scope="col">Effective</th><th scope="col">Permitted purposes</th><th scope="col">Prohibited purposes</th><th scope="col">Operations</th><th scope="col">Audiences</th><th scope="col">Retention</th></tr></thead>
+                <tbody>
+                  {release.sources.map((s) => (
+                    <tr key={s.sourceId} data-registration-id={s.registration.registrationId}>
+                      <td><span className="id">{s.registration.registrationId}</span><div className="id" style={{ color: 'var(--text-muted)' }}>{s.canonicalId}</div></td>
+                      <td className="id">{s.registration.sourceClass}</td>
+                      <td><span className="id">{s.registration.licenseId}</span><div className="ver" style={{ color: 'var(--text-muted)' }}>v{s.registration.policyVersion}</div></td>
+                      <td className="ts">{fmtUtc(s.registration.effectiveFrom)} → {s.registration.effectiveUntil ? fmtUtc(s.registration.effectiveUntil) : 'open'}</td>
+                      <td className="id">{s.registration.permittedPurposes.join(', ')}</td>
+                      <td className="id" style={{ color: 'var(--text-muted)' }}>{(s.registration.prohibitedPurposes ?? []).join(', ') || '—'}</td>
+                      <td className="id">{s.registration.allowedOperations.join(', ')}{s.registration.approvalRequiredOperations?.length ? <div style={{ color: 'var(--status-conditional)' }}>approval: {s.registration.approvalRequiredOperations.join(', ')}</div> : null}</td>
+                      <td className="id">{s.registration.allowedAudiences.join(', ')}</td>
+                      <td className="id">{s.registration.retention.mode}{s.registration.retention.until ? ` ${s.registration.retention.until}` : ''}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="m-0 mt-2 text-[11.5px]" style={{ color: 'var(--text-muted)' }}>Policy evaluation only: a decision is never a claim that the source is true. Every artifact captured from these sources is bound to its bytes by a data-os BinaryEvidence record and StorageReceipt with <span className="id">sourceTruthClaimed: false</span>.</p>
+          </details>
           <details className="surface-inset p-2">
             <summary className="text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>Explicit non-use statements, by source</summary>
             <ul className="m-0 mt-1 pl-4 text-[12px]" style={{ color: 'var(--text-secondary)' }}>
@@ -105,7 +129,7 @@ export default async function ReleasePage({ params }: { params: Promise<{ releas
         </Section>
 
         <Section title={`Records deliverable to named counterparties (${delivered.records.length})`} id="rl-records">
-          <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }} role="status">{delivered.withheldByRights} withheld under the rights schedule · {delivered.withheldByVisibility} withheld by visibility. Counts only.</p>
+          <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }} role="status">{delivered.withheldByRights} withheld by source-use decision{Object.keys(delivered.withheldReasons).length ? ` (${Object.entries(delivered.withheldReasons).map(([k, v]) => `${k} ×${v}`).join(', ')})` : ''} · {delivered.withheldByVisibility} withheld by visibility. Counts only.</p>
           <div className="surface overflow-x-auto" tabIndex={0}>
             <table className="ledger-table text-[12.5px]" aria-label="Records">
               <thead><tr><th scope="col">Record</th><th scope="col">Subject</th><th scope="col">Predicate</th><th scope="col">Value</th><th scope="col">Bounds</th><th scope="col">World state valid from</th><th scope="col">Information known by</th><th scope="col">Evidence class</th><th scope="col">Status in this release</th></tr></thead>

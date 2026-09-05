@@ -14,6 +14,8 @@
  * absent, with the remedy that would supply it.
  */
 import type { CanonicalURI, Domain, EvidenceClass, Hash, ISODateTime, VisibilityClass } from './types';
+import type { BinaryEvidence, SourceAudience, SourceOperation, SourceRegistration, SourceUseDecision, StorageReceipt } from '@/data-os/contracts';
+import { evaluateSourceUse } from '@/data-os/source-policy';
 
 /* ── Rights ── */
 
@@ -50,10 +52,6 @@ export const USE_LABEL: Record<PermittedUse, string> = {
   trading: 'Trading',
 };
 
-export function isUsePermitted(rights: RightsSchedule, use: PermittedUse): boolean {
-  return rights.permittedUses.includes(use);
-}
-
 export type Redistribution = 'internal_only' | 'licensed' | 'public';
 
 /** The classes of authorized source material the firm builds from. */
@@ -68,12 +66,17 @@ export const MATERIAL_LABEL: Record<MaterialClass, string> = {
   scientific: 'Scientific',
 };
 
-/** The intelligence-rights schedule for one source. Absence of a use is a prohibition, never a default. */
+/** The intelligence-rights schedule for one source. The registration is the policy of record; everything else is derived from it or describes it. */
 export interface RightsSchedule {
   sourceId: string;
+  /** notation://source/<authority>/<local-id> — the registration's sourceId. */
+  canonicalId: CanonicalURI;
   sourceName: string;
   materialClass: MaterialClass;
   licence: string;
+  /** The policy of record (data-os SourceRegistration). Every cell of the matrix is evaluated against it. */
+  registration: SourceRegistration;
+  /** Derived from the registration at the release's knowledge cutoff. Never hand-written. */
   permittedUses: PermittedUse[];
   /** Explicit non-use statements, verbatim. */
   nonUse: string[];
@@ -81,6 +84,56 @@ export interface RightsSchedule {
   attributionRequired: boolean;
   /** Which party the source is, when it is a case party. */
   producerId?: string;
+}
+
+/**
+ * Each use column of the rights matrix is one EXACT source-use request
+ * (purpose, operation, audience) evaluated against the source's registration
+ * by the data-os policy. No permission is inferred from another.
+ */
+export interface UseRequest { purpose: string; operation: SourceOperation; audience: SourceAudience }
+
+export const USE_REQUESTS: Record<PermittedUse, UseRequest> = {
+  acquisition: { purpose: 'CARAVAN_CORPUS', operation: 'INGEST', audience: 'INTERNAL' },
+  normalization: { purpose: 'CARAVAN_CORPUS', operation: 'DERIVE', audience: 'INTERNAL' },
+  customer_delivery: { purpose: 'CARAVAN_CORPUS', operation: 'EXPORT', audience: 'CUSTOMER' },
+  aggregation: { purpose: 'AGGREGATION', operation: 'DERIVE', audience: 'INTERNAL' },
+  model_training: { purpose: 'MODEL_TRAINING', operation: 'MODEL_TRAINING', audience: 'INTERNAL' },
+  internal_research: { purpose: 'INTERNAL_RESEARCH', operation: 'RETRIEVE', audience: 'INTERNAL' },
+  redistribution: { purpose: 'CARAVAN_CORPUS', operation: 'PUBLISH', audience: 'PUBLIC' },
+  proprietary_strategy: { purpose: 'PROPRIETARY_STRATEGY', operation: 'RETRIEVE', audience: 'INTERNAL' },
+  trading: { purpose: 'TRADING', operation: 'RETRIEVE', audience: 'INTERNAL' },
+};
+
+/** Evaluate one use of a source at an instant. Policy evaluation only; it is not a claim that the source is true. */
+export function evaluateUse(rights: RightsSchedule, use: PermittedUse, at: ISODateTime): SourceUseDecision {
+  const r = USE_REQUESTS[use];
+  return evaluateSourceUse(rights.registration, { requestId: `${rights.sourceId}:${use}:${at}`, registrationId: rights.registration.registrationId, purpose: r.purpose, operation: r.operation, audience: r.audience, requestedAt: at });
+}
+
+export function isUsePermitted(rights: RightsSchedule, use: PermittedUse, at: ISODateTime): boolean {
+  return evaluateUse(rights, use, at).state === 'ALLOWED';
+}
+
+/** The uses a registration permits at an instant, derived so the list and the matrix cannot disagree. */
+export function derivePermittedUses(registration: SourceRegistration, at: ISODateTime, sourceId: string): PermittedUse[] {
+  return PERMITTED_USES.filter((use) => {
+    const r = USE_REQUESTS[use];
+    return evaluateSourceUse(registration, { requestId: `${sourceId}:${use}:${at}`, registrationId: registration.registrationId, purpose: r.purpose, operation: r.operation, audience: r.audience, requestedAt: at }).state === 'ALLOWED';
+  });
+}
+
+/** The delivery request the feed evaluates for a projection. */
+export function deliveryRequestFor(viewer: VisibilityClass): UseRequest {
+  return viewer === 'PUBLIC_RULING' ? USE_REQUESTS.redistribution : USE_REQUESTS.customer_delivery;
+}
+
+/** Evidence bound to bytes by the data-os capture contract: the binary-evidence record and its storage receipt. */
+export interface EvidenceCapture {
+  evidence: BinaryEvidence;
+  receipt: StorageReceipt;
+  /** The ALLOWED INGEST decision the capture required. */
+  ingestDecisionId: string;
 }
 
 /* ── Records ── */
@@ -120,6 +173,10 @@ export interface CorpusRecord {
     sourceId: string;
     artifactId?: string;
     contentHash?: Hash;
+    /** data-os capture: sha256:<hex> content digest, storage key and receipt of the artifact the record was extracted from. */
+    contentDigest?: string;
+    storageKey?: string;
+    receiptId?: string;
     producerId?: string;
     transformId?: CanonicalURI;
   };
@@ -286,10 +343,17 @@ export function recordStatusAt(corpus: Corpus, record: CorpusRecord, knownAt: IS
   return 'CURRENT';
 }
 
-/** Rights guard for delivery: a record leaves the corpus only if its source permits customer delivery. */
-export function deliverable(corpus: Corpus, release: CorpusRelease, record: CorpusRecord): boolean {
+/** The exact policy decision for delivering a record to a projection, evaluated at the release cutoff. */
+export function deliveryDecision(release: CorpusRelease, record: CorpusRecord, viewer: VisibilityClass = 'COUNTERPARTY_SHARED'): SourceUseDecision | undefined {
   const rights = release.sources.find((s) => s.sourceId === record.provenance.sourceId);
-  return Boolean(rights && rights.permittedUses.includes('customer_delivery'));
+  if (!rights) return undefined;
+  const r = deliveryRequestFor(viewer);
+  return evaluateSourceUse(rights.registration, { requestId: `${record.recordId}:${r.operation}:${r.audience}:${release.knownAt}`, registrationId: rights.registration.registrationId, purpose: r.purpose, operation: r.operation, audience: r.audience, requestedAt: release.knownAt });
+}
+
+/** Rights guard for delivery: a record leaves the corpus only on an explicitly ALLOWED decision. */
+export function deliverable(corpus: Corpus, release: CorpusRelease, record: CorpusRecord, viewer: VisibilityClass = 'COUNTERPARTY_SHARED'): boolean {
+  return deliveryDecision(release, record, viewer)?.state === 'ALLOWED';
 }
 
 export interface AsOfQuery {
@@ -346,7 +410,7 @@ function withinValidity(r: CorpusRecord, validAt: ISODateTime): boolean {
  * knowable; a subject may be reached through an identity link record. An
  * absent answer is a typed refusal with a remedy, never a zero.
  */
-export function queryAsOf(corpus: Corpus, release: CorpusRelease, q: AsOfQuery, opts: { enforceRights?: boolean } = {}): AsOfAnswer {
+export function queryAsOf(corpus: Corpus, release: CorpusRelease, q: AsOfQuery, opts: { enforceRights?: boolean; viewer?: VisibilityClass } = {}): AsOfAnswer {
   const knownAt = q.knownAt <= release.knownAt ? q.knownAt : release.knownAt;
   const query = { ...q, knownAt };
   const records = releaseRecords(corpus, release);
@@ -370,8 +434,9 @@ export function queryAsOf(corpus: Corpus, release: CorpusRelease, q: AsOfQuery, 
         considered.push({ recordId: r.recordId, because: `valid from ${r.validFrom}${r.validTo ? ` to ${r.validTo}` : ''}, not at ${q.validAt}` });
         continue;
       }
-      if (opts.enforceRights && !deliverable(corpus, release, r)) {
-        considered.push({ recordId: r.recordId, because: `source ${r.provenance.sourceId} does not permit customer delivery` });
+      if (opts.enforceRights && !deliverable(corpus, release, r, opts.viewer)) {
+        const d = deliveryDecision(release, r, opts.viewer);
+        considered.push({ recordId: r.recordId, because: `source ${r.provenance.sourceId}: ${d?.state ?? 'NO_REGISTRATION'} (${d?.reasons.join(', ') ?? 'no registration'})` });
         continue;
       }
       return { query, releaseId: release.releaseId, record: r, status, resolution, identityLink, candidates };
@@ -385,8 +450,9 @@ export function queryAsOf(corpus: Corpus, release: CorpusRelease, q: AsOfQuery, 
         refusal: { code: 'RETRACTED', reason: `The only record was withdrawn: ${retraction?.reason ?? 'reason not recorded'}`, remedy: 'Obtain a replacement artifact from the producer, or an independent one; the corpus will carry it as a new record.', considered },
       };
     }
-    if (opts.enforceRights && candidates.some((r) => !deliverable(corpus, release, r))) {
-      return { query, releaseId: release.releaseId, resolution, identityLink, candidates, refusal: { code: 'NOT_DELIVERABLE', reason: 'A record exists but its source does not permit customer delivery.', remedy: 'Licence the source for delivery, or supply an equivalent artifact from a source that permits it.', considered } };
+    if (opts.enforceRights && candidates.some((r) => !deliverable(corpus, release, r, opts.viewer))) {
+      const d = deliveryDecision(release, candidates[0], opts.viewer);
+      return { query, releaseId: release.releaseId, resolution, identityLink, candidates, refusal: { code: 'NOT_DELIVERABLE', reason: `A record exists but the source-use decision for this delivery is ${d?.state ?? 'absent'}: ${d?.reasons.join(', ') ?? 'no registration'}.`, remedy: 'Register the source for this operation and audience, or supply an equivalent artifact from a source that permits it.', considered } };
     }
     return {
       query, releaseId: release.releaseId, resolution, identityLink, candidates,
@@ -450,17 +516,25 @@ export function recordById(corpus: Corpus, recordId: string): CorpusRecord | und
 }
 
 /** Records delivered to a viewer: rights guard first, then visibility. Returns the withheld count for the "N withheld" line. */
-export function deliverableRecords(corpus: Corpus, release: CorpusRelease, viewer: VisibilityClass): { records: CorpusRecord[]; withheldByRights: number; withheldByVisibility: number } {
+export function deliverableRecords(corpus: Corpus, release: CorpusRelease, viewer: VisibilityClass): { records: CorpusRecord[]; withheldByRights: number; withheldByVisibility: number; withheldReasons: Record<string, number> } {
   const visible = new Set<VisibilityClass>(viewer === 'PUBLIC_RULING' ? ['PUBLIC_RULING'] : viewer === 'COUNTERPARTY_SHARED' ? ['COUNTERPARTY_SHARED', 'PUBLIC_RULING'] : ['INTERNAL_ONLY', 'PRIVATE_PREFLIGHT', 'COUNTERPARTY_SHARED', 'PUBLIC_RULING']);
   let withheldByRights = 0;
   let withheldByVisibility = 0;
+  const withheldReasons: Record<string, number> = {};
   const out: CorpusRecord[] = [];
+  // The rights guard evaluates the exact delivery request for this projection; internal viewers are not a delivery.
+  const guardViewer: VisibilityClass = viewer === 'PUBLIC_RULING' ? 'PUBLIC_RULING' : 'COUNTERPARTY_SHARED';
   for (const r of releaseRecords(corpus, release)) {
-    if (!deliverable(corpus, release, r)) { withheldByRights += 1; continue; }
+    const d = deliveryDecision(release, r, guardViewer);
+    if (!d || d.state !== 'ALLOWED') {
+      withheldByRights += 1;
+      for (const reason of d?.reasons ?? ['NO_REGISTRATION']) withheldReasons[reason] = (withheldReasons[reason] ?? 0) + 1;
+      continue;
+    }
     if (!visible.has(r.visibility)) { withheldByVisibility += 1; continue; }
     out.push(r);
   }
-  return { records: out, withheldByRights, withheldByVisibility };
+  return { records: out, withheldByRights, withheldByVisibility, withheldReasons };
 }
 
 /** Distinct subjects and predicates in a release, for the stream explorer's controls. */

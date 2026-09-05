@@ -8,6 +8,7 @@
  * Layer 3  manifest commitments over the result manifest, which embeds layers 0 and 2 through the ruling
  * Layer R  release digests      over the canonical record set a corpus release carries (values, clocks, provenance hashes)
  * Layer M  release manifests    over the certified release manifest, which embeds layer R
+ * Bytes    bytes:<evidenceId>     byte length of the canonical artifact bytes (data-os BinaryEvidence.byteLength)
  */
 import type { AdmissionProfile, ClaimCaseBundle, Ruling } from '@/domain/types';
 import type { Corpus } from '@/domain/corpus';
@@ -15,12 +16,18 @@ import { releaseRecords } from '@/domain/corpus';
 import { allRulings } from '@/domain/selectors';
 import { buildResultManifest } from './manifest';
 import { buildReleaseManifest } from './releaseManifest';
+import { canonicalJson } from './digest';
 
 export type HashObject = (obj: unknown) => string;
 export type HashString = (s: string) => string;
 
 export function registerKey(p: AdmissionProfile) {
   return `register:${p.profileId}@${p.version}`;
+}
+
+/** The exact bytes captured for an artifact: its canonical JSON, UTF-8. data-os BinaryEvidence.byteLength is their length. */
+export function artifactBytes(e: ClaimCaseBundle['evidence'][number]): Uint8Array {
+  return new TextEncoder().encode(canonicalJson(artifactCanonical(e)));
 }
 
 export function artifactCanonical(e: ClaimCaseBundle['evidence'][number]) {
@@ -75,6 +82,7 @@ export function computeAllDigests(
     for (const e of c.evidence) {
       const h = hashObject(artifactCanonical(e));
       out[`artifact:${e.evidenceId}`] = h;
+      out[`bytes:${e.evidenceId}`] = String(artifactBytes(e).byteLength);
       artifact.set(e.evidenceId, h);
     }
   }

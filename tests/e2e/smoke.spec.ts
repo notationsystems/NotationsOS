@@ -91,6 +91,9 @@ test('a release page states certification, the production record and the rights 
   await expect(matrix.locator('[data-use="trading"][data-permitted="true"]')).toHaveCount(0);
   await expect(matrix.locator('[data-use="proprietary_strategy"][data-permitted="true"]')).toHaveCount(0);
   await expect(matrix.locator('[data-use="customer_delivery"][data-permitted="false"]')).toHaveCount(1);
+  await expect(matrix.locator('[data-use="customer_delivery"][data-decision="DENIED"]')).toHaveCount(1);
+  await expect(matrix.locator('[data-use="redistribution"][data-decision="APPROVAL_REQUIRED"]')).toHaveCount(4);
+  await expect(page.getByRole('table', { name: 'Source registrations' })).toBeAttached();
   const manifest = await (await page.request.get('/api/v1/releases/REL-CAR-2026.09.01/manifest')).json();
   expect(manifest.manifest.certification.status).toBe('CERTIFIED');
 });

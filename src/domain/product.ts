@@ -23,6 +23,13 @@ export const THESIS = {
 
 export const DISTRIBUTION_MECHANISMS = ['APIs', 'Feeds', 'Reports', 'Workbenches', 'MCP tools'] as const;
 
+/** Where the shared machinery is actually implemented. This repository is a fixture-only product surface and workbench prototype over it. */
+export const REFERENCE_IMPLEMENTATION = {
+  name: 'Notations Bench',
+  role: 'Reference implementation of the shared corpus, provenance, policy, release and verification machinery.',
+  inThisRepository: 'Small TypeScript counterparts of its source-policy and evidence-capture workflows (src/data-os), used by the corpus layer and its tests. Not a second canonical Data OS.',
+} as const;
+
 export const CUSTOMER_CATEGORIES = [
   { id: 'brokers', title: 'Brokers', need: 'Rely on facts produced by other parties to move a transaction: quantities, conditions, custody, identity.' },
   { id: 'asset_managers', title: 'Asset and portfolio managers', need: 'Hold and re-evaluate positions against point-in-time state, with corrections and recalls pushed rather than discovered.' },
@@ -66,8 +73,13 @@ export const ENGINES: readonly Engine[] = [
       { item: 'Feed API', presence: 'FIXTURE', where: '/api' },
       { item: 'MCP tools over the same feed', presence: 'FIXTURE', where: '/api#api-mcp' },
       { item: 'Caravan workbench (ruling application)', presence: 'FIXTURE', where: '/cases' },
+      { item: 'Source-use policy and evidence capture contracts (data-os, Bench-derived)', presence: 'PRESENT', where: '/api#api-vocab' },
       { item: 'Reports', presence: 'ABSENT' },
-      { item: 'Live source connectors, production storage and identity, deployed customer delivery, a completed pilot', presence: 'ABSENT' },
+      { item: 'Live source connectors', presence: 'ABSENT' },
+      { item: 'Production storage and identity', presence: 'ABSENT' },
+      { item: 'Deployed customer delivery', presence: 'ABSENT' },
+      { item: 'Independent verification', presence: 'ABSENT' },
+      { item: 'A completed pilot', presence: 'ABSENT' },
     ],
   },
   {

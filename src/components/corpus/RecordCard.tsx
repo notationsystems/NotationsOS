@@ -56,6 +56,7 @@ export function RecordCard({ record, status, rights, compact = false }: { record
           <dd className="flex flex-col gap-0.5">
             <span>Source <span className="id">{record.provenance.sourceId}</span>{rights && <> — {rights.sourceName}</>}</span>
             {record.provenance.artifactId && <span>Artifact <span className="id">{record.provenance.artifactId}</span> · <Digest value={record.provenance.contentHash} copy={false} /></span>}
+            {record.provenance.contentDigest && <span className="text-[11.5px]" style={{ color: 'var(--text-muted)' }}>Capture <span className="id">{record.provenance.contentDigest.slice(0, 15)}…</span> · key <span className="id">{record.provenance.storageKey}</span> · receipt <span className="id">{record.provenance.receiptId}</span> · source truth not claimed</span>}
             {record.provenance.transformId && <span>Transform <span className="id">{record.provenance.transformId}</span></span>}
           </dd>
           <dt>Rights</dt>

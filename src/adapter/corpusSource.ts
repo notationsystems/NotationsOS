@@ -17,7 +17,7 @@ export interface CorpusSource {
   listReleases(corpusId?: string): Promise<CorpusRelease[]>;
   getRelease(releaseId: string): Promise<{ corpus: Corpus; release: CorpusRelease } | undefined>;
   /** Records a viewer may receive from a release, after the rights guard and the visibility projection. */
-  records(releaseId: string, viewer: VisibilityClass): Promise<{ records: CorpusRecord[]; withheldByRights: number; withheldByVisibility: number } | undefined>;
+  records(releaseId: string, viewer: VisibilityClass): Promise<{ records: CorpusRecord[]; withheldByRights: number; withheldByVisibility: number; withheldReasons: Record<string, number> } | undefined>;
   asOf(releaseId: string, q: AsOfQuery): Promise<AsOfAnswer | undefined>;
   retractions(since: string | undefined, viewer: VisibilityClass): Promise<Retraction[]>;
 }
@@ -54,7 +54,7 @@ export class FixtureCorpusSource implements CorpusSource {
   async asOf(releaseId: string, q: AsOfQuery): Promise<AsOfAnswer | undefined> {
     const hit = await this.getRelease(releaseId);
     if (!hit) return undefined;
-    return queryAsOf(hit.corpus, hit.release, q, { enforceRights: true });
+    return queryAsOf(hit.corpus, hit.release, q, { enforceRights: true, viewer: 'COUNTERPARTY_SHARED' });
   }
 
   async retractions(since: string | undefined, viewer: VisibilityClass): Promise<Retraction[]> {

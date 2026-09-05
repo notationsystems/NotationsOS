@@ -9,13 +9,14 @@
 import type { VisibilityClass } from '@/domain/types';
 import { VISIBILITY_CLASSES } from '@/domain/types';
 import type { AsOfQuery } from '@/domain/corpus';
+import { deliveryDecision } from '@/domain/corpus';
 import { getCorpusSource } from './corpusSource';
 import { getCaseSource } from './caseSource';
 import { buildResultManifest } from '@/fixtures/manifest';
 import { buildReleaseManifest } from '@/fixtures/releaseManifest';
 import { projectForViewer } from '@/domain/selectors';
 
-import { FEED_VERSION, asOfBody, envelope, recordPayload, releaseSummary, retractionPayload } from './feedShapes';
+import { FEED_VERSION, asOfBody, envelope, recordPayload, releaseSummary, retractionPayload, rightsPayload } from './feedShapes';
 export { FEED_VERSION, asOfBody, asOfUrl, recordPayload, releaseSummary, retractionPayload } from './feedShapes';
 
 /** The projection a feed request may ask for. Internal classes are never served. */
@@ -44,7 +45,7 @@ export async function releasePayload(releaseId: string) {
       build: release.build,
       coverage: release.coverage,
       note: release.note,
-      sources: release.sources.map((s) => ({ sourceId: s.sourceId, sourceName: s.sourceName, materialClass: s.materialClass, licence: s.licence, permittedUses: s.permittedUses, nonUse: s.nonUse, redistribution: s.redistribution, attributionRequired: s.attributionRequired })),
+      sources: release.sources.map((s) => rightsPayload(s)),
       certification: release.certification,
       governance: corpus.governance,
       links: { manifest: `/api/v1/releases/${release.releaseId}/manifest`, records: `/api/v1/releases/${release.releaseId}/records`, retractions: `/api/v1/retractions?since=${encodeURIComponent(release.supersedesReleaseId ? (corpus.releases.find((r) => r.releaseId === release.supersedesReleaseId)?.knownAt ?? '') : '')}` },
@@ -64,8 +65,8 @@ export async function recordsPayload(releaseId: string, viewer: VisibilityClass,
       projection: viewer,
       filter: { subjectId: filter.subjectId ?? null, predicate: filter.predicate ?? null },
       count: records.length,
-      withheld: { byRights: all.withheldByRights, byVisibility: all.withheldByVisibility, note: 'Counts only. Withheld identities are not disclosed.' },
-      records: records.map((r) => recordPayload(r, hit.release.sources.find((s) => s.sourceId === r.provenance.sourceId))),
+      withheld: { byRights: all.withheldByRights, byVisibility: all.withheldByVisibility, reasons: all.withheldReasons, note: 'Counts only. Withheld identities are not disclosed.' },
+      records: records.map((r) => recordPayload(r, hit.release.sources.find((s) => s.sourceId === r.provenance.sourceId), deliveryDecision(hit.release, r, viewer === 'PUBLIC_RULING' ? 'PUBLIC_RULING' : 'COUNTERPARTY_SHARED'))),
     },
     hit.release,
   );
@@ -83,7 +84,7 @@ export async function asOfPayload(releaseId: string, q: AsOfQuery) {
   if (!hit) return undefined;
   const a = await getCorpusSource().asOf(releaseId, q);
   if (!a) return undefined;
-  return envelope(asOfBody(a, (sourceId) => hit.release.sources.find((s) => s.sourceId === sourceId)), hit.release);
+  return envelope(asOfBody(a, (sourceId) => hit.release.sources.find((s) => s.sourceId === sourceId), (r) => deliveryDecision(hit.release, r, 'COUNTERPARTY_SHARED')), hit.release);
 }
 
 export async function retractionsPayload(since: string | undefined, viewer: VisibilityClass) {

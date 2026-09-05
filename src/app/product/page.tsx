@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { CUSTOMER_CATEGORIES, DISTRIBUTION_MECHANISMS, ECONOMIC_ARCHITECTURE, ENGINES, MATERIAL_CLASSES_IN_CORPUS, PRESENCE_LABEL, PRODUCTION_SYSTEM, PRODUCT_ARCHITECTURE, THESIS, VALUE_PROPOSITION } from '@/domain/product';
+import { CUSTOMER_CATEGORIES, DISTRIBUTION_MECHANISMS, ECONOMIC_ARCHITECTURE, ENGINES, MATERIAL_CLASSES_IN_CORPUS, PRESENCE_LABEL, PRODUCTION_SYSTEM, PRODUCT_ARCHITECTURE, REFERENCE_IMPLEMENTATION, THESIS, VALUE_PROPOSITION } from '@/domain/product';
 import { Section } from '@/components/primitives/Section';
 
 export const metadata: Metadata = { title: 'Product model' };
@@ -86,6 +86,7 @@ ${PRODUCT_ARCHITECTURE.domains.map((d, i, a) => `   ${i === a.length - 1 ? '└�
       </Section>
 
       <Section title="What exists in this repository" id="pm-presence">
+        <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}><span style={{ color: 'var(--text-heading)' }}>{REFERENCE_IMPLEMENTATION.name}</span> — {REFERENCE_IMPLEMENTATION.role} {REFERENCE_IMPLEMENTATION.inThisRepository}</p>
         <div className="grid gap-3 md:grid-cols-2">
           {ENGINES.map((e) => (
             <article key={e.id} className="surface p-3 flex flex-col gap-2" aria-labelledby={`engine-${e.id}`}>

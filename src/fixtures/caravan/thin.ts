@@ -7,6 +7,7 @@
  */
 import type { ClaimCaseBundle, Ruling, RulingStatus, TemporalBasis, UseScope } from '@/domain/types';
 import { digestOf } from '../digestLookup';
+import { captureFor } from '../capture';
 import { CARAVAN_PROFILE } from './profile';
 
 const AS_OF = '2026-09-01T12:00:00Z';
@@ -63,6 +64,7 @@ function thin(s: ThinSpec): ClaimCaseBundle {
     producerId: 'P-PRODUCER-NORTHGATE',
     sourceId: 'northgate-lims',
     contentHash: digestOf(`artifact:${evId}`),
+    capture: captureFor(evId, 'northgate-lims'),
     recordIds: s.recordIds,
     visibility: 'COUNTERPARTY_SHARED' as const,
     capturedAt: s.evidenceKnownAt,

@@ -3,6 +3,7 @@
  * explorer (client). No fixture or adapter imports: safe in any bundle.
  */
 import type { AsOfAnswer, CorpusRecord, CorpusRelease, Retraction, RightsSchedule } from '@/domain/corpus';
+import type { SourceUseDecision } from '@/data-os/contracts';
 
 export const FEED_VERSION = 'payload-os.feed.v0-demo';
 
@@ -24,22 +25,27 @@ export function releaseSummary(r: CorpusRelease) {
 }
 
 /** Rights travel with the record so provenance survives downstream use, audit and resale. */
-export function rightsPayload(rights: RightsSchedule | undefined) {
+export function rightsPayload(rights: RightsSchedule | undefined, decision?: SourceUseDecision) {
   if (!rights) return null;
+  const r = rights.registration;
   return {
     sourceId: rights.sourceId,
+    canonicalId: rights.canonicalId,
     sourceName: rights.sourceName,
     materialClass: rights.materialClass,
     licence: rights.licence,
+    registration: { registrationId: r.registrationId, sourceClass: r.sourceClass, policyVersion: r.policyVersion, effectiveFrom: r.effectiveFrom, effectiveUntil: r.effectiveUntil ?? null, permittedPurposes: r.permittedPurposes, prohibitedPurposes: r.prohibitedPurposes ?? [], allowedOperations: r.allowedOperations, approvalRequiredOperations: r.approvalRequiredOperations ?? [], allowedAudiences: r.allowedAudiences, retention: r.retention },
     permittedUses: rights.permittedUses,
     nonUse: rights.nonUse,
     redistribution: rights.redistribution,
     attributionRequired: rights.attributionRequired,
     attribution: rights.attributionRequired ? `${rights.sourceName} — ${rights.licence}` : null,
+    /** The exact source-use decision under which this record was delivered. Policy evaluation only; not a claim that the source is true. */
+    deliveryDecision: decision ? { decisionId: decision.decisionId, state: decision.state, reasons: decision.reasons, request: decision.request, evaluatedAt: decision.evaluatedAt } : null,
   };
 }
 
-export function recordPayload(r: CorpusRecord, rights?: RightsSchedule) {
+export function recordPayload(r: CorpusRecord, rights?: RightsSchedule, decision?: SourceUseDecision) {
   return {
     recordId: r.recordId,
     canonicalId: r.canonicalId,
@@ -54,13 +60,13 @@ export function recordPayload(r: CorpusRecord, rights?: RightsSchedule) {
     knownAt: r.knownAt,
     observedAt: r.observedAt ?? null,
     evidenceClass: r.evidenceClass,
-    provenance: { ...r.provenance, contentHash: r.provenance.contentHash ?? null, artifactId: r.provenance.artifactId ?? null, producerId: r.provenance.producerId ?? null, transformId: r.provenance.transformId ?? null },
+    provenance: { ...r.provenance, contentHash: r.provenance.contentHash ?? null, contentDigest: r.provenance.contentDigest ?? null, storageKey: r.provenance.storageKey ?? null, receiptId: r.provenance.receiptId ?? null, artifactId: r.provenance.artifactId ?? null, producerId: r.provenance.producerId ?? null, transformId: r.provenance.transformId ?? null },
     visibility: r.visibility,
     supersedesRecordId: r.supersedesRecordId ?? null,
     supersededByRecordId: r.supersededByRecordId ?? null,
     retractedByRetractionId: r.retractedByRetractionId ?? null,
     firstReleaseId: r.firstReleaseId,
-    rights: rightsPayload(rights),
+    rights: rightsPayload(rights, decision),
   };
 }
 
@@ -78,12 +84,12 @@ export function retractionPayload(r: Retraction) {
   };
 }
 
-export function asOfBody(a: AsOfAnswer, rightsOf: (sourceId: string) => RightsSchedule | undefined = () => undefined) {
+export function asOfBody(a: AsOfAnswer, rightsOf: (sourceId: string) => RightsSchedule | undefined = () => undefined, decisionOf: (r: CorpusRecord) => SourceUseDecision | undefined = () => undefined) {
   return {
     query: a.query,
     resolution: a.resolution,
-    answer: a.record ? { ...recordPayload(a.record, rightsOf(a.record.provenance.sourceId)), statusAtKnownAt: a.status } : null,
-    identityLink: a.identityLink ? recordPayload(a.identityLink, rightsOf(a.identityLink.provenance.sourceId)) : null,
+    answer: a.record ? { ...recordPayload(a.record, rightsOf(a.record.provenance.sourceId), decisionOf(a.record)), statusAtKnownAt: a.status } : null,
+    identityLink: a.identityLink ? recordPayload(a.identityLink, rightsOf(a.identityLink.provenance.sourceId), decisionOf(a.identityLink)) : null,
     refusal: a.refusal ?? null,
     candidates: a.candidates.map((c) => c.recordId),
   };

@@ -136,6 +136,8 @@ export default async function ApiPage() {
               <tr><td>Capability maturity</td><td className="id">control-plane/src/governance/maturity.js</td><td className="id">release.methodology.status</td></tr>
               <tr><td>Source policy: permitted use and redistribution</td><td className="id">payload-methodology.js licensing</td><td className="id">sources[].permittedUses / nonUse / redistribution; record.rights.attribution</td></tr>
               <tr><td>Build record</td><td className="id">notations-corpus-graph ncg/platform/build.py</td><td className="id">release.build (inputDigests, deterministic, stages)</td></tr>
+              <tr><td>Source-use policy: exact purpose, operation, audience decisions</td><td className="id">src/data-os/source-policy.ts (Bench-derived)</td><td className="id">sources[].registration; rights.deliveryDecision; withheld.reasons</td></tr>
+              <tr><td>Evidence capture: content digest, storage key, receipt, source truth not claimed</td><td className="id">src/data-os/evidence-capture.ts (notations.binary-evidence.v1, notations.storage-receipt.v1)</td><td className="id">provenance.contentDigest / storageKey / receiptId</td></tr>
               <tr><td>Refusal with remedy</td><td className="id">controlTower.ts {'{'}kind:&apos;refusal&apos;, code, detail, remedy{'}'}</td><td className="id">refusal.code / reason / remedy</td></tr>
             </tbody>
           </table>

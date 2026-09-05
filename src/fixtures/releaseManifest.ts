@@ -26,7 +26,7 @@ export interface ReleaseManifestV0 {
   retractionsApplied: string[];
   supersedesReleaseId: string | null;
   coverage: string;
-  sources: Array<{ sourceId: string; materialClass: string; licence: string; permittedUses: string[]; nonUse: string[]; redistribution: string; attributionRequired: boolean }>;
+  sources: Array<{ sourceId: string; canonicalId: string; materialClass: string; licence: string; registration: CorpusRelease['sources'][number]['registration']; permittedUses: string[]; nonUse: string[]; redistribution: string; attributionRequired: boolean }>;
   certification: { status: CorpusRelease['certification']['status']; certifiedAt: string | null; basis: string; verification: CorpusRelease['certification']['verification'] };
   governance: Corpus['governance'];
 }
@@ -45,7 +45,7 @@ export function buildReleaseManifest(corpus: Corpus, release: CorpusRelease): Re
     retractionsApplied: releaseRetractions(corpus, release).map((r) => r.retractionId),
     supersedesReleaseId: release.supersedesReleaseId ?? null,
     coverage: release.coverage,
-    sources: release.sources.map((s) => ({ sourceId: s.sourceId, materialClass: s.materialClass, licence: s.licence, permittedUses: s.permittedUses, nonUse: s.nonUse, redistribution: s.redistribution, attributionRequired: s.attributionRequired })),
+    sources: release.sources.map((s) => ({ sourceId: s.sourceId, canonicalId: s.canonicalId, materialClass: s.materialClass, licence: s.licence, registration: s.registration, permittedUses: s.permittedUses, nonUse: s.nonUse, redistribution: s.redistribution, attributionRequired: s.attributionRequired })),
     certification: { status: release.certification.status, certifiedAt: release.certification.certifiedAt ?? null, basis: release.certification.basis, verification: release.certification.verification },
     governance: corpus.governance,
   };

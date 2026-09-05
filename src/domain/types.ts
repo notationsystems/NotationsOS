@@ -262,6 +262,8 @@ export interface EvidenceArtifact {
   supersedesEvidenceId?: string;
   /** Corpus records extracted from this artifact. */
   recordIds?: string[];
+  /** data-os capture binding: the BinaryEvidence record and StorageReceipt for this artifact's bytes. */
+  capture?: import('./corpus').EvidenceCapture;
   /** Identifiers the artifact itself carries — the raw material of reconciliation. */
   declaredIdentifiers?: Record<string, string>;
   /** Bounded extracted fields shown as "source context". Never the raw bytes. */

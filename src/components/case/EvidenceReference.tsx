@@ -86,6 +86,17 @@ export function EvidenceDetail({ evidence, bundle, highlighted }: { evidence: Ev
       <dl className="kv">
         <dt>Content hash</dt>
         <dd><Digest value={evidence.contentHash} /></dd>
+        {evidence.capture && (
+          <>
+            <dt>Capture</dt>
+            <dd className="flex flex-col gap-0.5 text-[12px]" data-testid="evidence-capture">
+              <span><span className="id">{evidence.capture.evidence.schema}</span> · <span className="id">{evidence.capture.evidence.contentDigest.slice(0, 15)}…</span> · {evidence.capture.evidence.byteLength} bytes · <span className="id">{evidence.capture.evidence.mediaType}</span></span>
+              <span>Storage key <span className="id">{evidence.capture.evidence.storageKey}</span></span>
+              <span>Receipt <span className="id">{evidence.capture.receipt.receiptId}</span> · stored <span className="ts">{fmtUtc(evidence.capture.receipt.storedAt)}</span></span>
+              <span>Source <span className="id">{evidence.capture.evidence.sourceId}</span> · source truth claimed: <span className="mono">false</span></span>
+            </dd>
+          </>
+        )}
         <dt>Canonical id</dt>
         <dd><span className="id">{evidence.canonicalId ?? 'Not assigned'}</span></dd>
         <dt>Captured by producer</dt>

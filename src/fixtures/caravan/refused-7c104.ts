@@ -12,6 +12,7 @@
  */
 import type { ClaimCaseBundle, Remediation, Ruling } from '@/domain/types';
 import { digestOf } from '../digestLookup';
+import { captureFor } from '../capture';
 import { CARAVAN_PROFILE } from './profile';
 
 const AS_OF = '2026-09-01T12:00:00Z';
@@ -320,6 +321,7 @@ export const CASE_7C104: ClaimCaseBundle = {
   evidence: [
     {
       evidenceId: 'EV-CERT-NIS-4418',
+      capture: captureFor('EV-CERT-NIS-4418'),
       recordIds: ['REC-0301'],
       canonicalId: 'notation://artifact/payload-os-demo/NIS-4418',
       title: 'Inspection certificate NIS-4418',
@@ -344,6 +346,7 @@ export const CASE_7C104: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-WEIGHT-WB-2291',
+      capture: captureFor('EV-WEIGHT-WB-2291'),
       recordIds: ['REC-0302'],
       canonicalId: 'notation://artifact/payload-os-demo/WB-2291',
       title: 'Weighbridge ticket WB-2291',
@@ -366,6 +369,7 @@ export const CASE_7C104: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-CONTRACT-HB-3310',
+      capture: captureFor('EV-CONTRACT-HB-3310'),
       recordIds: ['REC-0305'],
       canonicalId: 'notation://artifact/payload-os-demo/HB-3310',
       title: 'Sale contract HB-3310 (specification extract)',
@@ -389,6 +393,7 @@ export const CASE_7C104: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-BOL-BAL-77812',
+      capture: captureFor('EV-BOL-BAL-77812'),
       recordIds: ['REC-0303'],
       canonicalId: 'notation://artifact/payload-os-demo/BAL-77812',
       title: 'Bill of lading BAL-77812',
@@ -411,6 +416,7 @@ export const CASE_7C104: ClaimCaseBundle = {
     },
     {
       evidenceId: 'EV-CUSTODY-MER-0931',
+      capture: captureFor('EV-CUSTODY-MER-0931'),
       recordIds: ['REC-0304'],
       canonicalId: 'notation://artifact/payload-os-demo/MER-CL-0931',
       title: 'Claimant custody log MER-CL-0931',
