@@ -1,7 +1,8 @@
 /**
  * Every fixture artifact's capture binding is reproducible with the data-os
  * contracts: an ALLOWED INGEST decision from the source's registration,
- * captureEvidence over the artifact's canonical bytes, and
+ * captureEvidence over the artifact's canonical bytes (the decision is
+ * requested at the capture instant, as the contract requires), and
  * verifyEvidenceCapture against the store. Node only (data-os capture hashes
  * with node:crypto); the browser only renders the stamped binding.
  */
@@ -24,7 +25,7 @@ describe('fixture captures reproduce under the data-os evidence-capture contract
       const sourceId = CAPTURE_SOURCE[evidenceId];
       const registration = CARAVAN_REGISTRATIONS[sourceId];
       expect(registration, `${evidenceId} has a registered source`).toBeDefined();
-      const decision = evaluateSourceUse(registration, { requestId: `capture:${evidenceId}:ingest`, registrationId: registration.registrationId, purpose: 'CARAVAN_CORPUS', operation: 'INGEST', audience: 'INTERNAL', requestedAt: e.knownAt });
+      const decision = evaluateSourceUse(registration, { requestId: `capture:${evidenceId}:ingest`, registrationId: registration.registrationId, purpose: 'CARAVAN_CORPUS', operation: 'INGEST', audience: 'INTERNAL', requestedAt: e.capture!.evidence.capturedAt });
       expect(decision.state).toBe('ALLOWED');
       const store = new InMemoryContentAddressedStore();
       const result = captureEvidence({

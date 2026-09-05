@@ -4,28 +4,21 @@ import type {
   SourceUseDecision,
   SourceUseRequest,
 } from './contracts';
+import { parseISOInstant as instant, requireIdentifier, requireRecord, requireText } from './validation';
 
 const OPERATIONS = new Set(['DERIVE', 'EXPORT', 'INDEX', 'INGEST', 'MODEL_TRAINING', 'PUBLISH', 'RETRIEVE']);
 const AUDIENCES = new Set(['CUSTOMER', 'INTERNAL', 'PUBLIC', 'TENANT']);
 
-function instant(value: string, field: string): number {
-  const parsed = Date.parse(value);
-  if (Number.isNaN(parsed)) throw new Error(`${field} must be an ISO 8601 instant.`);
-  return parsed;
-}
-
-function text(value: string, field: string): void {
-  if (value.trim().length === 0) throw new Error(`${field} must not be empty.`);
-}
-
 function sortedUnique(values: readonly string[], field: string, allowEmpty = false): string[] {
-  if ((!allowEmpty && values.length === 0) || new Set(values).size !== values.length || values.some((value) => value.trim().length === 0)) {
+  if (!Array.isArray(values) || (!allowEmpty && values.length === 0) || new Set(values).size !== values.length) {
     throw new Error(`${field} must contain unique, non-empty values.`);
   }
+  for (const value of values) requireText(value, field);
   return [...values].sort();
 }
 
 function validateRetention(retention: RetentionPolicy, effectiveUntil?: string): void {
+  requireRecord(retention, 'retention');
   if (!['INDEFINITE', 'UNTIL_SOURCE_EXPIRY', 'UNTIL'].includes(retention.mode)) {
     throw new Error('retention.mode is unsupported.');
   }
@@ -41,6 +34,7 @@ function validateRetention(retention: RetentionPolicy, effectiveUntil?: string):
 }
 
 export function validateSourceRegistration(registration: SourceRegistration): void {
+  requireRecord(registration, 'sourceRegistration');
   for (const [field, value] of Object.entries({
     registrationId: registration.registrationId,
     sourceId: registration.sourceId,
@@ -48,15 +42,16 @@ export function validateSourceRegistration(registration: SourceRegistration): vo
     sourceClass: registration.sourceClass,
     licenseId: registration.licenseId,
     policyVersion: registration.policyVersion,
-  })) text(value, field);
+  })) requireText(value, field);
+  for (const field of ['registrationId', 'sourceId', 'licenseId', 'policyVersion'] as const) requireIdentifier(registration[field], field);
 
   const effectiveFrom = instant(registration.effectiveFrom, 'effectiveFrom');
-  if (registration.effectiveUntil && instant(registration.effectiveUntil, 'effectiveUntil') <= effectiveFrom) {
+  if (registration.effectiveUntil !== undefined && instant(registration.effectiveUntil, 'effectiveUntil') <= effectiveFrom) {
     throw new Error('effectiveUntil must be later than effectiveFrom.');
   }
 
   const allowedOperations = sortedUnique(registration.allowedOperations, 'allowedOperations', true);
-  const approvalRequired = sortedUnique(registration.approvalRequiredOperations ?? [], 'approvalRequiredOperations', true);
+  const approvalRequired = sortedUnique(registration.approvalRequiredOperations === undefined ? [] : registration.approvalRequiredOperations, 'approvalRequiredOperations', true);
   if (allowedOperations.some((operation) => !OPERATIONS.has(operation)) || approvalRequired.some((operation) => !OPERATIONS.has(operation))) {
     throw new Error('Source registration contains an unsupported operation.');
   }
@@ -68,7 +63,7 @@ export function validateSourceRegistration(registration: SourceRegistration): vo
   }
 
   const permittedPurposes = sortedUnique(registration.permittedPurposes, 'permittedPurposes');
-  const prohibitedPurposes = sortedUnique(registration.prohibitedPurposes ?? [], 'prohibitedPurposes', true);
+  const prohibitedPurposes = sortedUnique(registration.prohibitedPurposes === undefined ? [] : registration.prohibitedPurposes, 'prohibitedPurposes', true);
   if (permittedPurposes.some((purpose) => prohibitedPurposes.includes(purpose))) {
     throw new Error('A purpose cannot be both permitted and prohibited.');
   }
@@ -106,11 +101,12 @@ function decision(registration: SourceRegistration, request: SourceUseRequest): 
  */
 export function evaluateSourceUse(registration: SourceRegistration, request: SourceUseRequest): SourceUseDecision {
   validateSourceRegistration(registration);
+  requireRecord(request, 'sourceUseRequest');
   if (request.registrationId !== registration.registrationId) {
     throw new Error('Source-use request must name the evaluated registration.');
   }
-  text(request.requestId, 'request.requestId');
-  text(request.purpose, 'request.purpose');
+  requireIdentifier(request.requestId, 'request.requestId');
+  requireText(request.purpose, 'request.purpose');
   if (!OPERATIONS.has(request.operation) || !AUDIENCES.has(request.audience)) {
     throw new Error('Source-use request contains an unsupported operation or audience.');
   }

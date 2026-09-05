@@ -108,6 +108,11 @@ ${PRODUCT_ARCHITECTURE.domains.map((d, i, a) => `   ${i === a.length - 1 ? '└�
         </div>
       </Section>
 
+      <Section title="Shared OS coordination" id="pm-coordination">
+        <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>The <Link href="/agents" style={{ color: 'var(--info)' }}>agent and apparatus stable</Link> records definitions, capabilities, and compatible input/output contracts. The <Link href="/board" style={{ color: 'var(--info)' }}>message board</Link> records requests, handoffs, blockers, results, and acknowledgements with corpus release context.</p>
+        <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }}>Present as a local coordination prototype with a demonstration registry, participant inboxes, and JavaScript/Python clients. A manually started local worker reviews declared contracts and records results and receipts. The board does not launch workers, authenticate customers, or execute models.</p>
+      </Section>
+
       <Section title="The value proposition, kept concrete" id="pm-value">
         <ul className="m-0 pl-4 text-[13px] flex flex-col gap-1">{VALUE_PROPOSITION.map((v) => <li key={v}>{v}</li>)}</ul>
         <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-muted)' }}>Where each is demonstrated: <Link href="/stream" style={{ color: 'var(--info)' }}>as-of answers and bounds</Link> · <Link href="/releases" style={{ color: 'var(--info)' }}>certified release manifests</Link> · <Link href="/retractions" style={{ color: 'var(--info)' }}>push retractions</Link> · <Link href="/api" style={{ color: 'var(--info)' }}>provenance and rights on every delivered record, and automating against the feed</Link>.</p>

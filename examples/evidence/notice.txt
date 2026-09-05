@@ -1,0 +1,4 @@
+SYNTHETIC LOCAL DEMONSTRATION — not an operational port notice.
+Demo berth D-4 is unavailable between 08:00 and 10:00 on 2026-09-05.
+This text exercises byte capture and receipt inspection only.
+It establishes no real-world condition, shipment event, or corpus record.

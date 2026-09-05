@@ -1,0 +1,21 @@
+{
+  "schema": "payload.local-intake-request.v1",
+  "acquisitionId": "demo-caravan-carrier-001",
+  "evidenceId": "demo-evidence-caravan-carrier-001",
+  "sourceRegistration": {
+    "registrationId": "demo-carrier-declared-policy-v1",
+    "sourceId": "notation://source/notation-systems/carrier-demo",
+    "displayName": "Synthetic local carrier records; no real company asserted",
+    "sourceClass": "OPERATOR_DECLARATION",
+    "licenseId": "synthetic-demonstration-not-an-external-source-license",
+    "policyVersion": "1.0.0",
+    "effectiveFrom": "2026-09-01T00:00:00Z",
+    "permittedPurposes": ["CARAVAN_LOCAL_DEVELOPMENT"],
+    "allowedOperations": ["INGEST", "DERIVE"],
+    "allowedAudiences": ["INTERNAL"],
+    "retention": { "mode": "INDEFINITE" }
+  },
+  "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+  "mediaType": "application/json",
+  "capturedAt": "2026-09-05T00:00:00Z"
+}
