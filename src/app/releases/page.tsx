@@ -53,7 +53,7 @@ export default async function ReleasesPage() {
         })}
         <section aria-label="What a release is" className="surface-inset p-3 text-[12.5px] flex flex-col gap-1" style={{ color: 'var(--text-secondary)' }}>
           <p className="m-0">A release is governed, time-bounded information inventory: every record knowable by its cutoff, with value, unit, basis, uncertainty bounds, validity bounds, both clocks, provenance, evidence class, rights and a stable identity. A later release never edits an earlier one; corrections and withdrawals arrive as retractions, and the earlier release still shows what it said.</p>
-          <p className="m-0" style={{ color: 'var(--text-muted)' }}>A customer applies their own inference to the feed. The ruling workbench under Workbench is one optional application over the same releases. The operating model is stated at <Link href="/product" style={{ color: 'var(--info)' }}>Notation Systems · product model</Link>.</p>
+          <p className="m-0" style={{ color: 'var(--text-muted)' }}>A customer applies their own inference to the feed. The ruling workbench under Inquiry is one optional application over the same releases. The operating model is stated at <Link href="/product" style={{ color: 'var(--info)' }}>Notation Systems · product model</Link>.</p>
         </section>
       </div>
     </>

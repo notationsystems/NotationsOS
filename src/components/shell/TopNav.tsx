@@ -3,52 +3,18 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { VerticalContext } from './VerticalContext';
+import { locate } from './nav';
+
+export { NAV_AREAS, PRIMARY_NAV } from './nav';
 
 /**
- * The corpus and its feed come first, followed by the optional workbench
- * the candidate-production rail, and the shared agent/apparatus coordination register and board.
+ * The top bar: brand, where you are (area · page), the domain product. The
+ * primary navigation itself lives in the sidebar, which is a left rail on
+ * wide screens and a strip beneath this bar on small ones.
  */
-export const NAV_GROUPS: ReadonlyArray<{ group: string; items: ReadonlyArray<{ href: string; label: string; match: RegExp }> }> = [
-  {
-    group: 'Corpus',
-    items: [
-      { href: '/products', label: 'Products', match: /^\/products/ },
-      { href: '/releases', label: 'Releases', match: /^\/releases/ },
-      { href: '/stream', label: 'Stream', match: /^\/stream/ },
-      { href: '/retractions', label: 'Retractions', match: /^\/retractions/ },
-      { href: '/api', label: 'API', match: /^\/api/ },
-    ],
-  },
-  {
-    group: 'Workbench',
-    items: [
-      { href: '/notations', label: 'Notations', match: /^\/notations/ },
-      { href: '/cases', label: 'Cases', match: /^\/cases/ },
-      { href: '/rulings', label: 'Rulings', match: /^\/rulings/ },
-      { href: '/evidence', label: 'Evidence', match: /^\/evidence/ },
-      { href: '/replay', label: 'Replay', match: /^\/replay/ },
-      { href: '/profiles', label: 'Profiles', match: /^\/profiles/ },
-    ],
-  },
-  {
-    group: 'Production',
-    items: [
-      { href: '/candidates', label: 'Candidates', match: /^\/candidates/ },
-    ],
-  },
-  {
-    group: 'Coordination',
-    items: [
-      { href: '/agents', label: 'Stable', match: /^\/agents/ },
-      { href: '/board', label: 'Board', match: /^\/board/ },
-    ],
-  },
-];
-
-export const PRIMARY_NAV = NAV_GROUPS.flatMap((g) => g.items);
-
 export function TopNav() {
   const pathname = usePathname() ?? '/';
+  const here = locate(pathname);
   return (
     <header
       className="sticky top-0 z-40 flex items-center gap-3 px-3 sm:px-4 border-b"
@@ -58,37 +24,15 @@ export function TopNav() {
         <Link href="/releases" className="font-semibold tracking-tight" style={{ color: 'var(--text-heading)' }} aria-label="Payload OS home" title="Payload OS — shared information-production system">Payload OS</Link>
         <Link href="/product" className="label-sm hidden sm:inline" aria-label="Notation Systems product model">Notation Systems</Link>
       </span>
-      <nav aria-label="Primary" className="flex-1 min-w-0 overflow-x-auto">
-        <ul className="flex items-center gap-1 list-none m-0 p-0">
-          {NAV_GROUPS.map((g, gi) => (
-            <li key={g.group} className="flex items-center gap-1">
-              {gi > 0 && <span aria-hidden="true" className="mx-1 h-4 border-l" style={{ borderColor: 'var(--border-default)' }} />}
-              <span className="label-sm hidden lg:inline mr-0.5" aria-hidden="true">{g.group}</span>
-              <ul className="flex items-center gap-1 list-none m-0 p-0" aria-label={g.group}>
-                {g.items.map((item) => {
-                  const active = item.match.test(pathname);
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        aria-current={active ? 'page' : undefined}
-                        className="inline-flex items-center px-2.5 py-1.5 rounded-[var(--radius-md)] text-[13px] font-medium whitespace-nowrap"
-                        style={{
-                          color: active ? 'var(--text-heading)' : 'var(--text-secondary)',
-                          background: active ? 'rgba(255,255,255,0.06)' : 'transparent',
-                          boxShadow: active ? 'inset 0 -2px 0 var(--accent)' : 'none',
-                        }}
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <div className="flex-1 min-w-0 flex items-center gap-2 text-[13px]" aria-label="Where you are" data-testid="where">
+        {here ? (
+          <>
+            <span className="label-sm hidden sm:inline">{here.area.label}</span>
+            <span aria-hidden="true" className="hidden sm:inline" style={{ color: 'var(--text-muted)' }}>·</span>
+            <span className="truncate" style={{ color: 'var(--text-heading)' }}>{here.item.label}</span>
+          </>
+        ) : <span className="label-sm">Payload OS</span>}
+      </div>
       <VerticalContext />
     </header>
   );

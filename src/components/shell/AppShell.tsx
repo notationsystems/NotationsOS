@@ -1,19 +1,23 @@
+import { Sidebar } from './Sidebar';
 import { TopNav } from './TopNav';
 
 /**
- * The Payload OS shell: a skip link, a compact top bar carrying the primary
- * navigation and the (non-dominant) vertical context, and a main region.
- * The case and the ruling are the primary objects; the shell stays out of
- * their way.
+ * The Payload OS shell: a skip link, a compact top bar that says where you
+ * are, the one primary navigation as a left rail (a strip on small screens),
+ * and the main surface. Pages compose their own working surface and, when
+ * an object is selected, an inspector; the shell stays out of the way.
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="app-shell">
       <a href="#main" className="skip-link">Skip to main content</a>
       <TopNav />
-      <main id="main" tabIndex={-1} className="flex-1 min-w-0 outline-none">
-        {children}
-      </main>
+      <div className="app-body">
+        <Sidebar />
+        <main id="main" tabIndex={-1} className="app-main outline-none">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
