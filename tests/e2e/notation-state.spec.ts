@@ -157,3 +157,84 @@ test('notations: a version conflict keeps the work inspectable and copyable, and
   await expect(page.getByRole('button', { name: `Select notation ${theirs}`, exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: `Select notation ${mine}`, exact: true })).toHaveCount(0);
 });
+
+test('notations: the inspector follows the selection, relations are made and inspected from it, and the keyboard undoes, redoes and saves through the kernel', async ({ page }, testInfo) => {
+  await page.goto('/notations');
+  await loaded(page);
+  const stamp = `${testInfo.project.name} ${Date.now()}`;
+  const base = Number(await page.getByTestId('saved-version').textContent());
+  const workspace = page.getByTestId('notation-workspace');
+
+  // Create two notations; the inspector opens on the newest one and says it is not saved.
+  await page.getByLabel('New notation title', { exact: true }).fill(`Source ${stamp}`);
+  await page.getByLabel('New notation body', { exact: true }).fill('The declared carrier appears in two source records with different draft figures. An authored reading, not evidence.');
+  await page.getByRole('button', { name: 'Preview new notation', exact: true }).click();
+  await expect(page.getByTestId('pending-count')).toHaveText('1');
+  const sourceId = (await page.getByTestId('selected-notation-id').textContent())!;
+  await page.getByLabel('New notation title', { exact: true }).fill(`Target ${stamp}`);
+  await page.getByLabel('New notation body', { exact: true }).fill('Source-computed draft-survey figure, superseded at the later knowledge time.');
+  await page.getByRole('button', { name: 'Preview new notation', exact: true }).click();
+  await expect(page.getByTestId('pending-count')).toHaveText('2');
+  const targetId = (await page.getByTestId('selected-notation-id').textContent())!;
+  const inspector = page.getByTestId('notation-inspector');
+  await expect(inspector.getByRole('heading', { level: 2 })).toHaveText(`Target ${stamp}`);
+  await expect(inspector.getByTestId('selected-origin')).toHaveAttribute('data-origin', 'CREATED');
+  await expect(inspector.getByTestId('inspector-pending')).toContainText(`Create notation "Target ${stamp}"`);
+  await expect(workspace).toHaveAttribute('data-inspecting', 'notation');
+
+  // Layout: a column beside the register on wide screens; an inline detail view directly beneath it on narrow ones.
+  const register = await workspace.getByRole('list', { name: 'Notations' }).boundingBox();
+  const panel = await inspector.boundingBox();
+  const createForm = await page.getByRole('form', { name: 'Create notation' }).boundingBox();
+  if (testInfo.project.name.endsWith('desktop')) expect(panel!.x).toBeGreaterThan(register!.x + register!.width - 1);
+  else { expect(panel!.y).toBeGreaterThanOrEqual(register!.y + register!.height - 1); expect(createForm!.y).toBeGreaterThanOrEqual(panel!.y + panel!.height - 1); }
+
+  // Relate from the inspector: the source is selected, then related to the target through the pre-filled form.
+  await page.getByRole('button', { name: `Select notation Source ${stamp}`, exact: true }).click();
+  await expect(page.getByTestId('selected-notation-id')).toHaveText(sourceId);
+  await inspector.getByRole('button', { name: 'Relate this notation…' }).click();
+  await expect(page.getByLabel('From notation', { exact: true })).toHaveValue(sourceId);
+  await expect(page.getByLabel('To notation', { exact: true })).toBeFocused();
+  await page.getByLabel('To notation', { exact: true }).selectOption(targetId);
+  await page.getByLabel('Relation label', { exact: true }).fill('supports');
+  await page.getByRole('button', { name: 'Preview relation', exact: true }).click();
+  await expect(page.getByTestId('pending-count')).toHaveText('3');
+  await expect(inspector.getByTestId('inspector-relations')).toContainText(`out supports → Target ${stamp}`);
+  await workspace.evaluate((element) => window.scrollTo({ top: element.getBoundingClientRect().top + window.scrollY - 64 }));
+  await page.screenshot({ path: `docs/screenshots/00h-notations-inspector-${testInfo.project.name.replace('state-', '')}.png`, fullPage: testInfo.project.name.endsWith('mobile') });
+  await inspector.getByRole('button', { name: 'Inspect relation supports' }).click();
+  const relation = page.getByTestId('relation-inspector');
+  await expect(relation.getByTestId('relation-origin')).toHaveAttribute('data-origin', 'CREATED');
+  await expect(relation).toContainText(`Source ${stamp}`);
+  await expect(relation).toContainText(`Target ${stamp}`);
+  if (testInfo.project.name.endsWith('desktop')) { await workspace.evaluate((element) => window.scrollTo({ top: element.getBoundingClientRect().top + window.scrollY - 64 })); await page.screenshot({ path: 'docs/screenshots/00i-notations-relation-inspector.png', fullPage: false }); }
+  await relation.getByRole('button', { name: 'Inspect to notation' }).click();
+  await expect(page.getByTestId('selected-notation-id')).toHaveText(targetId);
+  await expect(inspector.getByTestId('inspector-relations')).toContainText(`in supports ← Source ${stamp}`);
+
+  // Keyboard: Undo removes the relation, Redo restores it, Save records the version; none of it from inside a text field.
+  await page.locator('body').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('Control+z');
+  await expect(page.getByTestId('pending-count')).toHaveText('4');
+  await expect(inspector.getByTestId('inspector-relations')).toContainText('Relations of this notation · 0');
+  await page.keyboard.press('Control+Shift+z');
+  await expect(page.getByTestId('pending-count')).toHaveText('5');
+  await expect(inspector.getByTestId('inspector-relations')).toContainText('Relations of this notation · 1');
+  await page.getByLabel('Notation body', { exact: true }).click();
+  await page.keyboard.press('Control+z');
+  await expect(page.getByTestId('pending-count')).toHaveText('5');
+  await page.keyboard.press('Control+s');
+  await expect(page.getByText(`Saved local version ${base + 1}.`, { exact: true })).toBeVisible();
+  await expect(page.getByTestId('pending-count')).toHaveText('0');
+  await expect(inspector.getByTestId('selected-origin')).toHaveAttribute('data-origin', 'SAVED');
+  await expect(inspector.getByTestId('selected-origin')).toHaveText(`In saved local version ${base + 1}`);
+
+  // Escape outside a text field closes the inspector; the register and the create form remain.
+  await page.locator('body').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('Escape');
+  await expect(inspector).toBeHidden();
+  await expect(workspace).toHaveAttribute('data-inspecting', 'none');
+  await expect(page.getByLabel('New notation title', { exact: true })).toBeEnabled();
+  const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze();
+  expect(accessibility.violations.filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')).toEqual([]);
+});

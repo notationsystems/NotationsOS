@@ -11,9 +11,8 @@ export const metadata: Metadata = { title: 'Notations · Local state workspace' 
 export default function NotationsPage() {
   const references = resolveReferences(FIXTURE_EVIDENCE_REFERENCES, FIXTURE_REFERENCE_WORLD, FIXTURE_RESOLVED_AT);
   return (
-    <>
-      <NotationWorkspace />
+    <NotationWorkspace>
       <EvidenceReferencePanel references={references} fixture={{ notationId: FIXTURE_NOTATION_ID, resolvedAt: FIXTURE_RESOLVED_AT }} />
-    </>
+    </NotationWorkspace>
   );
 }

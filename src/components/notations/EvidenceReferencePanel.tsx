@@ -19,7 +19,7 @@ function Temporal({ t }: { t: ResolvedReference['reference']['temporal'] }) {
  */
 export function EvidenceReferencePanel({ references, fixture }: { references: ResolvedReference[]; fixture: { notationId: string; resolvedAt: string } }) {
   return (
-    <section className="p-3 sm:p-4 max-w-[1180px] mx-auto w-full flex flex-col gap-3" aria-labelledby="evidence-references-heading" data-testid="evidence-references">
+    <section className="surface p-3 flex flex-col gap-3" aria-labelledby="evidence-references-heading" data-testid="evidence-references">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="evidence-references-heading" className="text-lg font-semibold" style={{ color: 'var(--text-heading)' }}>Evidence references</h2>
         <span className="pill" style={{ color: 'var(--status-conditional)', borderColor: 'currentColor' }} data-testid="evidence-fixture-marker">FIXTURE · attachment DISABLED</span>
