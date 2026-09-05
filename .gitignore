@@ -11,3 +11,4 @@ test-results/
 .DS_Store
 npm-debug.log*
 .stamp/
+.payload/

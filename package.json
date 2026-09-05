@@ -5,6 +5,7 @@
   "description": "Payload OS — the shared information-production system and distribution-workbench prototype for Notation Systems.",
   "scripts": {
     "dev": "next dev",
+    "dev:coordination": "node scripts/coordination-dev.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

@@ -45,11 +45,13 @@ The manufacturing analogy makes the moat legible: scraping is extraction; it is 
 
 Payload OS is the shared production and assurance layer. It is not a fourth public API. Caravan, Tradewind and Landshark are the bounded domain products a buyer purchases; a buyer should always know which domain product and which corpus release they are buying.
 
+The agent and apparatus stable and shared message board are internal coordination facilities within Payload OS. They record participant definitions and their working contracts, expose compatible connections and missing inputs, and carry scoped requests, handoffs, blockers, results and acknowledgements. This supports assembly of the shared production system. It does not change the customer categories, make inference a requirement for buying the corpus, or establish managed customer compute. The implementation and its present limits are recorded in [Agent coordination](AGENT_COORDINATION.md).
+
 ## Rules for this repository
 
 - Lead with data systems and compute. Public-facing text does not lead with principal capital.
 - Do not call any output a warrant. Ruling, assurance or admission decision describes what the current system can sell.
-- The honest present tense: this repository holds a fixture-only corpus product surface and a fixture-only ruling workbench, the latter an optional application over the corpus. It has no live source connectors, production storage or identity, deployed customer delivery, managed execution of customer workloads, independent verification, or completed pilot.
+- The honest present tense: this repository holds a fixture-only corpus product surface and a fixture-only ruling workbench, the latter an optional application over the corpus. Its shared agent/apparatus stable and board open with read-only seed data; opt-in `LOCAL_SANDBOX` mode persists local definitions, messages and acknowledgements. This local coordination prototype has no running agent fleet or production identity. The repository has no live source connectors, production storage or identity, deployed customer delivery, managed execution of customer workloads, independent verification, or completed pilot.
 
 ## How this repository reflects it
 
@@ -66,5 +68,8 @@ Payload OS is the shared production and assurance layer. It is not a fourth publ
 | The intelligence-rights schedule: for every source, whether it may be used for acquisition, normalization, customer delivery, aggregation, model training, internal research, redistribution, proprietary strategy, trading | `RightsSchedule.permittedUses` (a use not listed is prohibited), the rights matrix on every release page, `customer_delivery` enforced by the feed's rights guard | Fixture schedule; delivery enforced, the rest recorded as policy |
 | Tenant isolation, information barrier, release timing, non-use | `Corpus.governance`, shown on every release page and in the release manifest | Recorded as policy only |
 | Payload OS is the shared production and assurance layer; Caravan, Tradewind and Landshark are the domain products | `src/domain/domains.ts`, the domain-product control in the shell, `/product` | Caravan as fixture; the others as disabled slots |
+| A shared stable of agents and apparatuses, declaring purpose, authority, domains, contracts and capabilities | `src/coordination/types.ts`, `seed.ts`, `ledger.ts`; `/agents` | Seed definitions; local registrations in opt-in sandbox; registration does not launch a worker |
+| Synastry across apparatuses and agents through declared input/output compatibility | `connectionsFor`; the stable's directed connections and explicit missing inputs | Local prototype calculation over definitions in a common scope and domain; no execution or deployment attestation |
+| A shared message board for requests, handoffs, blockers, results and acknowledgements | `/board`, `GET` / `POST /api/coordination`; `src/coordination/store.ts` | Read-only seed board by default; append-only local event history with serialized writes in opt-in sandbox; simulated authors, no production authentication |
 | Data systems and intelligence products; provenance-preserving compute; separately governed principal capital | `src/domain/product.ts`, `/product` | Stated with presence flags; managed customer-workload execution and principal capital absent |
 | Live source connectors; production storage and identity; deployed customer delivery; managed execution of customer workloads; independent verification; a completed pilot | — | Absent, and each stated as absent on `/product` |

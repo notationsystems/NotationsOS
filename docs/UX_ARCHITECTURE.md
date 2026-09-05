@@ -6,7 +6,9 @@ What exists in this repository, not what might.
 
 The corpus and its API are the product (`docs/ECONOMIC_ARCHITECTURE.md`). This workbench is an optional application layer over the corpus for customers who want a prescribed control: it takes a claim, a declared use, a tolerance, two clocks and evidence, and renders the ruling the substrate returns. Payload OS is the shared production and assurance layer, not a fourth public API; Caravan, Tradewind and Landshark are the bounded domain products, and the shell always shows which one is active. Nothing here is required for a customer to apply their own inference to the data stream.
 
-This document describes the object model the screens are built around, the navigation, the two projections of a case, the component boundaries, and where authority stops.
+The shared agent and apparatus stable and message board assemble the coordination layer of Payload OS. Definitions describe the participants' purpose, authority, domains, input and output contracts, and capabilities. Messages carry requests, handoffs, blockers, results and acknowledgements in a declared scope. Customers can continue to consume the corpus feed directly.
+
+This document describes the object model the screens are built around, the navigation, the two projections of a case, the shared coordination surfaces, the component boundaries, and where authority stops.
 
 ## Corpus object model (the product)
 
@@ -51,7 +53,7 @@ Every status, check result and assurance value is read from the bundle. The mani
 
 ## Navigation
 
-Top bar, two groups: **Corpus** (`Releases`, `Stream`, `Retractions`, `API`) then **Workbench** (`Cases`, `Rulings`, `Evidence`, `Replay`, `Profiles`), and a small domain-product control (`Caravan` active; `Tradewind` and `Landshark` are disabled module slots declared in `src/domain/domains.ts`). `/` opens the releases. The shell is 48 px tall and gets out of the way.
+Top bar, three groups: **Corpus** (`Releases`, `Stream`, `Retractions`, `API`), **Workbench** (`Cases`, `Rulings`, `Evidence`, `Replay`, `Profiles`), and **Coordination** (`Stable`, `Board`), with a small domain-product control (`Caravan` active; `Tradewind` and `Landshark` are disabled module slots declared in `src/domain/domains.ts`). `/` opens the releases. Coordination is shared by Payload OS: its participants declare their own domains and the screens show the coordination scope. The shell is 48 px tall and gets out of the way.
 
 | Route | Screen | Component |
 |---|---|---|
@@ -61,6 +63,9 @@ Top bar, two groups: **Corpus** (`Releases`, `Stream`, `Retractions`, `API`) the
 | `/stream` | as-of query: release, subject, predicate, world time, knowledge time → the answering record with bounds, clocks, provenance, class and rights, the identity link used, or a typed refusal with remedy; the feed URL that reproduces it | `components/corpus/StreamExplorer.tsx` |
 | `/retractions` | the push-retraction feed with affected and replacement records and affected rulings | `app/retractions/page.tsx` |
 | `/api` | the feed endpoints with live examples, how to automate against the feed, both adapter contracts | `app/api/page.tsx` |
+| `/agents` | agent and apparatus definitions, search and kind filters, declared contracts, synastry with matching and missing inputs, local registration when enabled | `components/coordination/CoordinationWorkspace.tsx` |
+| `/board` | shared messages with topic and kind filters, directed and broadcast messages, replies, release context, acknowledgements; local posting when enabled | `components/coordination/CoordinationWorkspace.tsx` |
+| `/api/coordination` | JSON snapshot; local `register`, `post`, `acknowledge` commands | `app/api/coordination/route.ts` |
 | `/cases` | case queue: textual operational summary, filters (status, sponsor/counterparty, profile, visibility, reviewer, valid-time and knowledge-time ranges), search by case / manifest / lot / shipment / claim identifiers | `components/queue/CaseQueue.tsx` |
 | `/cases/new` | staged intake (Subject, Intended use, Claims, Evidence, Time basis, Admission profile, Review and submit); draft is saved in the page and says it is not evaluated; submission is an intent | `components/intake/NewCaseIntake.tsx` |
 | `/cases/:caseId` | the workspace: left rail (structure, claims, evidence, revisions, history), centre (selected object), right decision rail | `components/case/CaseWorkspace.tsx` |
@@ -85,6 +90,8 @@ Case components in `src/components/case/`: `CaseIdentityHeader`, `DecisionRail`,
 
 Ruling components in `src/components/ruling/`: `RulingViewer`, `SupersessionBanner`, `MachineReadableExport`, `ApiExampleDrawer`. Replay: `components/replay/ReplayView.tsx`.
 
+Coordination components in `src/components/coordination/` render the stable and board from one `CoordinationSnapshot`. `src/coordination/types.ts` defines `payload.coordination.v1`; `ledger.ts` validates commands, restricts references to the current scope, and computes directed contract connections. `store.ts` supplies seed state or replays local events. The browser refreshes from the server and retains unsaved input when a request fails. Registration and message forms appear only when the snapshot permits writes. The stable's `MATCH` / `PARTIAL` labels describe declared input/output compatibility within a common domain and scope; missing inputs remain visible. They describe neither running workers nor executable approval. Full protocol and Bench references: [Agent coordination](AGENT_COORDINATION.md).
+
 Domain rules live in fixture and profile data (`src/fixtures/caravan/profile.ts`), not in components. No component knows what a lot, a certificate or a moisture value means.
 
 Every ruling names the corpus release and build it was evaluated against (`Ruling.corpus`), the manifest's `corpusBuild` is that build, the workspace and the ruling viewer show it, and evidence detail links each artifact to the corpus records extracted from it.
@@ -93,6 +100,8 @@ Every ruling names the corpus release and build it was evaluated against (`Rulin
 
 - Screens read through `CorpusSource` (`src/adapter/corpusSource.ts`) and `CaseSource` (`src/adapter/caseSource.ts`). The only implementations read committed fixtures. Their `origin` is rendered as a banner on every fixture-backed screen, and the `/api/v1` responses carry `fixture_only: true` in the body and `X-Payload-Fixture-Only: true` in the headers.
 - The browser performs presentation validation only: visibility projection, knowledge-time projection, highlight linking from a failed check to its claims, evidence, broken lineage edge and remediation, queue summaries. There is no admission logic, no second gate battery, and no inference of a status from display fields.
-- Every user action (request evidence, replace evidence, correct claim, change use, change tolerance, appeal, resubmit, reviewer intervention, submit) produces an `ActionIntent` shown in an "Action intents (not sent)" panel. Nothing is sent; nothing is re-evaluated. There is no bare "Override": reviewer intervention requires an authority, a reason and a basis before it can be recorded, and it is recorded beside the automatic results, not over them.
+- Every workbench action (request evidence, replace evidence, correct claim, change use, change tolerance, appeal, resubmit, reviewer intervention, submit) produces an `ActionIntent` shown in an "Action intents (not sent)" panel. Nothing is sent; nothing is re-evaluated. There is no bare "Override": reviewer intervention requires an authority, a reason and a basis before it can be recorded, and it is recorded beside the automatic results, not over them.
+- Coordination opens in `FIXTURE` mode with no writes. `npm run dev:coordination` enables the separate `LOCAL_SANDBOX` service on loopback, where registrations, posts and acknowledgements are sent to `/api/coordination` and recorded locally. Every snapshot still carries `fixture_only: true`, and also names its mode, persistence, scope and write capability. Participant selection is simulated identity. Scope checks do not constitute production authentication or tenant isolation.
+- A board post, acknowledgement or matching contract cannot admit evidence, resolve identity, certify a release, launch a worker, run a model or execute a customer workload. Corpus data remains committed fixtures; the local operational event history lives separately in `.payload/coordination/events.json`.
 - Digests are computed only in Node (`scripts/stamp-digests.entry.ts`) and committed; the browser never hashes anything.
 - The brief's assurance classes are a presentation vocabulary. The mapping recorded in this repository, applied by the fixture author and to be applied by any live adapter, is: `UNVERIFIED_EVALUATION` when the manifest verification status is `unverified` and no review or external anchor exists; `HUMAN_REVIEWED` when a named reviewer approved with a recorded basis; `VERIFIED_ATTESTATION` when a verifier checked the manifest (`verified`) with a real proof; `EXTERNALLY_WITNESSED` when the anchor kind is `counterparty_cosigned`, `timestamp_authority` or `public_chain`. The substrate values are carried beside the class so the interface never shows the class without its basis.
