@@ -52,6 +52,8 @@ npm run evidence -- inspect-candidate-build --build <build-id>
 
 The builder reopens every selected normalization and its source bytes, rejects missing/quarantined members and duplicate source-scoped identities, and persists references and metadata without copying candidate data fields. It does not scan for members or choose a current version. Reordered identical requests preserve the original build and time; inspection recomputes the original decisions without granting current access. Builds remain `UNADMITTED` and do not feed the public API. See [Local candidate builds](docs/LOCAL_CANDIDATE_BUILDS.md) for the request shape, cutoff, source-class and DERIVE rules, storage limits and recovery behavior.
 
+`npm run evidence -- compare-candidate-builds --request <manifest.json>` compares two inspected local builds by exact source-id/source-record-id tuples and normalization/candidate references. It requires full build digests, identical definition/contract/purpose and nondecreasing build/cutoff times. The deterministic report is not saved and includes no invented comparison time; it distinguishes reference changes without inferring field changes, corrections or retractions. Source identifiers are included, but raw bytes, candidate fields and policy bodies are not. See [Local candidate comparison](docs/LOCAL_CANDIDATE_COMPARISON.md) for the request template and limits. This creates no new build, current-use grant, board post or released change feed.
+
 With the local coordination server running, `npm run agent:candidate-build-review -- --once` registers a separate build-inspection worker. Send it a directed request with topic `candidate-build-review`, `context: null` and exact JSON body `{ "buildId": "…", "expectedDigest": "sha256:…" }`, using the full `build.digest` returned by inspection, not `recordsRoot`. Run it again to obtain a redacted build-level result and acknowledgement. Its evidence root is selected only by the operator's `--root` flag, not the message. Saved results are validated and read back before acknowledgement; a failed receipt reuses the historical observation, while a new request obtains a new inspection. See [Candidate-build review worker](docs/CANDIDATE_BUILD_REVIEW_WORKER.md) for the complete client example, loopback-only configuration and simulated-identity limits. This grants no current retrieval rights or admission authority.
 
 ## Check
@@ -80,6 +82,7 @@ Playwright uses the environment's Chromium when `PW_CHROMIUM_PATH` is set (for e
 - `docs/LOCAL_EVIDENCE_INTAKE.md` — local source-policy evaluation, content-addressed evidence, acquisition receipts, inspection and Bench-derived boundaries.
 - `docs/LOCAL_NORMALIZATION.md` — fixed Caravan Carrier parsing, separate derivation permission, source-scoped candidates, quarantine and read-only recomputation.
 - `docs/LOCAL_CANDIDATE_BUILDS.md` — explicit time-bounded candidate membership, build-time derivation permission, reference roots and historical inspection; no canonical admission.
+- `docs/LOCAL_CANDIDATE_COMPARISON.md` — read-only exact local build comparison, source-scoped reference changes and deterministic ephemeral reports; no semantic diff or released change feed.
 - `docs/CANDIDATE_BUILD_REVIEW_WORKER.md` — manually launched board-to-local-build inspection, bounded results, result-before-receipt recovery and authority limits.
 - `docs/INTERACTION_SPEC.md` — status transitions, refusal interaction, replay, supersession, visibility.
 - `docs/DEMO_CASE.md` — the fixtures, why they are synthetic, what they demonstrate, what is unvalidated.
@@ -90,7 +93,7 @@ Playwright uses the environment's Chromium when `PW_CHROMIUM_PATH` is set (for e
 src/domain      corpus types and as-of selectors (corpus.ts); the operating model as data (product.ts); workbench view model and selectors; domains
 src/adapter     CorpusSource and CaseSource seams; feed payload builders; fixture implementations only
 src/projection  closed ProjectionSpec, full fixture-source snapshot descriptor and replaceable records/graph compiler; engine routing only, no renderer dependencies
-src/data-os     Bench-derived source policy and capture contracts; local evidence store, fixed Carrier parser, candidate/quarantine and explicit candidate-build CLI; no canonical corpus admission
+src/data-os     Bench-derived source policy/capture, local evidence store, fixed Carrier parser, candidate builds and read-only reference comparison; no canonical corpus admission
 src/coordination agent/apparatus definitions, scope and message rules, contract matching, participant inbox, deterministic contract/build-inspection workers and opt-in local event log
 clients         dependency-free JavaScript and Python coordination clients
 scripts         local server launcher, contract-review and candidate-build-review workers; evidence intake/normalization/candidate-build entry points
