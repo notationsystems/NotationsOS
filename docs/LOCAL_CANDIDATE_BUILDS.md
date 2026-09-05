@@ -1,5 +1,7 @@
 # Local Caravan candidate builds
 
+Status update (2026-09-05): references below to six absences or no live connectors describe this document's earlier milestone. One bounded, operator-only FMCSA Company Census connector is now implemented for internal qualification; see [Local source connectors](LOCAL_SOURCE_CONNECTORS.md). It establishes neither recurring ingestion nor customer live feeds. All other authority, storage, identity, execution and verification boundaries below remain unchanged.
+
 Payload OS can now assemble an explicit set of locally normalized Caravan Carrier candidates into a deterministic, time-bounded candidate build. This is a shared internal production rail for Caravan. It is not canonical corpus admission, a released information product or a customer API.
 
 ```text

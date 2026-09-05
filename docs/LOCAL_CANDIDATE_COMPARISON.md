@@ -1,5 +1,7 @@
 # Local candidate-build comparison
 
+Status update (2026-09-05): references below to six absences or no live connectors describe this document's earlier milestone. One bounded, operator-only FMCSA Company Census connector is now implemented for internal qualification; see [Local source connectors](LOCAL_SOURCE_CONNECTORS.md). It establishes neither recurring ingestion nor customer live feeds. All other authority, storage, identity, execution and verification boundaries below remain unchanged.
+
 Payload OS can compare two exact, existing local Caravan Carrier candidate builds by source-scoped membership and immutable references. The comparison reopens both builds and their evidence chains before reporting. It is a read-only diagnostic in the local production rail, not a projection, canonical-state transition, correction decision or released change feed.
 
 ```text

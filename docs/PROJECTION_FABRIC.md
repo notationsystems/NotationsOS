@@ -1,5 +1,7 @@
 # Projection Fabric
 
+Status update (2026-09-05): references below to six absences or no live connectors describe this document's earlier milestone. One bounded, operator-only FMCSA Company Census connector is now implemented for internal qualification; see [Local source connectors](LOCAL_SOURCE_CONNECTORS.md). It establishes neither recurring ingestion nor customer live feeds. All other authority, storage, identity, execution and verification boundaries below remain unchanged.
+
 The Projection Fabric gives different instruments a common, explicit interpretation of the same information substrate. It changes representation, not referent identity or source authority. Its place in the five-fabric architecture and the seven doctrine invariants is recorded in [Synthesized architecture](SYNTHESIZED_ARCHITECTURE.md).
 
 This increment implements a closed `ProjectionSpec`, a deterministic fixture projection compiler and a read-only JSON preview endpoint. It does not install or instantiate kepler.gl, CesiumJS or Three.js, add a renderer UI, construct geometry or provide a production corpus service.

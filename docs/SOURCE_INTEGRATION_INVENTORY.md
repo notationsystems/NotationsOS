@@ -1,5 +1,7 @@
 # Source integration inventory
 
+**Subsequent implementation:** this document and the v1 inventory endpoint preserve the original prototype inventory baseline. The separately named `fmcsa-company-census` connector has since been implemented and live-qualified; it does not promote `fmcsa-qcmobile`. Current queue and scope are in [Source connection program](SOURCE_CONNECTION_PROGRAM.md); actual local capture standing is available through the [source connector CLI](LOCAL_SOURCE_CONNECTORS.md). Baseline `NOT_INTEGRATED` labels below are not a runtime health report for later variants.
+
 Payload OS now has a named inventory of the sources already recorded in the Payload Terminal prototype. It is the starting list for integration, not a list of sources currently being scraped or a new choice of market, geography or customer. No source was selected or contacted in this increment.
 
 ## Exact origin and observed standing

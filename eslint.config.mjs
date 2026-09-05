@@ -5,7 +5,8 @@ import nextTs from 'eslint-config-next/typescript';
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'playwright-report/**', 'test-results/**', '.stamp/**', 'src/vendor/**']),
+  // Operator evidence and ignored dependency checkouts are not this repository's source.
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'playwright-report/**', 'test-results/**', '.stamp/**', '.payload/**', 'src/vendor/**']),
 ]);
 
 export default eslintConfig;

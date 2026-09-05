@@ -1,5 +1,7 @@
 # Local GAT IFC evidence inspector
 
+Status update (2026-09-05): references below to six absences or no live connectors describe this document's earlier milestone. One bounded, operator-only FMCSA Company Census connector is now implemented for internal qualification; see [Local source connectors](LOCAL_SOURCE_CONNECTORS.md). It establishes neither recurring ingestion nor customer live feeds. All other authority, storage, identity, execution and verification boundaries below remain unchanged.
+
 Implemented: a preserved IFC artifact can be audited through the exact pinned GAT engine and inspected through a local API. Source bytes, the original report, a separate safe projection, and an immutable execution receipt retain distinct identities. This is a specialist instrument within Payload OS, not a new corpus authority or a customer execution service.
 
 ```text

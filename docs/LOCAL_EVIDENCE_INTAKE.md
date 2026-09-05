@@ -1,5 +1,7 @@
 # Local evidence intake
 
+Status update (2026-09-05): references below to six absences or no live connectors describe this document's earlier milestone. One bounded, operator-only FMCSA Company Census connector is now implemented for internal qualification; see [Local source connectors](LOCAL_SOURCE_CONNECTORS.md). It establishes neither recurring ingestion nor customer live feeds. All other authority, storage, identity, execution and verification boundaries below remain unchanged.
+
 Payload OS has a local evidence rail for capturing a file under a declared source-use policy and reopening the resulting acquisition to recompute its byte and receipt integrity. This is an internal means of information production. The company mandate and three domain products remain defined in [Economic architecture](ECONOMIC_ARCHITECTURE.md).
 
 This increment implements only this path:
