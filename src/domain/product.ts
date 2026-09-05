@@ -42,6 +42,7 @@ export const ENGINES: readonly Engine[] = [
       { item: 'Push retractions', presence: 'FIXTURE', where: '/retractions' },
       { item: 'Feed API', presence: 'FIXTURE', where: '/api' },
       { item: 'Decision workbench (Caravan ruling application)', presence: 'FIXTURE', where: '/cases' },
+      { item: 'Small Rust notation state kernel: local authored objects, undo/redo and frontend save/reload; not canonical corpus state', presence: 'PRESENT', where: '/notations' },
       { item: 'Live source connectors', presence: 'ABSENT' },
       { item: 'Production storage and identity', presence: 'ABSENT' },
       { item: 'Deployed customer delivery', presence: 'ABSENT' },

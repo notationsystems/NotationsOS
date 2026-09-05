@@ -21,6 +21,7 @@ export const NAV_GROUPS: ReadonlyArray<{ group: string; items: ReadonlyArray<{ h
   {
     group: 'Workbench',
     items: [
+      { href: '/notations', label: 'Notations', match: /^\/notations/ },
       { href: '/cases', label: 'Cases', match: /^\/cases/ },
       { href: '/rulings', label: 'Rulings', match: /^\/rulings/ },
       { href: '/evidence', label: 'Evidence', match: /^\/evidence/ },
