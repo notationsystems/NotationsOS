@@ -5,7 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { localRecordDigest } from '../data-os/local-record';
 import { StateKernelError } from './errors';
 import { createNotationRepository, disabledKernelSnapshot, parseStateKernelRequest, stateKernelEnabled } from './store';
-import { emptyNotationState, type KernelCommand, type StateKernelRequest } from './types';
+import { evaluateKernel } from './runtime';
+import { emptyNotationState, notationCapacity, type KernelCommand, type StateKernelRequest } from './types';
 
 let temporary: string;
 beforeEach(() => { temporary = mkdtempSync(join(tmpdir(), 'notations-state-repository-')); });
@@ -36,11 +37,12 @@ describe('local notation repository using the real Rust kernel', () => {
     const store = createNotationRepository(root);
     const empty = await store.read();
     expect(empty).toEqual({ schema: 'payload.local-notation-workspace.v1', mode: 'LOCAL_DEVELOPMENT', enabled: true,
-      savedVersion: 0, savedDigest: null, state: emptyNotationState(), persistence: 'LOCAL_VERSIONED_FILES', canonicalAdmission: false });
+      savedVersion: 0, savedDigest: null, state: emptyNotationState(), capacity: notationCapacity(0, 0), persistence: 'LOCAL_VERSIONED_FILES', canonicalAdmission: false });
     const input = request(0, [create(), update(), undo()]);
     const inputBefore = structuredClone(input);
     const preview = await store.preview(input);
     expect(preview).toMatchObject({ savedVersion: 0, savedDigest: null,
+      capacity: { usedCommands: 3, remainingCommands: 253, usedSavedVersions: 0, remainingSavedVersions: 64 },
       state: { revision: 3, notations: [{ id: 'notation-a', title: 'Original title', body: 'Original body' }],
         relations: [], canUndo: true, canRedo: true } });
     expect(input).toEqual(inputBefore);
@@ -104,14 +106,51 @@ describe('local notation repository using the real Rust kernel', () => {
     ))];
     const first = await createNotationRepository(root).save(request(0, commands));
     expect(first.state.revision).toBe(255);
-    const full = await createNotationRepository(root).save(request(1, [undo('last-undo')]));
+    expect(first.capacity).toEqual(notationCapacity(255, 1));
+    const finalBatch = request(1, [undo('last-undo')]);
+    const lastPreview = await createNotationRepository(root).preview(finalBatch);
+    expect(lastPreview.capacity).toEqual(notationCapacity(256, 1));
+    // A preview that uses the final command must still be saveable.
+    const full = await createNotationRepository(root).save(finalBatch);
     expect(full.state).toMatchObject({ revision: 256, notations: [], canUndo: false, canRedo: true });
+    expect(full.capacity).toEqual(notationCapacity(256, 2));
     const original = files(root);
     await expect(createNotationRepository(root).preview(request(2, [redo('too-many')]))).rejects.toMatchObject({ code: 'LIMIT_EXCEEDED' });
     await expect(createNotationRepository(root).save(request(2, [redo('too-many')]))).rejects.toMatchObject({ code: 'LIMIT_EXCEEDED' });
     expect(files(root)).toEqual(original);
     expect(await createNotationRepository(root).read()).toEqual(full);
+    expect(await createNotationRepository(root).save(finalBatch)).toEqual(full);
   });
+
+  it('makes the last version saveable, then refuses previews and saves while preserving reads and exact retries', async () => {
+    // Build a valid near-capacity fixture with real Rust states. Setup is not a save benchmark.
+    const root = temporary;
+    const commands: KernelCommand[] = [];
+    let previousDigest: string | null = null;
+    for (let version = 1; version <= 63; version += 1) {
+      const command: KernelCommand = version === 1 ? create() : {
+        commandId: `update-${version}`, kind: 'UPDATE_NOTATION', notationId: 'notation-a', title: `Version ${version}`, body: 'Retained history',
+      };
+      commands.push(command);
+      const payload = { schema: 'payload.notation-saved-version.v1', version, previousDigest,
+        request: request(version - 1, [command]), state: await evaluateKernel(commands) };
+      const digest = localRecordDigest(payload, 8 * 1024 * 1024);
+      writeFileSync(join(root, `${String(version).padStart(6, '0')}.json`), JSON.stringify({ ...payload, digest }), { flag: 'wx' });
+      previousDigest = digest;
+    }
+    const store = createNotationRepository(root);
+    const finalBatch = request(63, [update('final-update')]);
+    expect((await store.preview(finalBatch)).capacity).toEqual(notationCapacity(64, 63));
+    const full = await store.save(finalBatch);
+    expect(full.capacity).toEqual(notationCapacity(64, 64));
+    const original = files(root);
+    await expect(store.preview(request(64, [undo()]))).rejects.toMatchObject({ code: 'CAPACITY', status: 409 });
+    await expect(store.save(request(64, [undo()]))).rejects.toMatchObject({ code: 'CAPACITY', status: 409 });
+    expect(await store.save(finalBatch)).toEqual(full);
+    expect(await store.read()).toEqual(full);
+    expect(files(root)).toEqual(original);
+    expect(existsSync(join(root, 'writer.lock'))).toBe(false);
+  }, 60_000);
 
   it('rejects stale versions without changing saved history or retaining a writer lock', async () => {
     const root = join(temporary, 'workspace');

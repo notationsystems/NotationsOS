@@ -49,6 +49,46 @@ The operator selects one store with `--root <directory>`; the default is `.paylo
 
 The CLI returns `comparison`, `integrity: "RECOMPUTED_LOCAL"`, `rawBytesIncluded: false`, `candidateFieldsIncluded: false` and `comparisonPersisted: false`. Success exits `0`, including comparisons that contain changes. Errors are printed as JSON on stderr and exit `1`; no partial report or quarantine result is returned.
 
+## Local frontend comparison
+
+The same operation is available through `POST /api/production/compare` after the operator starts `npm run dev:production`. The route requires explicit `PAYLOAD_PRODUCTION_LOCAL=1` and a same-origin literal-loopback request, including for read-only comparisons. It is disabled for public/customer operation. The backend's `PAYLOAD_PRODUCTION_DIR` selects the one evidence store; otherwise it uses `.payload/evidence`.
+
+Send the exact existing request above with `Content-Type: application/json`. There is no `requestId`, query option, caller timestamp, replacement build, path, or completion flag. For builds returned by the production workflow, map each output's `id` to `buildId` and its full `digest` to `expectedDigest`. Existing CLI-created builds in the same store are also inspectable; comparison does not require a production registration or manufacture one.
+
+```javascript
+async function compareInspectedBuilds(before, after) {
+  const reference = ({ id, digest }) => ({ buildId: id, expectedDigest: digest });
+  const response = await fetch('/api/production/compare', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      schema: 'payload.local-candidate-build-comparison-request.v1',
+      before: reference(before), after: reference(after),
+    }),
+  });
+  const result = await response.json();
+  if (!response.ok) throw Object.assign(new Error(result.error.message), { result });
+  return result;
+}
+```
+
+HTTP 200 returns `payload.production-candidate-comparison.v1`. Its `comparison` is **exactly** the unchanged `payload.local-candidate-build-comparison.v1` report returned by the CLI, including the deterministic digest and every nonclaim. The wrapper carries `mode: LOCAL_DEVELOPMENT`, `inspection: HISTORICAL`, `integrity: RECOMPUTED_LOCAL`, `sourceIdentifiersIncluded: true`, and false values for `rawBytesIncluded`, `candidateFieldsIncluded`, `comparisonPersisted`, `canonicalAdmission`, and `currentRightsGrant`. The TypeScript response type is `ProductionCandidateComparison` in `src/production/comparison.ts` (use a type-only import in frontend code).
+
+The response is `no-store`. Comparisons start no acquisition, normalization, scientific analysis, production run, reservation, board event, or saved report. Repeating a request reopens the same evidence and returns the same result only while those inputs remain intact. A timeout is safe to retry as a read; this does not authorize retrying an interrupted production command. The input stream is bounded to 64 KiB and ten seconds; the existing fixed worker bounds execution to fifteen seconds, two concurrent workers per server process, and 2 MiB of process output. The underlying report retains its 512 KiB bound and maximum 128 entries.
+
+Errors use `payload.production-error.v1` with fixed explanations, never underlying exception text or host diagnostics:
+
+| HTTP | Code |
+|---|---|
+| 400 | `INVALID_COMPARISON_REQUEST` for an invalid nested comparison contract; `INVALID_REQUEST` for malformed JSON/UTF-8 or query options |
+| 403 | `LOCAL_MODE_DISABLED` or `LOCAL_ONLY` |
+| 404 | `BUILD_NOT_FOUND` |
+| 408 / 413 / 415 | `BODY_TIMEOUT` / `BODY_TOO_LARGE` / `INVALID_CONTENT_TYPE` |
+| 409 | `BUILD_DIGEST_MISMATCH`, `INCOMPATIBLE_BUILDS`, or `REVERSED_BUILD_ORDER` |
+| 503 | `BUILD_INSPECTION_FAILED`, or an existing worker availability/concurrency/output failure |
+| 504 | `EXECUTION_TIMEOUT` |
+
+No partial comparison is returned on failure. Source identifiers are intentionally included, as in the CLI report; this is not the redacted board-review summary, a raw-data download, a new permission grant, or a release-bound customer change feed. The HTTP addition does not expand the comparator into field-level or semantic analysis.
+
 ## Compatibility before comparison
 
 The request is a closed `payload.local-candidate-build-comparison-request.v1` object containing only `schema`, `before` and `after`; each reference contains only `buildId` and `expectedDigest`. Every field is required. Request JSON is bounded at 64 KiB and must be valid UTF-8; malformed bytes are rejected rather than replaced during decoding.
@@ -113,3 +153,9 @@ The following sources in the sibling `Notations Kernel` were read without modifi
 | `src/caravan-change-feed-workflow.js` — `createCaravanChangeFeed`, `evidenceChecks` | A Caravan change feed requires one exact definition, a verified comparison and a verified release containing the definition, later build and diff. Its reference changes are release-bound without claiming source truth or deployed delivery. This local comparison implements none of those release/feed gates and is not a customer change feed. |
 
 The comparison fits the [five-fabric architecture](SYNTHESIZED_ARCHITECTURE.md) as a bounded inspection of local corpus candidates, not a canonical state transition or Projection Fabric input. The six stated absences remain: live source connectors, production storage and identity, deployed customer delivery, managed execution of customer workloads, independent verification, and a completed pilot.
+
+For the local HTTP increment, the committed Bench `src/corpus-build-diff-workflow.js` and `test/corpus-build-diff-workflow.test.js` were reread at `c6d693613478f32e0b0d7dafe918d8e51274ffcc`: exact immutable references, explicit same-identity digest differences, and semantic nonclaims remain the governing lessons. The native `src/caravan-change-feed-workflow.js` is untracked in that sibling and is not cited as committed evidence for this increment. Its working state remained 53 modified tracked files and 74 untracked files on `codex/payloados-0.7-baseline`; nothing was imported, edited, installed or executed there.
+
+Verification covers route gating and closed contracts, fresh worker-process parity with the direct comparator (including legacy CLI builds), every comparison error, unchanged temporary file hashes, and an actual built-server Carrier comparison. Run `npm run check` and `npm run e2e:production`; set `GAT_INTEGRATION=1` only with the pinned local runtime to include the unchanged IFC acceptance workflow. Operator evidence, board history, and the BIM source/runtime pin are not test fixtures and are preserved.
+
+Executed for this increment: `npm run check` passed TypeScript, ESLint, 29 Rust tests, and 1,257 JavaScript/TypeScript tests across 55 files (six optional GAT tests skipped). The new route and worker-process files account for 87 tests. With `GAT_INTEGRATION=1`, `npm run e2e:production` passed the production build, build-trace guard, and all three HTTP workflows: Carrier production, pinned supported/blocked IFC audits, and historical Carrier build comparison. Existing operator evidence and coordination file hashes were unchanged; the pinned GAT execution checkout remained clean at `80272f94107cce4f70c81e57915800b04c5944a6`. No dependency versions changed.

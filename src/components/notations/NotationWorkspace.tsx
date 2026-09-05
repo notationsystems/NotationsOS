@@ -1,12 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
-import type { KernelCommand, NotationRelation, StateKernelFailure, StateKernelRequest, StateKernelSnapshot } from '@/state-kernel/types';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { MAX_NOTATION_COMMANDS, MAX_NOTATION_SAVED_VERSIONS, notationCapacity, type KernelCommand, type NotationRelation, type StateKernelFailure, type StateKernelRequest, type StateKernelSnapshot } from '@/state-kernel/types';
 import { Inspector } from '@/components/primitives/Inspector';
 import { CapacityMeter } from './CapacityMeter';
 import { ConflictPanel } from './ConflictPanel';
-import { LeaveDialog } from './LeaveDialog';
 import { capacityOf } from './capacity';
 import { clearDrafts, describeCommand, draftsHaveContent, emptyText, readDrafts, writeDrafts, type BrowserDrafts, type DraftText, type Edit } from './drafts';
 
@@ -16,9 +14,10 @@ const faint = { color: 'var(--text-muted)' };
 
 type InFlight = 'load' | 'preview' | 'save' | 'reload' | null;
 
-async function readSnapshot(path: string, body?: StateKernelRequest, signal?: AbortSignal): Promise<StateKernelSnapshot> {
+/** The snapshot is trusted only when it is exactly the contract, capacity included: the kernel's numbers are never guessed at. */
+async function readSnapshot(path: string, body?: StateKernelRequest): Promise<StateKernelSnapshot> {
   const response = await fetch(path, {
-    method: body ? 'POST' : 'GET', cache: 'no-store', signal,
+    method: body ? 'POST' : 'GET', cache: 'no-store',
     ...(body ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}),
   });
   const value = await response.json() as StateKernelSnapshot | StateKernelFailure;
@@ -26,9 +25,20 @@ async function readSnapshot(path: string, body?: StateKernelRequest, signal?: Ab
     const failure = 'error' in value ? value.error : undefined;
     throw new Error(failure ? `${failure.code}: ${failure.message}` : `Request failed (${response.status}).`);
   }
-  if (!('schema' in value) || value.schema !== 'payload.local-notation-workspace.v1'
-    || value.state?.schema !== 'notations.notation-state.v1') throw new Error('The state service returned an invalid workspace snapshot.');
-  return value;
+  const s = value as Partial<StateKernelSnapshot>;
+  if (!s || typeof s !== 'object' || s.schema !== 'payload.local-notation-workspace.v1' || s.state?.schema !== 'notations.notation-state.v1'
+    || !Number.isSafeInteger(s.savedVersion) || (s.savedVersion as number) < 0 || (s.savedVersion as number) > MAX_NOTATION_SAVED_VERSIONS
+    || !Number.isSafeInteger(s.state.revision) || s.state.revision < 0 || s.state.revision > MAX_NOTATION_COMMANDS
+    || !Array.isArray(s.state.notations) || !Array.isArray(s.state.relations)
+    || typeof s.enabled !== 'boolean' || typeof s.state.canUndo !== 'boolean' || typeof s.state.canRedo !== 'boolean') {
+    throw new Error('The state service returned an invalid workspace snapshot.');
+  }
+  const expected = notationCapacity(s.state.revision, s.savedVersion as number);
+  const reported = s.capacity as Record<string, unknown> | undefined;
+  if (!reported || (Object.keys(expected) as Array<keyof typeof expected>).some((key) => reported[key] !== expected[key])) {
+    throw new Error('The state service returned invalid or inconsistent capacity metadata.');
+  }
+  return s as StateKernelSnapshot;
 }
 
 function textFieldCount(text: DraftText, snapshot: StateKernelSnapshot | null): number {
@@ -66,24 +76,23 @@ function originOf(kind: 'notation' | 'relation', id: string, pending: KernelComm
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 /**
- * A browser draft of Rust-validated commands, never a second state authority.
- * Three things are kept distinct and shown distinctly: unapplied form text,
- * kernel-validated commands that are not saved, and the saved local version.
- * Drafts survive internal navigation, browser back and reload in this tab;
- * a failed request keeps them; a version conflict keeps them inspectable and
- * copyable until the person reloads deliberately. Selection connects the
- * register to a contextual inspector: the selected notation's editor, its
- * relations, the pending commands that name it, and its evidence line.
- * Server-rendered panels that belong beneath the workspace (the evidence
- * reference fixture) come in as children so the inspector's column spans
- * them too.
+ * The draft controller, owned by the root client provider so that client
+ * navigation away from /notations and back neither discards the draft,
+ * cancels a request in flight, nor rebases the draft onto a newer saved
+ * version. It is a browser draft of Rust-validated commands, never a second
+ * state authority. Three things are kept distinct and shown distinctly:
+ * unapplied form text, kernel-validated commands that are not saved, and
+ * the saved local version. A copy of the draft, pinned to the saved version
+ * and digest it was made against, lives in this tab's sessionStorage so a
+ * browser reload restores it after the kernel re-validates the commands;
+ * a draft from another saved version is set aside as stale, never applied.
  */
-export function NotationWorkspace({ children }: { children?: ReactNode }) {
-  const router = useRouter();
+function useNotationController() {
   const [snapshot, setSnapshot] = useState<StateKernelSnapshot | null>(null);
   const [pending, setPending] = useState<KernelCommand[]>([]);
-  const [inFlight, setInFlight] = useState<InFlight>('load');
-  const inFlightRef = useRef(true);
+  const [inFlight, setInFlight] = useState<InFlight>(null);
+  const inFlightRef = useRef(false);
+  const initiallyLoaded = useRef(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [selectedId, setSelectedId] = useState('');
@@ -91,7 +100,6 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
   const [text, setText] = useState<DraftText>(emptyText);
   const [confirmReload, setConfirmReload] = useState(false);
   const [conflict, setConflict] = useState<{ reason: 'VERSION_CONFLICT' | 'STALE_DRAFTS'; drafts: BrowserDrafts } | null>(null);
-  const [leave, setLeave] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   const busy = inFlight !== null;
@@ -105,12 +113,14 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
   const typedDrafts = textCount > 0;
   const unsaved = pending.length > 0 || typedDrafts;
   const capacity = useMemo(() => (snapshot ? capacityOf(snapshot) : null), [snapshot]);
-  const dialogOpen = confirmReload || Boolean(leave) || Boolean(conflict);
-  const locked = busy || !snapshot?.enabled || confirmReload || Boolean(leave);
+  const dialogOpen = confirmReload || Boolean(conflict);
+  const locked = busy || !snapshot?.enabled || confirmReload;
   const commandsExhausted = Boolean(capacity?.commandsExhausted);
   const versionsExhausted = Boolean(capacity?.versionsExhausted);
-  const canUndoNow = !locked && !typedDrafts && !commandsExhausted && Boolean(snapshot?.state.canUndo);
-  const canRedoNow = !locked && !typedDrafts && !commandsExhausted && Boolean(snapshot?.state.canRedo);
+  /** At either ceiling the kernel accepts no further preview; the forms say so by being disabled. */
+  const previewLocked = locked || commandsExhausted || versionsExhausted;
+  const canUndoNow = !previewLocked && !typedDrafts && Boolean(snapshot?.state.canUndo);
+  const canRedoNow = !previewLocked && !typedDrafts && Boolean(snapshot?.state.canRedo);
   const canSaveNow = !locked && !typedDrafts && !versionsExhausted && pending.length > 0;
   const whyNotSave = !snapshot?.enabled ? 'Local notation state is disabled; there is nothing to save.'
     : busy ? 'A state request is in progress.'
@@ -118,82 +128,64 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
         : typedDrafts ? 'Unapplied form text is retained. Preview or clear it before Save.'
           : versionsExhausted ? 'This workspace has reached its saved-version limit; nothing further can be saved here.'
             : !pending.length ? 'Nothing is pending. Save records previewed commands; there are none.' : '';
-  const titleFor = useCallback((id: string) => notations.find((notation) => notation.id === id)?.title ?? id, [notations]);
 
-  const setEdits = (update: (current: Record<string, Edit>) => Record<string, Edit>) => setText((current) => ({ ...current, edits: update(current.edits) }));
-  const field = <K extends keyof DraftText>(key: K, value: DraftText[K]) => setText((current) => ({ ...current, [key]: value }));
+  const setEdits = useCallback((update: (current: Record<string, Edit>) => Record<string, Edit>) => setText((current) => ({ ...current, edits: update(current.edits) })), []);
+  const field = useCallback(<K extends keyof DraftText>(key: K, value: DraftText[K]) => setText((current) => ({ ...current, [key]: value })), []);
 
-  // Load, then restore this tab's drafts against the loaded saved version.
-  useEffect(() => {
-    const controller = new AbortController();
+  // Only the first visit loads. A later visit finds the draft where it was; a browser reload restores this tab's copy.
+  const loadInitial = useCallback(async () => {
+    if (initiallyLoaded.current || inFlightRef.current) return;
+    initiallyLoaded.current = true;
+    inFlightRef.current = true;
+    setInFlight('load');
     const stored = readDrafts();
-    readSnapshot('/api/state-kernel', undefined, controller.signal).then(async (next) => {
-      if (controller.signal.aborted) return;
+    try {
+      const next = await readSnapshot('/api/state-kernel');
       setSnapshot(next);
       setSelectedId(next.state.notations[0]?.id ?? '');
       setNotice(next.enabled ? 'Saved local state loaded.' : 'Local notation state is disabled.');
-      if (!stored || !draftsHaveContent(stored) || !next.enabled) return;
-      if (stored.baseVersion !== next.savedVersion || stored.savedDigest !== next.savedDigest) { setConflict({ reason: 'STALE_DRAFTS', drafts: stored }); return; }
-      setText({ ...emptyText(), ...stored.text });
-      if (stored.selectedId && next.state.notations.some((n) => n.id === stored.selectedId)) setSelectedId(stored.selectedId);
-      if (!stored.pending.length) { setNotice('Saved local state loaded. Unapplied text restored from this tab.'); return; }
-      try {
-        const previewed = await readSnapshot('/api/state-kernel/preview', { schema: 'payload.notation-command-batch.v1', baseVersion: next.savedVersion, commands: stored.pending }, controller.signal);
-        if (controller.signal.aborted) return;
-        if (previewed.savedVersion !== next.savedVersion) throw new Error('The saved version changed during restoration.');
-        setSnapshot(previewed); setPending(stored.pending);
-        if (stored.selectedId && previewed.state.notations.some((n) => n.id === stored.selectedId)) setSelectedId(stored.selectedId);
-        setNotice(`Browser drafts restored: ${stored.pending.length} pending ${stored.pending.length === 1 ? 'command' : 'commands'} re-validated by the state kernel. Not saved.`);
-      } catch (failure) {
-        if (controller.signal.aborted) return;
-        setConflict({ reason: 'STALE_DRAFTS', drafts: stored });
-        setError(failure instanceof Error ? failure.message : 'The stored drafts could not be re-validated.');
+      if (stored && draftsHaveContent(stored) && next.enabled) {
+        if (stored.baseVersion !== next.savedVersion || stored.savedDigest !== next.savedDigest) {
+          setConflict({ reason: 'STALE_DRAFTS', drafts: stored });
+        } else {
+          setText({ ...emptyText(), ...stored.text });
+          if (stored.selectedId && next.state.notations.some((n) => n.id === stored.selectedId)) setSelectedId(stored.selectedId);
+          if (!stored.pending.length) setNotice('Saved local state loaded. Unapplied text restored from this tab.');
+          else {
+            try {
+              const previewed = await readSnapshot('/api/state-kernel/preview', { schema: 'payload.notation-command-batch.v1', baseVersion: next.savedVersion, commands: stored.pending });
+              if (previewed.savedVersion !== next.savedVersion) throw new Error('The saved version changed during restoration.');
+              setSnapshot(previewed); setPending(stored.pending);
+              if (stored.selectedId && previewed.state.notations.some((n) => n.id === stored.selectedId)) setSelectedId(stored.selectedId);
+              setNotice(`Browser drafts restored: ${stored.pending.length} pending ${stored.pending.length === 1 ? 'command' : 'commands'} re-validated by the state kernel. Not saved.`);
+            } catch (failure) {
+              setConflict({ reason: 'STALE_DRAFTS', drafts: stored });
+              setError(failure instanceof Error ? failure.message : 'The stored drafts could not be re-validated.');
+            }
+          }
+        }
       }
-    }).catch((failure: unknown) => {
-      if (!controller.signal.aborted) {
-        setError(failure instanceof Error ? failure.message : 'Unable to load local state.');
-        setNotice('');
-      }
-    }).finally(() => {
-      if (!controller.signal.aborted) { inFlightRef.current = false; setInFlight(null); setHydrated(true); }
-    });
-    return () => controller.abort();
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : 'Unable to load local state.');
+      setNotice('');
+    } finally { inFlightRef.current = false; setInFlight(null); setHydrated(true); }
   }, []);
 
-  // Persist drafts to this tab whenever they change; clear when nothing is unsaved.
+  // Persist this tab's copy whenever the draft changes; clear it when nothing is unsaved.
   useEffect(() => {
     if (!hydrated || !snapshot?.enabled || conflict) return;
     if (!unsaved) { clearDrafts(); return; }
     writeDrafts({ schema: 'payload.notation-browser-drafts.v1', baseVersion: snapshot.savedVersion, savedDigest: snapshot.savedDigest, pending, text, selectedId, storedAt: new Date().toISOString() });
   }, [hydrated, snapshot, conflict, unsaved, pending, text, selectedId]);
 
-  // Browser navigation and reload: the browser asks; the drafts are in this tab either way.
+  // The browser asks before a reload or close while work is unsaved or a preview or save is in flight; reads are never guarded.
+  const guarded = unsaved || inFlight === 'preview' || inFlight === 'save';
   useEffect(() => {
-    if (!unsaved) return;
+    if (!guarded) return;
     const guard = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
     window.addEventListener('beforeunload', guard);
     return () => window.removeEventListener('beforeunload', guard);
-  }, [unsaved]);
-
-  // Internal navigation: intercept same-origin links to other pages while work is unsaved.
-  useEffect(() => {
-    if (!unsaved || leave) return;
-    const onClick = (event: MouseEvent) => {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const anchor = (event.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
-      if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download')) return;
-      const href = anchor.getAttribute('href') ?? '';
-      if (!href.startsWith('/') || href.startsWith('//')) return;
-      const path = href.split(/[?#]/)[0];
-      if (path === window.location.pathname) return;
-      event.preventDefault(); event.stopPropagation();
-      setLeave(href);
-    };
-    document.addEventListener('click', onClick, true);
-    return () => document.removeEventListener('click', onClick, true);
-  }, [unsaved, leave]);
-
-  const stay = useCallback(() => setLeave(null), []);
+  }, [guarded]);
 
   function begin(kind: Exclude<InFlight, null>) {
     if (inFlightRef.current) return false;
@@ -206,7 +198,8 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
     const message = failure instanceof Error ? failure.message : 'The state request failed.';
     setError(message);
     if (message.startsWith('VERSION_CONFLICT') && snapshot) {
-      setConflict({ reason: 'VERSION_CONFLICT', drafts: { schema: 'payload.notation-browser-drafts.v1', baseVersion: snapshot.savedVersion, savedDigest: snapshot.savedDigest, pending, text, selectedId, storedAt: new Date().toISOString() } });
+      const drafts: BrowserDrafts = { schema: 'payload.notation-browser-drafts.v1', baseVersion: snapshot.savedVersion, savedDigest: snapshot.savedDigest, pending, text, selectedId, storedAt: new Date().toISOString() };
+      if (draftsHaveContent(drafts)) setConflict({ reason: 'VERSION_CONFLICT', drafts });
     }
   }
   function batch(commands: KernelCommand[]): StateKernelRequest {
@@ -214,7 +207,7 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
   }
 
   async function preview(command: KernelCommand, onAccepted?: () => void) {
-    if (!snapshot?.enabled || commandsExhausted || !begin('preview')) return;
+    if (!snapshot || previewLocked || !begin('preview')) return;
     const commands = [...pending, command];
     try {
       const next = await readSnapshot('/api/state-kernel/preview', batch(commands));
@@ -227,7 +220,7 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
   }
 
   async function save() {
-    if (!snapshot?.enabled || !pending.length || typedDrafts || versionsExhausted || !begin('save')) return;
+    if (locked || versionsExhausted || !pending.length || typedDrafts || !begin('save')) return;
     try {
       const next = await readSnapshot('/api/state-kernel/save', batch(pending));
       setSnapshot(next); setPending([]);
@@ -249,15 +242,80 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
     finally { finish(); }
   }
 
-  function discardAndLeave(href: string) {
-    clearDrafts(); setPending([]); setText(emptyText()); setConflict(null); setLeave(null);
-    router.push(href);
-  }
-
   const undo = () => void preview({ commandId: crypto.randomUUID(), kind: 'UNDO' });
   const redo = () => void preview({ commandId: crypto.randomUUID(), kind: 'REDO' });
 
-  // Keyboard shortcuts: Undo and Redo outside text fields (inside them the field's own history applies); Save anywhere.
+  function create(event: FormEvent) {
+    event.preventDefault();
+    if (previewLocked || !text.createTitle.trim()) return;
+    const id = crypto.randomUUID();
+    void preview({ commandId: crypto.randomUUID(), kind: 'CREATE_NOTATION', notation: { id, title: text.createTitle, body: text.createBody } }, () => {
+      setSelectedId(id); setSelectedRelationId(''); setText((current) => ({ ...current, createTitle: '', createBody: '' }));
+    });
+  }
+  function update(event: FormEvent) {
+    event.preventDefault();
+    if (previewLocked || !selected || !edit || !editChanged || !edit.title.trim()) return;
+    const id = selected.id;
+    void preview({ commandId: crypto.randomUUID(), kind: 'UPDATE_NOTATION', notationId: id, title: edit.title, body: edit.body }, () => {
+      setEdits((current) => { const next = { ...current }; delete next[id]; return next; });
+    });
+  }
+  function createRelation(event: FormEvent) {
+    event.preventDefault();
+    if (previewLocked || !text.relationFrom || !text.relationTo || !text.relationLabel.trim()) return;
+    void preview({ commandId: crypto.randomUUID(), kind: 'CREATE_RELATION', relation: {
+      id: crypto.randomUUID(), from: text.relationFrom, to: text.relationTo, label: text.relationLabel,
+    } }, () => { setText((current) => ({ ...current, relationFrom: '', relationTo: '', relationLabel: '' })); });
+  }
+
+  return {
+    snapshot, pending, inFlight, busy, error, notice, selectedId, setSelectedId, selectedRelationId, setSelectedRelationId, text, setText, setEdits, field,
+    confirmReload, setConfirmReload, conflict, setConflict, notations, relations, selected, selectedRelation, edit, editChanged, textCount, typedDrafts, unsaved,
+    capacity, dialogOpen, locked, previewLocked, commandsExhausted, versionsExhausted, canUndoNow, canRedoNow, canSaveNow, whyNotSave,
+    loadInitial, preview, save, reload, undo, redo, create, update, createRelation, setNotice,
+  };
+}
+
+type Controller = ReturnType<typeof useNotationController>;
+const NotationDraftContext = createContext<Controller | null>(null);
+
+/** The draft's home for the life of the browser document: mounted once at the root, above every route. */
+export function NotationDraftProvider({ children }: { children: ReactNode }) {
+  const controller = useNotationController();
+  return <NotationDraftContext.Provider value={controller}>{children}</NotationDraftContext.Provider>;
+}
+
+/** What the rest of the shell may know about the draft: whether unsaved work exists, and how much. */
+export function useNotationDraftStatus(): { unsaved: boolean; pendingCount: number; textCount: number; inFlight: InFlight } | null {
+  const controller = useContext(NotationDraftContext);
+  return controller ? { unsaved: controller.unsaved, pendingCount: controller.pending.length, textCount: controller.textCount, inFlight: controller.inFlight } : null;
+}
+
+/**
+ * The notation workspace: the register, the selected notation's inspector
+ * (its editor, its origin, its relations, the pending commands that name
+ * it, its evidence line), the relation inspector, and the forms. Panels
+ * that belong beneath it (the evidence-reference fixture) come in as
+ * children so the inspector's column spans them too.
+ */
+export function NotationWorkspace({ children }: { children?: ReactNode }) {
+  const controller = useContext(NotationDraftContext);
+  if (!controller) throw new Error('NotationWorkspace requires the root NotationDraftProvider.');
+  return <NotationWorkspaceView controller={controller}>{children}</NotationWorkspaceView>;
+}
+
+function NotationWorkspaceView({ controller, children }: { controller: Controller; children?: ReactNode }) {
+  const {
+    snapshot, pending, inFlight, busy, error, notice, selectedId, setSelectedId, selectedRelationId, setSelectedRelationId, text, setText, setEdits, field,
+    confirmReload, setConfirmReload, conflict, setConflict, notations, relations, selected, selectedRelation, edit, editChanged, textCount, typedDrafts, unsaved,
+    capacity, dialogOpen, locked, previewLocked, commandsExhausted, versionsExhausted, canUndoNow, canRedoNow, canSaveNow, whyNotSave,
+    loadInitial, save, reload, undo, redo, create, update, createRelation, setNotice,
+  } = controller;
+  useEffect(() => { void loadInitial(); }, [loadInitial]);
+  const titleFor = useCallback((id: string) => notations.find((notation) => notation.id === id)?.title ?? id, [notations]);
+
+  // Keyboard shortcuts, alive only while the workspace is on screen: Undo and Redo outside text fields (inside them the field's own history applies); Save anywhere.
   const shortcuts = useRef({ undo, redo, save: () => void save(), canUndo: canUndoNow, canRedo: canRedoNow, canSave: canSaveNow, whyNotSave });
   useEffect(() => { shortcuts.current = { undo, redo, save: () => void save(), canUndo: canUndoNow, canRedo: canRedoNow, canSave: canSaveNow, whyNotSave }; });
   useEffect(() => {
@@ -274,7 +332,7 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
     };
     document.addEventListener('keydown', key);
     return () => document.removeEventListener('keydown', key);
-  }, []);
+  }, [setNotice]);
 
   function select(id: string) {
     setSelectedRelationId('');
@@ -302,31 +360,7 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
     target?.focus();
   }
 
-  function create(event: FormEvent) {
-    event.preventDefault();
-    if (locked || !text.createTitle.trim()) return;
-    const id = crypto.randomUUID();
-    void preview({ commandId: crypto.randomUUID(), kind: 'CREATE_NOTATION', notation: { id, title: text.createTitle, body: text.createBody } }, () => {
-      setSelectedId(id); setSelectedRelationId(''); setText((current) => ({ ...current, createTitle: '', createBody: '' }));
-    });
-  }
-  function update(event: FormEvent) {
-    event.preventDefault();
-    if (locked || !selected || !edit || !editChanged || !edit.title.trim()) return;
-    const id = selected.id;
-    void preview({ commandId: crypto.randomUUID(), kind: 'UPDATE_NOTATION', notationId: id, title: edit.title, body: edit.body }, () => {
-      setEdits((current) => { const next = { ...current }; delete next[id]; return next; });
-    });
-  }
-  function createRelation(event: FormEvent) {
-    event.preventDefault();
-    if (locked || !text.relationFrom || !text.relationTo || !text.relationLabel.trim()) return;
-    void preview({ commandId: crypto.randomUUID(), kind: 'CREATE_RELATION', relation: {
-      id: crypto.randomUUID(), from: text.relationFrom, to: text.relationTo, label: text.relationLabel,
-    } }, () => { setText((current) => ({ ...current, relationFrom: '', relationTo: '', relationLabel: '' })); });
-  }
-
-  const stateLabel = busy && !snapshot ? 'LOADING' : snapshot?.enabled ? 'LOCAL DEVELOPMENT' : 'DISABLED';
+  const stateLabel = snapshot ? (snapshot.enabled ? 'LOCAL DEVELOPMENT' : 'DISABLED') : error ? 'UNAVAILABLE' : 'LOADING';
   const progress = inFlight === 'load' ? 'Loading saved local state…'
     : inFlight === 'preview' ? `Validating ${plural(pending.length + 1, 'command')} with the state kernel…`
       : inFlight === 'save' ? `Saving ${plural(pending.length, 'command')} against saved version ${snapshot?.savedVersion ?? '—'}…`
@@ -348,11 +382,9 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
       </header>
       <aside className="surface-inset p-3 text-[13px]" aria-label="Local development boundary">
         <p>Local authored state only. Not evidence, identity resolution, inference, or canonical corpus state.</p>
-        <p className="mt-1" style={muted}>Previews and form text are browser drafts until saved. This screen does not admit data, release a corpus, or launch agents.</p>
+        <p className="mt-1" style={muted}>Previews and form text are browser drafts until saved. They stay with this browser tab through in-app navigation and a page reload, in one tab only; nothing is saved by leaving. This screen does not admit data, release a corpus, or launch agents.</p>
         {snapshot && !snapshot.enabled && <p className="mt-2">Enable the loopback development service with <code className="mono">npm run dev:state-kernel</code>, then reload saved state.</p>}
       </aside>
-
-      {leave && <LeaveDialog href={leave} pendingCount={pending.length} textCount={textCount} onStay={stay} onLeave={() => { setLeave(null); router.push(leave); }} onDiscard={() => discardAndLeave(leave)} />}
 
       <section className="surface p-3 flex flex-col gap-3" aria-label="State controls">
         <ol className="m-0 p-0 list-none grid gap-2 sm:grid-cols-3" aria-label="Where your work is">
@@ -391,7 +423,7 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
         <p className="text-[12px]" style={muted}>Save validates the whole pending batch again against the saved version. A preview is not a reservation: a conflict keeps your drafts and asks you to reload deliberately.</p>
         {typedDrafts && <p className="text-[12px]" style={muted}>Unapplied form text is retained. Preview or clear it before Save, Undo, or Redo.</p>}
         {commandsExhausted && <p className="text-[12px]" role="alert" style={{ color: 'var(--status-refused)' }} data-testid="commands-exhausted">This workspace has used all of its lifetime commands. No further command, undo or redo is accepted; save what is pending and copy your drafts.</p>}
-        {versionsExhausted && <p className="text-[12px]" role="alert" style={{ color: 'var(--status-refused)' }} data-testid="versions-exhausted">This workspace has reached its saved-version limit. Previews still run; nothing further can be saved here.</p>}
+        {versionsExhausted && <p className="text-[12px]" role="alert" style={{ color: 'var(--status-refused)' }} data-testid="versions-exhausted">This workspace has reached its saved-version limit. The kernel accepts no further preview or save; nothing further can be saved here.</p>}
         {snapshot?.savedDigest && <details className="text-[12px]"><summary className="cursor-pointer">Saved state digest</summary><p className="mono break-all mt-1">{snapshot.savedDigest}</p></details>}
       </section>
 
@@ -411,8 +443,8 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
             </div>
             {!notations.length ? (
               <div className="empty-state mt-3" data-testid="register-empty">
-                <h3>{snapshot ? 'No notations in this state' : 'Loading saved local state'}</h3>
-                {!snapshot ? <p className="m-0">The saved local version is being read.</p>
+                <h3>{snapshot ? 'No notations in this state' : error ? 'Saved local state unavailable' : 'Loading saved local state'}</h3>
+                {!snapshot ? <p className="m-0">{error ? 'The state service did not return a usable snapshot. Reload saved state to try again.' : 'The saved local version is being read.'}</p>
                   : !snapshot.enabled ? <p className="m-0">Local notation state is disabled, so nothing can be authored here. Enable the loopback development service, then reload saved state.</p>
                     : <><p className="m-0">Create the first notation below. The kernel validates it as a preview; it becomes part of a saved local version only when you save.</p><p className="m-0" style={faint}>Undo can remove a notation from the draft; Redo restores the same identity.</p></>}
               </div>
@@ -447,11 +479,11 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
               <fieldset disabled={locked} className="flex flex-col gap-3">
                 <div className="flex flex-col gap-1">
                   {editChanged && <span className="label-sm" style={{ color: 'var(--status-conditional)' }} data-testid="edit-unapplied">Unapplied edit: not previewed, not saved</span>}
-                  <label htmlFor="notation-edit-title" className="text-[13px]">Notation title<input id="notation-edit-title" className={fieldClass} required value={edit.title} onChange={(event) => setEdits((current) => ({ ...current, [selected.id]: { ...edit, title: event.target.value } }))} /></label>
+                  <label htmlFor="notation-edit-title" className="text-[13px]">Notation title<input id="notation-edit-title" className={fieldClass} required disabled={previewLocked} value={edit.title} onChange={(event) => setEdits((current) => ({ ...current, [selected.id]: { ...edit, title: event.target.value } }))} /></label>
                 </div>
-                <div><label htmlFor="notation-edit-body" className="text-[13px]">Notation body</label><textarea id="notation-edit-body" className={fieldClass} rows={7} value={edit.body} onChange={(event) => setEdits((current) => ({ ...current, [selected.id]: { ...edit, body: event.target.value } }))} /></div>
+                <div><label htmlFor="notation-edit-body" className="text-[13px]">Notation body</label><textarea id="notation-edit-body" className={fieldClass} rows={7} disabled={previewLocked} value={edit.body} onChange={(event) => setEdits((current) => ({ ...current, [selected.id]: { ...edit, body: event.target.value } }))} /></div>
                 <div className="flex flex-wrap gap-2">
-                  <button type="submit" className="btn btn-primary btn-sm" disabled={!editChanged || !edit.title.trim() || commandsExhausted}>Preview changes</button>
+                  <button type="submit" className="btn btn-primary btn-sm" disabled={previewLocked || !editChanged || !edit.title.trim()}>Preview changes</button>
                   <button type="button" className="btn btn-sm" disabled={!editChanged} onClick={() => setEdits((current) => { const next = { ...current }; delete next[selected.id]; return next; })}>Clear form edits</button>
                 </div>
               </fieldset>
@@ -463,7 +495,7 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
                 const other = outgoing ? relation.to : relation.from;
                 return <li key={relation.id}><button type="button" className="row-selectable surface-inset px-2 py-1.5 w-full text-left text-[12.5px] break-words" disabled={locked} aria-label={`Inspect relation ${relation.label}`} onClick={() => setSelectedRelationId(relation.id)}><span className="label-sm" style={faint}>{outgoing ? 'out' : 'in'}</span> <strong className="font-medium">{relation.label}</strong> <span style={faint}>{outgoing ? '→' : '←'}</span> {titleFor(other)}</button></li>;
               })}</ul> : <p className="m-0 text-[12.5px]" style={faint}>No relation names this notation.</p>}
-              <div><button type="button" className="btn btn-sm" disabled={locked || notations.length < 1} onClick={() => relateFrom(selected.id)}>Relate this notation…</button></div>
+              <div><button type="button" className="btn btn-sm" disabled={previewLocked || notations.length < 1} onClick={() => relateFrom(selected.id)}>Relate this notation…</button></div>
             </section>
             <section className="inspector-section" aria-labelledby="inspector-pending-heading" data-testid="inspector-pending">
               <h3 id="inspector-pending-heading">Pending commands naming it · {selectedPending.length}</h3>
@@ -493,9 +525,9 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
           <section className="surface p-3" aria-labelledby="create-notation-heading">
             <h2 id="create-notation-heading" className="font-semibold">Create notation</h2>
             <form aria-label="Create notation" onSubmit={create} className="mt-3"><fieldset disabled={locked} className="flex flex-col gap-3">
-              <label htmlFor="notation-create-title" className="text-[13px]">New notation title<input id="notation-create-title" className={fieldClass} required value={text.createTitle} onChange={(event) => field('createTitle', event.target.value)} /></label>
-              <div><label htmlFor="notation-create-body" className="text-[13px]">New notation body</label><textarea id="notation-create-body" className={fieldClass} rows={3} value={text.createBody} onChange={(event) => field('createBody', event.target.value)} /></div>
-              <div className="flex flex-wrap gap-2"><button type="submit" className="btn btn-primary btn-sm" disabled={!text.createTitle.trim() || commandsExhausted}>Preview new notation</button><button type="button" className="btn btn-sm" disabled={!text.createTitle && !text.createBody} onClick={() => setText((current) => ({ ...current, createTitle: '', createBody: '' }))}>Clear new notation</button></div>
+              <label htmlFor="notation-create-title" className="text-[13px]">New notation title<input id="notation-create-title" className={fieldClass} required disabled={previewLocked} value={text.createTitle} onChange={(event) => field('createTitle', event.target.value)} /></label>
+              <div><label htmlFor="notation-create-body" className="text-[13px]">New notation body</label><textarea id="notation-create-body" className={fieldClass} rows={3} disabled={previewLocked} value={text.createBody} onChange={(event) => field('createBody', event.target.value)} /></div>
+              <div className="flex flex-wrap gap-2"><button type="submit" className="btn btn-primary btn-sm" disabled={previewLocked || !text.createTitle.trim()}>Preview new notation</button><button type="button" className="btn btn-sm" disabled={!text.createTitle && !text.createBody} onClick={() => setText((current) => ({ ...current, createTitle: '', createBody: '' }))}>Clear new notation</button></div>
             </fieldset></form>
           </section>
           <section className="surface p-3" aria-labelledby="notation-relations-heading">
@@ -510,13 +542,13 @@ export function NotationWorkspace({ children }: { children?: ReactNode }) {
               </li>
             ))}</ul> : <p className="text-[13px] mt-2" style={faint}>{notations.length ? 'No authored relations in this state. Select a notation and use "Relate this notation…", or fill in the form below.' : 'No authored relations in this state.'}</p>}
             <form aria-label="Create relation" onSubmit={createRelation} className="mt-3"><fieldset disabled={locked || !notations.length} className="grid gap-3 sm:grid-cols-3">
-              <div><label htmlFor="notation-relation-from" className="text-[13px]">From notation</label><select id="notation-relation-from" className={fieldClass} required value={text.relationFrom} onChange={(event) => field('relationFrom', event.target.value)}><option value="">Select source</option>{notations.map((notation) => <option key={notation.id} value={notation.id}>{notation.title}</option>)}</select></div>
-              <div><label htmlFor="notation-relation-to" className="text-[13px]">To notation</label><select id="notation-relation-to" className={fieldClass} required value={text.relationTo} onChange={(event) => field('relationTo', event.target.value)}><option value="">Select target</option>{notations.map((notation) => <option key={notation.id} value={notation.id}>{notation.title}</option>)}</select></div>
-              <label htmlFor="notation-relation-label" className="text-[13px]">Relation label<input id="notation-relation-label" className={fieldClass} required value={text.relationLabel} onChange={(event) => field('relationLabel', event.target.value)} /></label>
-              <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="submit" className="btn btn-primary btn-sm" disabled={!text.relationFrom || !text.relationTo || !text.relationLabel.trim() || commandsExhausted}>Preview relation</button><button type="button" className="btn btn-sm" disabled={!text.relationFrom && !text.relationTo && !text.relationLabel} onClick={() => setText((current) => ({ ...current, relationFrom: '', relationTo: '', relationLabel: '' }))}>Clear relation form</button></div>
+              <div><label htmlFor="notation-relation-from" className="text-[13px]">From notation</label><select id="notation-relation-from" className={fieldClass} required disabled={previewLocked} value={text.relationFrom} onChange={(event) => field('relationFrom', event.target.value)}><option value="">Select source</option>{notations.map((notation) => <option key={notation.id} value={notation.id}>{notation.title}</option>)}</select></div>
+              <div><label htmlFor="notation-relation-to" className="text-[13px]">To notation</label><select id="notation-relation-to" className={fieldClass} required disabled={previewLocked} value={text.relationTo} onChange={(event) => field('relationTo', event.target.value)}><option value="">Select target</option>{notations.map((notation) => <option key={notation.id} value={notation.id}>{notation.title}</option>)}</select></div>
+              <label htmlFor="notation-relation-label" className="text-[13px]">Relation label<input id="notation-relation-label" className={fieldClass} required disabled={previewLocked} value={text.relationLabel} onChange={(event) => field('relationLabel', event.target.value)} /></label>
+              <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="submit" className="btn btn-primary btn-sm" disabled={previewLocked || !text.relationFrom || !text.relationTo || !text.relationLabel.trim()}>Preview relation</button><button type="button" className="btn btn-sm" disabled={!text.relationFrom && !text.relationTo && !text.relationLabel} onClick={() => setText((current) => ({ ...current, relationFrom: '', relationTo: '', relationLabel: '' }))}>Clear relation form</button></div>
             </fieldset></form>
           </section>
-          {capacity && snapshot?.enabled && <CapacityMeter capacity={capacity} />}
+          {capacity && snapshot?.enabled && <CapacityMeter capacity={capacity} pendingCount={pending.length} />}
           {children}
         </div>
       </div>

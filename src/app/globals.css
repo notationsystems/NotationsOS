@@ -284,6 +284,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 .nav-link:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.05); text-decoration: none; }
 .nav-link[aria-current='page'] { color: var(--text-heading); background: rgba(255, 255, 255, 0.07); box-shadow: inset 0 -2px 0 var(--accent); }
+.nav-mark { margin-left: 2px; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--status-conditional); color: var(--status-conditional); font-size: var(--text-2xs); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.4; }
 @media (min-width: 1024px) {
   .app-body { flex-direction: row; }
   .app-sidebar {
@@ -297,7 +298,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .app-sidebar .nav-area-head { display: block; padding: 0 10px 3px; }
   .app-sidebar .nav-area-head .nav-area-activity { display: block; font-size: var(--text-xs); color: var(--text-muted); text-transform: none; letter-spacing: 0; font-weight: 400; margin-top: 2px; line-height: 1.35; }
   .app-sidebar .nav-links { flex-direction: column; }
-  .nav-link { display: flex; min-height: 26px; padding: 3px 10px; }
+  .nav-link { display: flex; flex: 1; min-height: 26px; padding: 3px 10px; }
+  .nav-mark { margin-right: 8px; }
   .nav-link[aria-current='page'] { box-shadow: inset 2px 0 0 var(--accent); }
   .app-sidebar .app-context { display: flex; flex-direction: column; gap: 6px; margin-top: auto; padding: 12px 10px 4px; border-top: 1px solid var(--border-subtle); font-size: var(--text-xs); color: var(--text-muted); }
 }

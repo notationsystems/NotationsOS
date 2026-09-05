@@ -1,0 +1,2 @@
+*.ifc text eol=lf
+*.audit.json text eol=lf

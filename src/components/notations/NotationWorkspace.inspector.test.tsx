@@ -1,8 +1,8 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { emptyNotationState, type Notation, type NotationRelation, type StateKernelFailure, type StateKernelRequest, type StateKernelSnapshot } from '@/state-kernel/types';
-import { NotationWorkspace } from './NotationWorkspace';
+import { emptyNotationState, notationCapacity, type Notation, type NotationRelation, type StateKernelFailure, type StateKernelRequest, type StateKernelSnapshot } from '@/state-kernel/types';
+import { NotationDraftProvider, NotationWorkspace } from './NotationWorkspace';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
@@ -16,7 +16,7 @@ function snapshot(notations: Notation[] = [], revision = 0, savedVersion = 0, ex
     schema: 'payload.local-notation-workspace.v1', mode: 'LOCAL_DEVELOPMENT', enabled: true,
     savedVersion, savedDigest: savedVersion ? `sha256:${'a'.repeat(64)}` : null,
     state: { ...emptyNotationState(), notations, relations, revision, canUndo: revision > 0, canRedo },
-    persistence: 'LOCAL_VERSIONED_FILES', canonicalAdmission: false, ...rest,
+    capacity: notationCapacity(revision, savedVersion), persistence: 'LOCAL_VERSIONED_FILES', canonicalAdmission: false, ...rest,
   };
 }
 
@@ -33,6 +33,7 @@ function api(...responses: Response[]) {
   return fetch;
 }
 const requestAt = (fetch: ReturnType<typeof api>, index: number) => JSON.parse(String(fetch.mock.calls[index][1]?.body)) as StateKernelRequest;
+const renderWorkspace = () => render(<NotationDraftProvider><NotationWorkspace /></NotationDraftProvider>);
 
 beforeEach(() => {
   let sequence = 0;
@@ -45,7 +46,7 @@ describe('NotationWorkspace inspector and keyboard', () => {
     const user = userEvent.setup();
     const created: Notation = { id: '00000000-0000-4000-8000-000000000001', title: 'Third', body: '' };
     api(snapshot([original, other], 2, 1, { relations: [mentions] }), snapshot([original, other, created], 3, 1, { relations: [mentions] }));
-    render(<NotationWorkspace />);
+    renderWorkspace();
     await screen.findByText('Saved local state loaded.');
     const inspector = screen.getByTestId('notation-inspector');
     expect(screen.getByTestId('notation-workspace')).toHaveAttribute('data-inspecting', 'notation');
@@ -87,7 +88,7 @@ describe('NotationWorkspace inspector and keyboard', () => {
   it('creates relations from the inspector and inspects them: Relate pre-fills the source and moves focus to the target; a selected relation shows both ends and leads back to them', async () => {
     const user = userEvent.setup();
     api(snapshot([original, other], 2, 1, { relations: [mentions] }));
-    render(<NotationWorkspace />);
+    renderWorkspace();
     await screen.findByText('Saved local state loaded.');
     await user.click(screen.getByRole('button', { name: 'Relate this notation…' }));
     expect(screen.getByLabelText('From notation')).toHaveValue(original.id);
@@ -115,7 +116,7 @@ describe('NotationWorkspace inspector and keyboard', () => {
   it('moves the selection with the arrow keys, opens the editor on Enter, and explains an empty register', async () => {
     const user = userEvent.setup();
     api(snapshot([original, other], 2, 1));
-    const first = render(<NotationWorkspace />);
+    const first = renderWorkspace();
     await screen.findByText('Saved local state loaded.');
     screen.getByRole('button', { name: `Select notation ${original.title}` }).focus();
     await user.keyboard('{ArrowDown}');
@@ -131,7 +132,7 @@ describe('NotationWorkspace inspector and keyboard', () => {
     first.unmount();
 
     api(snapshot());
-    const second = render(<NotationWorkspace />);
+    const second = renderWorkspace();
     await screen.findByText('Saved local state loaded.');
     expect(screen.getByTestId('register-empty')).toHaveTextContent('No notations in this state');
     expect(screen.getByTestId('register-empty')).toHaveTextContent('Create the first notation below.');
@@ -139,7 +140,7 @@ describe('NotationWorkspace inspector and keyboard', () => {
     second.unmount();
 
     api({ ...snapshot(), enabled: false, persistence: 'DISABLED' });
-    render(<NotationWorkspace />);
+    renderWorkspace();
     await screen.findByText('Local notation state is disabled.');
     expect(screen.getByTestId('register-empty')).toHaveTextContent('Local notation state is disabled, so nothing can be authored here.');
   });
@@ -147,7 +148,7 @@ describe('NotationWorkspace inspector and keyboard', () => {
   it('keyboard shortcuts: Ctrl+Z and Ctrl+Shift+Z send Undo and Redo through the kernel outside text fields only; Ctrl+S saves, and says why when it cannot', async () => {
     const user = userEvent.setup();
     const fetch = api(snapshot([original], 1, 0), snapshot([], 2, 0, { canRedo: true }), snapshot([original], 3, 0), snapshot([original], 3, 1));
-    render(<NotationWorkspace />);
+    renderWorkspace();
     await screen.findByText('Saved local state loaded.');
     expect(screen.getByRole('button', { name: /^Undo/ })).toHaveAttribute('aria-keyshortcuts', 'Control+Z Meta+Z');
     expect(screen.getByTestId('shortcuts')).toHaveTextContent('Ctrl S');
@@ -186,7 +187,7 @@ describe('NotationWorkspace inspector and keyboard', () => {
     const saving = new Promise<StateKernelSnapshot>((resolve) => { release = resolve; });
     const fresh: Notation = { id: '00000000-0000-4000-8000-000000000001', title: original.title, body: '' };
     api(snapshot(), snapshot([fresh], 1), saving);
-    render(<NotationWorkspace />);
+    renderWorkspace();
     await screen.findByText('Saved local state loaded.');
     await user.type(screen.getByLabelText('New notation title'), fresh.title);
     await user.click(screen.getByRole('button', { name: 'Preview new notation' }));

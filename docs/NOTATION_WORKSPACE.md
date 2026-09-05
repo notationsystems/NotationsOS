@@ -15,8 +15,8 @@ A successful preview changes the draft revision, never the saved version, and th
 ## Draft lifecycle
 
 - **Persistence.** Whenever anything is unsaved, the workspace writes `payload.notation-browser-drafts.v1` to `sessionStorage`: the pending commands, the form text, the selection, and the saved version and digest they were made against. When nothing is unsaved the entry is cleared. Nothing in it is authority; nothing in it is saved.
-- **Internal navigation.** A click on a same-origin link to another page while work is unsaved is intercepted before the router sees it and opens a dialog with three actions: **Stay**, **Leave and keep drafts**, **Discard drafts and leave**. Focus moves to Stay, Escape stays, and focus returns where it was. Links to the current page, new-tab links, downloads and modified clicks are not intercepted.
-- **Browser navigation and reload.** The browser's own `beforeunload` prompt stays in place. Whichever way the person leaves, the drafts are in this tab; on return the workspace restores the text and re-validates any pending commands through a preview against the loaded saved version. Restored commands are re-validated by the kernel, never trusted.
+- **Internal navigation.** The draft's home is a root client provider that lives for the whole browser document, above every route. Navigating to another page and back finds the draft, the selection, the pending commands, their original saved base version and any request in flight exactly where they were, without another read of the kernel; nothing is rebased onto a newer saved version behind the person's back. Navigation is never interrupted: instead the rail marks the Notations link `draft` while unsaved work exists, with the counts in its tooltip, on every page.
+- **Browser reload and close.** The browser's own `beforeunload` prompt is armed while work is unsaved or a preview or save is in flight, on whichever page the person is; never for a read. After a reload the workspace restores the tab's copy: the text at once, the pending commands only after the kernel re-validates them in a preview against the loaded saved version. Restored commands are re-validated, never trusted. Another tab is another draft.
 - **Stale drafts.** Drafts pinned to a different saved version or digest than the one loaded are set aside as stale: shown in the conflict panel, inspectable and copyable, never applied.
 - **Failed requests.** A failed preview or save leaves the text and the pending commands exactly where they were.
 
@@ -26,20 +26,7 @@ When a save is refused with `VERSION_CONFLICT`, the workspace explains which sav
 
 ## Capacity
 
-The meter shows lifetime commands, saved versions, current notations and current relations as used / limit / remaining, warns at ninety percent, and at each limit states what happens and how to recover. The lifetime command count includes undo and redo and only grows: at 256 no further command, undo or redo is accepted and the controls say so. At 64 saved versions previews still run and Save is refused; the interface disables Save and says so. Recovery today is to save what is pending, copy the drafts, and have an operator start a new workspace directory; a checkpoint or archive facility that preserves reserved identities is not implemented, and the interface says that too.
-
-**Backend contract request.** The snapshot does not report capacity, so the frontend derives usage (`state.revision`, `savedVersion`, current counts) and takes the limits from the kernel contract, labelling the meter "limits from the kernel contract". The requested addition to `payload.local-notation-workspace.v1`, already typed as optional in `src/state-kernel/types.ts`:
-
-```json
-"capacity": {
-  "commands":  { "used": 12, "limit": 256 },
-  "versions":  { "used": 3,  "limit": 64 },
-  "notations": { "used": 2,  "limit": 64 },
-  "relations": { "used": 1,  "limit": 128 }
-}
-```
-
-Usage should be what the kernel and the store know after the request (for a preview, the draft revision; for a read, the saved history). When present, the meter labels itself "reported by the state API" and uses nothing else.
+The snapshot reports `capacity` (`maxCommands`, `usedCommands`, `remainingCommands`, `maxSavedVersions`, `usedSavedVersions`, `remainingSavedVersions`; `src/state-kernel/types.ts`), and the frontend refuses any snapshot whose capacity is missing or disagrees with the contract's arithmetic, keeping the accepted draft. The meter shows lifetime commands and saved versions as the API reports them and current notations and relations against the kernel contract's limits, each as used / limit / remaining. It warns in the last sixteen commands or four versions. The lifetime command count includes undo and redo and only grows: at 256 no further command, undo or redo is accepted, the forms are disabled, and an already accepted pending batch can still be saved while a version slot remains. At 64 saved versions the kernel accepts no further preview or save; the forms and Save are disabled, reading and a deliberate reload still work. Recovery today is to save what is pending, copy the drafts, and have an operator start a new workspace directory; a checkpoint or archive facility that preserves reserved identities is not implemented, and the interface says that too. The contract request the previous increment made for this field is answered by the backend's shape above, which the frontend adopted.
 
 ## Evidence references: the contract, ahead of the backend
 
@@ -86,7 +73,7 @@ Commands go through the existing API and Rust remains the validation authority. 
 
 ## Verification
 
-`npm run check` runs the Rust tests, TypeScript, lint and the unit tests, which now include the draft store, the capacity view, the evidence-reference resolver and the workspace's protection behaviours over a mocked API. `npm run e2e:state-kernel` runs the real kernel and store in an isolated temporary directory on desktop and mobile through: create → update → undo → save → reload; edit → internal navigation → Stay / Leave and keep / Discard, with focus and Escape; unapplied text and pending commands → browser reload; a preview the kernel refuses → retained draft; a competing save → version conflict → inspect, copy, keep, deliberate reload; the capacity meter with the contract limits; the fixture panel's marker and resolution states. The at-limit behaviour (256 commands, 64 versions) is verified in unit tests over snapshots at the limit, not by filling a real workspace.
+`npm run check` runs the Rust tests, TypeScript, lint and the unit tests, which include the draft store, the capacity view, the evidence-reference resolver, the workspace's protection behaviours, the provider's retention across route changes and in-flight requests, the capacity ceilings, and the refusal of inconsistent capacity, all over a mocked API. `npm run e2e:state-kernel` runs the real kernel and store in an isolated temporary directory on desktop and mobile through: create → update → undo → save → reload; edit → Releases → return with one kernel read and the rail's draft marker; unapplied text and pending commands → browser reload; a preview the kernel refuses → retained draft; a competing save → version conflict → inspect, copy, keep, deliberate reload; the capacity meter with the API's numbers; the fixture panel's marker and resolution states; the inspector, relations and keyboard. The at-limit behaviour (256 commands, 64 versions) is verified in unit tests over snapshots at the limit and in the store tests against the real kernel, not by filling a real workspace through the browser.
 
 ## Implementation receipt (2026-09-05)
 
@@ -98,7 +85,7 @@ Commands go through the existing API and Rust remains the validation authority. 
 
 **Fixture-only presentation.** The evidence-reference panel. Its references belong to no stored notation, resolve against the committed production demonstration and corpus at a fixed clock, and cannot be attached, edited or saved.
 
-**Backend contract requests.** A `capacity` field on the workspace snapshot (above). `ATTACH_EVIDENCE_REFERENCE` and `DETACH_EVIDENCE_REFERENCE` commands with a `references` list per notation, validated by Rust under the rules above, with resolution left to the application. Neither is implemented; the frontend reads `capacity` when present and shows the reference contract as a fixture until the commands exist.
+**Backend contract requests.** A `capacity` field on the workspace snapshot: answered since by the backend in its own shape, which the frontend adopted (see Capacity). `ATTACH_EVIDENCE_REFERENCE` and `DETACH_EVIDENCE_REFERENCE` commands with a `references` list per notation, validated by Rust under the rules above, with resolution left to the application: not implemented; the frontend shows the reference contract as a fixture until the commands exist.
 
 **Remaining limitations.** Drafts live in one browser tab's `sessionStorage`; another tab or another browser does not see them. Restoring pending commands costs one preview request. A conflict panel does not show what the other writer saved; reload does. Capacity limits are the contract's until the API reports them. The kernel's O(n²) replay on save near capacity (noted in review) is unchanged and outside this frontend increment. No graph interaction, keyboard shortcuts for undo and redo, or relation inspector were added; the design brief's notation slice continues from here.
 
@@ -111,3 +98,7 @@ Commands go through the existing API and Rust remains the validation authority. 
 **Verified over a mocked API** (`NotationWorkspace.inspector.test.tsx`, 5 tests, with the earlier 13 unchanged): the inspector following the selection with origin, relations, pending commands and the evidence line; Escape honoured outside text fields only; relation creation from the inspector and relation inspection; arrow keys, Home and Enter; the empty and disabled register; the four shortcuts with their conditions; `Saving…` and the status text while a save is in flight.
 
 **Not done.** No platform detection for key hints. No multi-selection. No relation editing or deletion, because the kernel has no such command. Evidence references remain the fixture panel; the inspector's evidence line states that attachment is disabled by the backend contract.
+
+## Reconciliation with the backend's draft stabilization (2026-09-05)
+
+The backend branch stabilized the same workflow from its side: a root draft provider, a required `capacity` on the snapshot, previews refused at the version ceiling, strict snapshot validation, and tests for in-flight requests across navigation. The merge kept one implementation. The provider architecture and the capacity contract are the backend's; the tab's `sessionStorage` copy with kernel re-validation, the stale-draft and conflict panels, the inspector layout and the keyboard are this frontend's. The leave dialog was removed: with the draft retained in the document, interrupting navigation protected nothing, so the rail's `draft` marker and the browser's own unload prompt carry that duty. Both test suites pass unmodified in their assertions except where they named the dialog or the earlier capacity shape.

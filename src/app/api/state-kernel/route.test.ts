@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StateKernelError } from '@/state-kernel/errors';
 import { MAX_KERNEL_INPUT_BYTES } from '@/state-kernel/runtime';
 import { parseStateKernelRequest } from '@/state-kernel/store';
-import { emptyNotationState, type StateKernelSnapshot } from '@/state-kernel/types';
+import { emptyNotationState, notationCapacity, type StateKernelSnapshot } from '@/state-kernel/types';
 import { GET } from './route';
 import { POST as PREVIEW } from './preview/route';
 import { POST as SAVE } from './save/route';
@@ -16,7 +16,7 @@ vi.mock('@/state-kernel/store', async (importOriginal) => ({
 const batch = () => ({ schema: 'payload.notation-command-batch.v1', baseVersion: 0,
   commands: [{ commandId: 'create-a', kind: 'CREATE_NOTATION', notation: { id: 'a', title: 'Title', body: 'Body' } }] });
 const snapshot = (): StateKernelSnapshot => ({ schema: 'payload.local-notation-workspace.v1', mode: 'LOCAL_DEVELOPMENT',
-  enabled: true, savedVersion: 0, savedDigest: null, state: emptyNotationState(), persistence: 'LOCAL_VERSIONED_FILES', canonicalAdmission: false });
+  enabled: true, savedVersion: 0, savedDigest: null, state: emptyNotationState(), capacity: notationCapacity(0, 0), persistence: 'LOCAL_VERSIONED_FILES', canonicalAdmission: false });
 const baseHeaders = { 'content-type': 'application/json', host: '127.0.0.1:3000',
   origin: 'http://127.0.0.1:3000', 'sec-fetch-site': 'same-origin' };
 const writes = [{ name: 'preview', handler: PREVIEW, method: 'preview' }, { name: 'save', handler: SAVE, method: 'save' }] as const;

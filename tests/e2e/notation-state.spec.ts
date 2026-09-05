@@ -13,9 +13,11 @@ async function loaded(page: Page) {
   await expect(page.getByRole('status')).toContainText(/Saved local state loaded|Browser drafts restored|Unapplied text restored/);
 }
 
-test('notations: real local state survives create, edit, Rust undo and save/page reload', async ({ page }, testInfo) => {
+test('notations: real local state keeps navigation drafts in the document and survives create, edit, Rust undo and save/page reload', async ({ page }, testInfo) => {
   const errors: string[] = [];
+  let stateReads = 0;
   page.on('pageerror', (error) => errors.push(error.message));
+  page.on('request', (request) => { if (new URL(request.url()).pathname === '/api/state-kernel' && request.method() === 'GET') stateReads++; });
   await page.goto('/notations');
   await loaded(page);
   await expect(page.getByText('LOCAL DEVELOPMENT', { exact: true })).toBeVisible();
@@ -31,16 +33,43 @@ test('notations: real local state survives create, edit, Rust undo and save/page
   await page.getByLabel('Notation title', { exact: true }).fill(`${title} revised`);
   await page.getByLabel('Notation body', { exact: true }).fill('Revised authored local context.');
   await expect(page.getByTestId('edit-unapplied')).toBeVisible();
+
+  // Internal navigation neither interrupts nor loses anything: the draft, the selection and the base version stay in the document, and the rail says so.
+  await page.getByLabel('New notation title', { exact: true }).fill('Unapplied navigation draft');
+  await page.getByLabel('New notation body', { exact: true }).fill('Keep this typed text across routes.');
+  await page.getByLabel('Relation label', { exact: true }).fill('Unapplied relation');
+  const nav = page.getByRole('navigation', { name: 'Primary' });
+  await expect(nav.getByTestId('nav-draft-marker')).toBeVisible();
+  await nav.getByRole('link', { name: 'Releases', exact: true }).click();
+  await expect(page).toHaveURL(/\/releases$/);
+  await expect(page.getByRole('region', { name: 'What a release is', exact: true })).toBeVisible();
+  await expect(nav.getByTestId('nav-draft-marker')).toBeVisible();
+  expect(await page.evaluate(() => { const event = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(event); return event.defaultPrevented; })).toBe(true);
+  await nav.getByRole('link', { name: 'Notations', exact: true }).click();
+  await expect(page).toHaveURL(/\/notations$/);
+  await expect(page.getByTestId('selected-notation-id')).toHaveText(notationId!);
+  await expect(page.getByTestId('pending-count')).toHaveText('1');
+  await expect(page.getByTestId('saved-version')).toHaveText(String(initialVersion));
+  await expect(page.getByLabel('Notation title', { exact: true })).toHaveValue(`${title} revised`);
+  await expect(page.getByLabel('Notation body', { exact: true })).toHaveValue('Revised authored local context.');
+  await expect(page.getByLabel('New notation title', { exact: true })).toHaveValue('Unapplied navigation draft');
+  await expect(page.getByLabel('New notation body', { exact: true })).toHaveValue('Keep this typed text across routes.');
+  await expect(page.getByLabel('Relation label', { exact: true })).toHaveValue('Unapplied relation');
+  expect(stateReads).toBe(1);
+  await page.getByRole('button', { name: 'Clear new notation', exact: true }).click();
+  await page.getByRole('button', { name: 'Clear relation form', exact: true }).click();
+
   await page.getByRole('button', { name: 'Preview changes', exact: true }).click();
   await expect(page.getByTestId('pending-count')).toHaveText('2');
   await expect(page.getByTestId('selected-notation-id')).toHaveText(notationId!);
-  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await page.getByRole('button', { name: /^Undo/ }).click();
   await expect(page.getByLabel('Notation title', { exact: true })).toHaveValue(title);
   await expect(page.getByLabel('Notation body', { exact: true })).toHaveValue('Original authored notation, not canonical evidence.');
   await expect(page.getByTestId('pending-count')).toHaveText('3');
-  await page.getByRole('button', { name: 'Save local version', exact: true }).click();
+  await page.getByRole('button', { name: /^Save local version/ }).click();
   await expect(page.getByText(`Saved local version ${initialVersion + 1}.`, { exact: true })).toBeVisible();
   await expect(page.getByTestId('pending-count')).toHaveText('0');
+  await expect(nav.getByTestId('nav-draft-marker')).toHaveCount(0);
   await page.reload();
   await loaded(page);
   await page.getByRole('button', { name: `Select notation ${title}`, exact: true }).click();
@@ -48,43 +77,36 @@ test('notations: real local state survives create, edit, Rust undo and save/page
   await expect(page.getByLabel('Notation title', { exact: true })).toHaveValue(title);
   await expect(page.getByLabel('Notation body', { exact: true })).toHaveValue('Original authored notation, not canonical evidence.');
   await expect(page.getByTestId('saved-version')).toHaveText(String(initialVersion + 1));
-  await expect(page.getByRole('button', { name: 'Redo', exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: /^Redo/ })).toBeEnabled();
   const dimensions = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: window.innerWidth }));
   expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport + 1);
   const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze();
   expect(accessibility.violations.filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')).toEqual([]);
   expect(errors).toEqual([]);
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
   await page.screenshot({ path: testInfo.outputPath('notation-state.png'), fullPage: true });
 });
 
-test('notations: drafts survive internal navigation (Stay / Leave and keep / Discard) and a browser reload, with accessible focus', async ({ page }, testInfo) => {
+test('notations: drafts stay with the tab through navigation and a browser reload, and discarding them is deliberate', async ({ page }, testInfo) => {
   await page.goto('/notations');
   await loaded(page);
   const title = `Draft kept ${testInfo.project.name} ${Date.now()}`;
   await page.getByLabel('New notation title', { exact: true }).fill(title);
   await expect(page.getByTestId('state-text')).toHaveAttribute('data-count', '1');
   const nav = page.getByRole('navigation', { name: 'Primary' });
+  await expect(nav.getByTestId('nav-draft-marker')).toBeVisible();
 
-  await nav.getByRole('link', { name: 'Releases' }).click();
-  const dialog = page.getByTestId('leave-dialog');
-  await expect(dialog).toBeVisible();
-  await expect(page).toHaveURL(/\/notations$/);
-  await expect(page.locator(':focus')).toHaveText('Stay');
-  await page.keyboard.press('Tab');
-  await expect(page.locator(':focus')).toHaveText('Leave and keep drafts');
-  await page.keyboard.press('Escape');
-  await expect(dialog).toBeHidden();
-  await expect(page.getByLabel('New notation title', { exact: true })).toHaveValue(title);
-
-  await nav.getByRole('link', { name: 'Releases' }).click();
-  await dialog.getByRole('button', { name: 'Leave and keep drafts' }).click();
+  await nav.getByRole('link', { name: 'Releases', exact: true }).click();
   await expect(page).toHaveURL(/\/releases$/);
-  await nav.getByRole('link', { name: 'Notations' }).click();
-  await expect(page.getByRole('status')).toContainText('Unapplied text restored from this tab.');
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  await nav.getByRole('link', { name: 'Notations', exact: true }).click();
+  await expect(page).toHaveURL(/\/notations$/);
   await expect(page.getByLabel('New notation title', { exact: true })).toHaveValue(title);
+  await expect(page.getByTestId('state-text')).toHaveAttribute('data-count', '1');
 
   await page.reload();
   await loaded(page);
+  await expect(page.getByRole('status')).toContainText('Unapplied text restored from this tab.');
   await expect(page.getByLabel('New notation title', { exact: true })).toHaveValue(title);
   await page.getByRole('button', { name: 'Preview new notation', exact: true }).click();
   await expect(page.getByTestId('pending-count')).toHaveText('1');
@@ -93,14 +115,14 @@ test('notations: drafts survive internal navigation (Stay / Leave and keep / Dis
   await expect(page.getByRole('status')).toContainText('Browser drafts restored: 1 pending command re-validated by the state kernel. Not saved.');
   await expect(page.getByTestId('pending-count')).toHaveText('1');
   await expect(page.getByTestId('selected-notation-id')).toHaveText(notationId!);
+  await expect(nav.getByTestId('nav-draft-marker')).toBeVisible();
 
-  await nav.getByRole('link', { name: 'Releases' }).click();
-  await dialog.getByRole('button', { name: 'Discard drafts and leave' }).click();
-  await expect(page).toHaveURL(/\/releases$/);
-  await nav.getByRole('link', { name: 'Notations' }).click();
-  await loaded(page);
+  await page.getByRole('button', { name: 'Reload saved state', exact: true }).click();
+  await expect(page.locator(':focus')).toHaveText('Keep editing');
+  await page.getByRole('button', { name: 'Discard drafts and reload', exact: true }).click();
   await expect(page.getByTestId('pending-count')).toHaveText('0');
   await expect(page.getByLabel('New notation title', { exact: true })).toHaveValue('');
+  await expect(nav.getByTestId('nav-draft-marker')).toHaveCount(0);
 });
 
 test('notations: a preview the kernel refuses keeps the draft, and the three states are told apart', async ({ page }) => {
@@ -114,9 +136,9 @@ test('notations: a preview the kernel refuses keeps the draft, and the three sta
   await expect(page.getByTestId('state-text')).toHaveAttribute('data-count', '1');
   await expect(page.getByTestId('state-pending')).toHaveAttribute('data-count', '0');
   await expect(page.getByTestId('state-saved')).toContainText('Saved local version');
-  await expect(page.getByTestId('capacity')).toHaveAttribute('data-source', 'CONTRACT');
-  await expect(page.getByTestId('capacity-commands')).toContainText('/ 256');
-  await expect(page.getByTestId('capacity-versions')).toContainText('/ 64');
+  await expect(page.getByTestId('capacity')).toHaveAttribute('data-source', 'API');
+  await expect(page.getByTestId('command-capacity')).toContainText('/ 256 used');
+  await expect(page.getByTestId('version-capacity')).toContainText('/ 64 used');
   await expect(page.getByTestId('evidence-fixture-marker')).toBeVisible();
   await expect(page.locator('[data-reference-id]')).toHaveCount(5);
   await expect(page.locator('[data-reference-id][data-resolution="CHANGED"]')).toHaveCount(1);
@@ -136,7 +158,7 @@ test('notations: a version conflict keeps the work inspectable and copyable, and
     data: { schema: 'payload.notation-command-batch.v1', baseVersion: base, commands: [{ commandId: randomUUID(), kind: 'CREATE_NOTATION', notation: { id: randomUUID(), title: theirs, body: 'Saved by another writer.' } }] },
   });
   expect(competing.status()).toBe(200);
-  await page.getByRole('button', { name: 'Save local version', exact: true }).click();
+  await page.getByRole('button', { name: /^Save local version/ }).click();
   const panel = page.getByTestId('conflict-panel');
   await expect(panel).toBeVisible();
   await expect(panel).toHaveAttribute('data-reason', 'VERSION_CONFLICT');

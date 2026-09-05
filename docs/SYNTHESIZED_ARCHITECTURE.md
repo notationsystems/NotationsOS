@@ -119,6 +119,8 @@ These mappings preserve the supplied synthesis without silently promoting old co
 
 ## Implemented boundary
 
+The [local production API](LOCAL_PRODUCTION_WORKFLOW.md) connects Acquisition and candidate organization through explicit registered inputs, stage receipts and historical inspection. The [GAT IFC inspector](GAT_INSPECTOR.md) is a pinned Compute/Decision instrument over preserved evidence, with a separate safe Projection response. Its analysis model does not become State Fabric canonical authority; the Rust notation kernel remains authored state only. Neither local path activates a release or public customer execution.
+
 The local acquisition, normalization and candidate-build rails and the manually launched coordination reviewers remain as documented. Their unadmitted local files do not become a released corpus or a source for the fixture projection endpoint. The public corpus/workbench surfaces remain demonstration fixtures.
 
 The Projection Fabric supplies a bounded, read-only specification and preview over exact fixture releases, not installed kepler.gl, CesiumJS or Three.js instances. The first small state-kernel milestone is now implemented locally: `/notations` supports create → update → undo → save → page reload through the Rust command kernel. Its stable IDs and authored relationships do not confer source truth or admission authority. Bevy ECS is deferred; there is no ECS, renderer or simulation dependency in this kernel.

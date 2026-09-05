@@ -88,8 +88,12 @@ The underlying production system is shared. The customer-facing API, feed, repor
 
 ## How this repository reflects it
 
+The [local production workflow](LOCAL_PRODUCTION_WORKFLOW.md) makes the existing acquisition-to-candidate rail operable through an opt-in loopback API, with configuration records, stage receipts and historical inspection. The [GAT IFC inspector](GAT_INSPECTOR.md) adds a pinned, bounded specialist audit over preserved evidence. These are internal local capabilities, not public customer delivery, canonical admission, independent verification or managed customer compute. The six firm-wide absences above remain unchanged.
+
 | Statement | Where it is implemented | Presence |
 |---|---|---|
+| Operate one local Caravan production path through supported frontend contracts | `src/production`, `/api/production`, `/api/production/inspect`; [Local production workflow](LOCAL_PRODUCTION_WORKFLOW.md) | Local development implementation: registered definitions/sources, bounded capture, exact retries, evidence inspection, fixed Carrier normalization/quarantine and unadmitted candidate-build inspection. No live connector or public acquisition controls |
+| Inspect building-model evidence through a pinned specialist engine | `src/gat`, `/api/gat/audits`; [GAT inspector](GAT_INSPECTOR.md) | Local implementation: exact IFC bytes + current declared DERIVE permission → pinned GAT audit → original report/receipt + safe projection. Supported and blocked outcomes; no source-truth, engineering approval, admission or physical-action authority |
 | Governed, time-bounded information inventory with evidence, method lineage, rights, uncertainty and release history intact | `src/domain/corpus.ts`, `src/fixtures/caravan/release.ts`; `/releases` | Demonstration fixture |
 | The production system: acquisition, extraction, normalization, identity, ontology, computation, storage, indexing, verification, release, correction, recall | `ProductionStage` in `src/domain/corpus.ts`; `BuildRecord.stages` on every release; `/releases/:id` production record; `/product` | Demonstration fixture: storage is stated as not run, computation as not applicable |
 | Authorized geospatial, remote-sensing, operational and scientific source material | `RightsSchedule.materialClass`; the material column of the rights matrix; `/product` | Operational and scientific in the demonstration corpus; geospatial and remote sensing not represented, and stated so |

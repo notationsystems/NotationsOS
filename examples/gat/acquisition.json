@@ -1,0 +1,21 @@
+{
+  "schema": "payload.local-intake-request.v1",
+  "acquisitionId": "demo-gat-supported-001",
+  "evidenceId": "demo-gat-supported-ifc-001",
+  "purpose": "GAT_IFC_INSPECTION",
+  "mediaType": "model/ifc",
+  "capturedAt": "2026-09-05T00:00:00.000Z",
+  "sourceRegistration": {
+    "registrationId": "demo-gat-supported-policy",
+    "sourceId": "notation://source/local/gat-supported-demo",
+    "displayName": "Synthetic GAT IFC demonstration, not customer building evidence",
+    "sourceClass": "SYNTHETIC_DEMONSTRATION",
+    "licenseId": "gat-demo-mit-see-examples-gat-origin",
+    "policyVersion": "1.0.0",
+    "effectiveFrom": "2026-09-01T00:00:00.000Z",
+    "permittedPurposes": ["GAT_IFC_INSPECTION"],
+    "allowedOperations": ["INGEST", "DERIVE"],
+    "allowedAudiences": ["INTERNAL"],
+    "retention": { "mode": "INDEFINITE" }
+  }
+}
