@@ -12,6 +12,7 @@ export const NAV_GROUPS: ReadonlyArray<{ group: string; items: ReadonlyArray<{ h
   {
     group: 'Corpus',
     items: [
+      { href: '/products', label: 'Products', match: /^\/products/ },
       { href: '/releases', label: 'Releases', match: /^\/releases/ },
       { href: '/stream', label: 'Stream', match: /^\/stream/ },
       { href: '/retractions', label: 'Retractions', match: /^\/retractions/ },

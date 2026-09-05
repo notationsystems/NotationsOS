@@ -101,6 +101,8 @@ scripts         local server launcher, contract-review and candidate-build-revie
 examples/evidence synthetic notice and operator-declared intake manifest
 examples/carrier synthetic Carrier JSON, acquisition declaration and normalization request
 src/mcp         MCP tools over the same feed payloads, and the stdio server
+src/domain/informationProduct.ts  the first information product as data, held to the corpus by its test: every field exists, every released record meets the stated evidence requirement, the customer question is answerable through the feed at two knowledge times
+src/domain/deliveredRecord.ts     the ten questions a delivered record answers, mapped to payload fields; its test holds every record the feed delivers to all ten
 src/domain/doctrine.ts   the architecture carried forward as data: five fabrics, three states of information, seven rules with where each is enforced and which tests prove it, verification tiers (docs/ARCHITECTURE.md is the prose; /product renders it)
 src/domain/projection.ts the projection instruments' questions and roles and the routing table as data, over the one router in src/projection/spec.ts; a test checks the table against the router for every combination
 src/architecture.test.ts structural doctrine: browser and page layers take only types and the pure policy evaluator from the rails; the rails import nothing from above; every projection leaves the corpus untouched and identities intact
@@ -111,6 +113,7 @@ src/app         product model: /product
                 corpus: /releases, /releases/[releaseId], /stream, /retractions, /api, /api/v1/* (fixture feed)
                 workbench: /cases, /cases/new, /cases/[caseId], /rulings, /rulings/[rulingId], /replay/[caseId], /profiles, /evidence
                 coordination: /agents, /board, /api/coordination, /api/coordination/inbox (read-only fixtures or local sandbox)
+                product: /products (the first information product, caravan.lot-state.v0: customer question, subjects, fields with evidence requirements, freshness, permitted uses, correction at two knowledge times, the ten-question delivered-record contract, the acceptance target)
                 production: /candidates (the local rail's acquisitions, normalizations, candidate build and refusals, all UNADMITTED; reproduced from examples/ by npm run stamp:production)
                 projection: /api/projections/sources/[releaseId] (descriptor GET), /api/projections/preview (read-only POST over pinned fixture releases)
 tests/e2e       Playwright smoke, accessibility, keyboard, mobile, overflow guard, screenshots

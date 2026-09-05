@@ -139,3 +139,19 @@ test('candidates: the local rail is visible, unadmitted, identity unresolved, an
   const nav = page.getByRole('navigation', { name: 'Primary' });
   await expect(nav.getByRole('link', { name: 'Candidates' })).toBeVisible();
 });
+
+test('the information product states its question, fields, correction at two knowledge times, the ten-question contract and the acceptance target', async ({ page }) => {
+  await page.goto('/products');
+  await expect(page.getByRole('heading', { level: 1, name: 'Caravan lot state' })).toBeVisible();
+  await expect(page.getByTestId('customer-question')).toContainText('as knowable at a stated time');
+  await expect(page.locator('[data-product-field]')).toHaveCount(6);
+  await expect(page.locator('[data-product-field][data-within="false"]')).toHaveCount(0);
+  await expect(page.getByTestId('prohibited-purposes')).toContainText('PROPRIETARY_STRATEGY, TRADING');
+  await expect(page.locator('[data-asof="early"]')).toContainText('40 t');
+  await expect(page.locator('[data-asof="late"]')).toContainText('40.12 t');
+  await expect(page.locator('[data-asof="late"]')).toContainText('supersedes REC-0203');
+  await expect(page.locator('[data-contract-question]')).toHaveCount(10);
+  await expect(page.locator('[data-acceptance-step][data-reached="true"]')).toHaveCount(2);
+  await expect(page.locator('[data-acceptance-step][data-reached="false"]')).toHaveCount(2);
+  await expect(page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Products' })).toBeVisible();
+});
