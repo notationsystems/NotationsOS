@@ -156,7 +156,7 @@ ${PRODUCT_ARCHITECTURE.domains.map((d, i, a) => `   ${i === a.length - 1 ? 'â””â
       </Section>
 
       <Section title="Projection fabric" id="pm-projection">
-        <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>Three instruments for three questions over one corpus, and a table. A projection changes representation, never identity; it derives no relation from where things land; it has no path back into its source. The contract and the router are in <span className="mono">src/domain/projection.ts</span>; the engines are named, not installed.</p>
+        <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>Three instruments for three questions over one corpus, and the records view. A projection changes representation, never identity; it derives no relation from where things land; it has no path back into its source. The closed spec, the source-pinned compiler and the read-only preview endpoints are in <span className="mono">src/projection</span>; the routing table is in <span className="mono">src/domain/projection.ts</span>; the engines are routed to, not installed.</p>
         <div className="surface overflow-x-auto" tabIndex={0}>
           <table className="ledger-table text-[12px]" aria-label="Projection engines">
             <thead><tr><th scope="col">Engine</th><th scope="col">Question</th><th scope="col">Role</th><th scope="col">Runtime</th><th scope="col">Here</th></tr></thead>

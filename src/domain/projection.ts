@@ -1,87 +1,56 @@
 /**
- * The projection fabric as a contract. A projection turns a selection of
- * corpus, canonical or inquiry state into something a person or program can
- * look at; it never changes what it looks at, never invents a relation from
- * where things land on a screen, and never changes what a thing is.
- *
- * Three engines are named for three different jobs (kepler.gl for patterns
- * across many geospatial observations, CesiumJS for geodetic realization,
- * Three.js for structural or computational geometry) and a fourth, the
- * table, for listings. None of the three engines is installed here; the
- * router decides deterministically which one a spec would go to, so the
- * decision table exists and is tested before any engine does.
+ * The projection fabric's engines and routing table as data, over the
+ * implemented contract in src/projection (payload.projection-spec.v1: a
+ * closed spec, a source-pinned compiler, read-only endpoints). There is one
+ * router, src/projection/spec.ts; this module names the instruments'
+ * questions and roles and records the routing table that
+ * docs/PROJECTION_FABRIC.md states, and projection.test.ts asserts the table
+ * agrees with the router for every combination. Nothing here renders.
  */
-import type { CanonicalURI } from './types';
+import { routeProjection, type ProjectionView } from '@/projection/spec';
 
-export const COORDINATE_SEMANTICS = ['GEODETIC', 'INTRINSIC_PHYSICAL', 'FEATURE_SPACE', 'GRAPH_LAYOUT', 'MODEL_SPACE', 'NONE'] as const;
-export type CoordinateSemantics = (typeof COORDINATE_SEMANTICS)[number];
+export type { ProjectionSpec, ProjectionView } from '@/projection/spec';
+export { routeProjection };
 
-export const REPRESENTATIONS = ['POINT', 'LINE', 'POLYGON', 'MESH', 'VOLUME', 'TRAJECTORY', 'GRAPH', 'FIELD', 'TABLE'] as const;
-export type Representation = (typeof REPRESENTATIONS)[number];
+export const PROJECTION_MODES = ['EVIDENCE', 'MAP', 'GLOBE', 'STRUCTURE'] as const satisfies readonly ProjectionView['mode'][];
+export const COORDINATE_SEMANTICS = ['NONE', 'GEODETIC', 'GRAPH_LAYOUT', 'INTRINSIC_PHYSICAL', 'FEATURE_SPACE', 'ARBITRARY_MODEL_SPACE'] as const satisfies readonly ProjectionView['coordinateSemantics'][];
+export const REPRESENTATIONS = ['RECORDS', 'POINT', 'DENSITY', 'GLOBAL_3D', 'GRAPH', 'MESH', 'FIELD'] as const satisfies readonly ProjectionView['representation'][];
 
-/** What the viewer is asking of the projection; it selects the instrument together with the coordinate semantics. */
-export const PROJECTION_INTENTS = ['PATTERN', 'REALIZATION', 'STRUCTURE', 'LISTING'] as const;
-export type ProjectionIntent = (typeof PROJECTION_INTENTS)[number];
-
-export const PROJECTION_ENGINES = ['kepler.gl', 'CesiumJS', 'Three.js', 'table'] as const;
+export const PROJECTION_ENGINES = ['kepler.gl', 'CesiumJS', 'Three.js', 'records'] as const;
 export type ProjectionEngine = (typeof PROJECTION_ENGINES)[number];
-
-export type ProjectionSource =
-  | { kind: 'CORPUS_RELEASE'; releaseId: string }
-  | { kind: 'CANONICAL_VERSION'; versionId: string }
-  | { kind: 'INQUIRY_STATE'; inquiryId: string };
-
-export interface ProjectionSpec {
-  source: ProjectionSource;
-  selection: {
-    entities: readonly CanonicalURI[];
-    relations?: readonly string[];
-    temporalWindow?: { from: string; to: string };
-  };
-  coordinateSemantics: CoordinateSemantics;
-  representation: Representation;
-  intent: ProjectionIntent;
-  /** Enough to reproduce the projection: what was projected, by which compiler, through which transform. */
-  provenance: { sourceVersion: string; compilerVersion: string; transformId: string };
-}
-
-export interface ProjectionPlan {
-  engine: ProjectionEngine;
-  reasons: string[];
-  /** The referents pass through unchanged. A projection changes representation, not identity. */
-  referents: readonly CanonicalURI[];
-  /** Proximity, layout and similarity on the instrument are never relations. */
-  derivesRelations: false;
-  /** The plan reads its source; it has no path back into it. */
-  mutatesSource: false;
-  provenance: ProjectionSpec['provenance'];
-}
 
 export const ENGINE_ROLE: Record<ProjectionEngine, { question: string; role: string; runtime: string }> = {
   'kepler.gl': { question: 'Where is the pattern?', role: 'Analytical cartography over many geospatial observations: density, aggregation, flows, time filters.', runtime: 'Browser, deck.gl / WebGL' },
   CesiumJS: { question: 'Where does this exist, and how does it move through geographic space and time?', role: 'Geodetic realization on a WGS84 globe: terrain, imagery, 3D Tiles, trajectories.', runtime: 'Browser, WebGL' },
   'Three.js': { question: 'How is the system constituted, in whatever space it lives in?', role: 'Structural and computational geometry: meshes, fields, graphs, state spaces, Morpho.', runtime: 'Browser, WebGL / WebGPU' },
-  table: { question: 'What are the records?', role: 'A listing with every field, the workbench default.', runtime: 'HTML' },
+  records: { question: 'What are the records?', role: 'Selected safe record payloads, the evidence view and the workbench default.', runtime: 'JSON, HTML' },
 };
 
-/** The decision table. Pure: the same spec always routes the same way. */
-export function routeProjection(spec: ProjectionSpec): ProjectionPlan {
-  const reasons: string[] = [];
-  let engine: ProjectionEngine;
-  const geodetic = spec.coordinateSemantics === 'GEODETIC';
-  const flat = spec.representation === 'POINT' || spec.representation === 'LINE' || spec.representation === 'POLYGON';
-  if (spec.representation === 'TABLE' || spec.intent === 'LISTING' || spec.coordinateSemantics === 'NONE') {
-    engine = 'table';
-    reasons.push(spec.representation === 'TABLE' ? 'representation is TABLE' : spec.intent === 'LISTING' ? 'intent is LISTING' : 'no coordinate semantics');
-  } else if (geodetic && spec.intent === 'PATTERN' && flat) {
-    engine = 'kepler.gl';
-    reasons.push('GEODETIC coordinates', `intent PATTERN over ${spec.representation}`);
-  } else if (geodetic) {
-    engine = 'CesiumJS';
-    reasons.push('GEODETIC coordinates', spec.intent === 'PATTERN' ? `${spec.representation} needs the globe, not the analytic map` : `intent ${spec.intent} on the globe`);
-  } else {
-    engine = 'Three.js';
-    reasons.push(`${spec.coordinateSemantics} coordinates are not geographic`, `intent ${spec.intent}`);
-  }
-  return { engine, reasons, referents: spec.selection.entities, derivesRelations: false, mutatesSource: false, provenance: spec.provenance };
+export interface ProjectionRoute extends ProjectionView {
+  engine: ProjectionEngine;
+  /** What the fixture compiler returns today for this route. */
+  currentResult: 'READY' | 'UNAVAILABLE';
+  note: string;
+}
+
+/** The routing table of docs/PROJECTION_FABRIC.md. Every other combination is rejected by the router. */
+export const PROJECTION_ROUTING: readonly ProjectionRoute[] = [
+  { mode: 'EVIDENCE', coordinateSemantics: 'NONE', representation: 'RECORDS', engine: 'records', currentResult: 'READY', note: 'Selected safe record payloads with status at the knowledge instant.' },
+  { mode: 'STRUCTURE', coordinateSemantics: 'GRAPH_LAYOUT', representation: 'GRAPH', engine: 'Three.js', currentResult: 'READY', note: 'Records plus a record-to-subject incidence graph; no layout, no inferred edge.' },
+  { mode: 'MAP', coordinateSemantics: 'GEODETIC', representation: 'POINT', engine: 'kepler.gl', currentResult: 'UNAVAILABLE', note: 'No fixture geometry; nothing is invented.' },
+  { mode: 'MAP', coordinateSemantics: 'GEODETIC', representation: 'DENSITY', engine: 'kepler.gl', currentResult: 'UNAVAILABLE', note: 'No fixture geometry; nothing is invented.' },
+  { mode: 'GLOBE', coordinateSemantics: 'GEODETIC', representation: 'GLOBAL_3D', engine: 'CesiumJS', currentResult: 'UNAVAILABLE', note: 'No fixture geometry; nothing is invented.' },
+  { mode: 'STRUCTURE', coordinateSemantics: 'INTRINSIC_PHYSICAL', representation: 'MESH', engine: 'Three.js', currentResult: 'UNAVAILABLE', note: 'No fixture geometry.' },
+  { mode: 'STRUCTURE', coordinateSemantics: 'INTRINSIC_PHYSICAL', representation: 'FIELD', engine: 'Three.js', currentResult: 'UNAVAILABLE', note: 'No fixture geometry.' },
+  { mode: 'STRUCTURE', coordinateSemantics: 'FEATURE_SPACE', representation: 'MESH', engine: 'Three.js', currentResult: 'UNAVAILABLE', note: 'No fixture geometry.' },
+  { mode: 'STRUCTURE', coordinateSemantics: 'FEATURE_SPACE', representation: 'FIELD', engine: 'Three.js', currentResult: 'UNAVAILABLE', note: 'No fixture geometry.' },
+  { mode: 'STRUCTURE', coordinateSemantics: 'ARBITRARY_MODEL_SPACE', representation: 'MESH', engine: 'Three.js', currentResult: 'UNAVAILABLE', note: 'No fixture geometry.' },
+  { mode: 'STRUCTURE', coordinateSemantics: 'ARBITRARY_MODEL_SPACE', representation: 'FIELD', engine: 'Three.js', currentResult: 'UNAVAILABLE', note: 'No fixture geometry.' },
+];
+
+/** What every compiled projection states it did not do. */
+export const PROJECTION_NONCLAIMS = ['sourceMutated', 'canonicalAdmission', 'relationInferred', 'sourceTruthClaimed', 'independentlyVerified', 'rendererExecuted'] as const;
+
+export function routeFor(view: ProjectionView): ProjectionRoute | undefined {
+  return PROJECTION_ROUTING.find((r) => r.mode === view.mode && r.coordinateSemantics === view.coordinateSemantics && r.representation === view.representation);
 }

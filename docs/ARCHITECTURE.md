@@ -1,86 +1,42 @@
-# Architecture carried forward
+# Doctrine binding
 
-The founder's synthesis (2026-09-05) of every earlier iteration, as it binds this repository. `src/domain/doctrine.ts` holds the same content as data; `/product` renders it; `src/domain/doctrine.test.ts` and `src/architecture.test.ts` keep it honest. The mandate in [Economic architecture](ECONOMIC_ARCHITECTURE.md) and [Company mandate](COMPANY_MANDATE.md) is unchanged by this document; this is how the machinery is arranged underneath it.
+[Synthesized architecture](SYNTHESIZED_ARCHITECTURE.md) is the prose of record for the five fabrics, the seven doctrine invariants, the projection instruments, the runtime allocation and the historical concept mapping. This document records only what that architecture binds in this repository: where each rule is enforced, which tests prove it, the three states of information as they exist here, the verification tier reached, and the identity chain. `src/domain/doctrine.ts` holds the same content as data; `/product` renders it; `src/domain/doctrine.test.ts` fails if a named test file disappears.
 
-## The system
+## Three states of information, here
 
-```
-Acquire → preserve evidence → compile corpus → establish state → project → compute → investigate → act → observe
-```
-
-with provenance, lineage, quality, policy and replayability around the whole of it, and observation returning to acquisition, never directly into state.
-
-## Five fabrics
-
-| # | Fabric | Transforms | In this repository |
+| State | Meaning | Invariants | In this repository |
 |---|---|---|---|
-| 1 | Acquisition | world → evidence | The local evidence rail: declared policy, exact INGEST decision, content-addressed bytes, receipt. No connector, frontier, crawler or change detector. |
-| 2 | Corpus | evidence → computational commons | Carrier normalization after a separate DERIVE decision; UNADMITTED, UNRESOLVED candidates or a quarantine; time-bounded candidate builds. Demonstration releases stand in for compiled inventory. |
-| 3 | State | candidate → validation → version | Absent as a kernel. Admission is a separate act nothing here performs. The deterministic state kernel is specified outside this repository. |
-| 4 | Compute and decision | state → model → result → decision | The ruling workbench, one optional application over the corpus. No model, simulation or optimizer runs here. |
-| 5 | Projection | state or inquiry → operable representation | The feed API, MCP tools, stream and pages. `ProjectionSpec` and its router exist and are tested; kepler.gl, CesiumJS and Three.js are named, not installed. |
-
-## Three states of information
-
-| State | Meaning | Invariants | Here |
-|---|---|---|---|
-| Evidence, E | what has been observed | append-only, content-addressed, a record of what a source said | evidence artifacts with capture digests and receipts; acquisitions on the rail |
+| Evidence, E | what has been observed | append-only, content-addressed, a record of what a source said | evidence artifacts with capture digests and receipts; acquisitions on the local rail |
 | Canonical, K | what has been admitted under a schema and a validation regime, as a version | immutable per version, schema-constrained, deterministic identity | released records in certified releases; admission absent |
-| Inquiry, I | what one investigation is manipulating; allowed to be wrong | exploratory, mutable, never a source of truth, promotion crosses validation | the intake draft; candidates on the rail; no general inquiry workspace yet |
+| Inquiry, I | what one investigation is manipulating; allowed to be wrong | exploratory, mutable, never a source of truth, promotion crosses validation | the intake draft; candidates on the rail; no general inquiry workspace |
 
-Corpus ≠ canonical state. Corpus ≠ graph. Evidence ≠ assertion. The identity chain is kept distinct, with the morphisms between its members preserved: evidence ≠ observation ≠ claim ≠ canonical state ≠ representation ≠ model ≠ execution ≠ verification.
+The identity chain is kept distinct, with the morphisms between its members preserved: evidence ≠ observation ≠ claim ≠ canonical state ≠ representation ≠ model ≠ execution ≠ verification.
 
-## Doctrine
+## The seven rules, bound
 
-1. Evidence is not state.
-2. Canonical state is not the entire corpus.
-3. Inquiry is allowed to be wrong.
-4. Computation produces derived objects, not truth automatically.
-5. Projection never mutates its source.
-6. Identity survives representation changes.
-7. Every promoted result crosses an explicit validation boundary.
+| # | Rule | Enforced here | Proved by |
+|---|---|---|---|
+| 1 | Evidence is not state. | Evidence artifacts and corpus records are distinct types; every record names its artifact and receipt; every capture and candidate carries `sourceTruthClaimed: false`. | `src/fixtures/capture.contract.test.ts`, `src/fixtures/production/demo.contract.test.ts` |
+| 2 | Canonical state is not the entire corpus. | No candidate, run or build identifier or digest appears in any release, feed payload or MCP result; the rail has its own page. | `src/fixtures/production/demo.contract.test.ts` |
+| 3 | Inquiry is allowed to be wrong. | The intake draft is saved unevaluated with submission as an intent; the workbench adjudicates nothing; a board message resolves no identity. | `src/components/case/CaseWorkspace.test.tsx`, `src/coordination/ledger.test.ts` |
+| 4 | Computation produces derived objects, not truth automatically. | Derived quantities carry named, versioned methods; every candidate carries its derivation decision and adapter digest; checks are evaluation, verification is stated as internal recompute. | `src/domain/corpus.test.ts`, `src/data-os/local-normalization.test.ts` |
+| 5 | Projection never mutates its source. | The fixture corpus is byte-identical before and after every feed payload and MCP tool; the projection compiler returns detached copies and states `sourceMutated: false`. | `src/architecture.test.ts`, `src/domain/projection.test.ts`, `src/projection/projection.test.ts` |
+| 6 | Identity survives representation changes. | One `notation://` identity per record across the records feed, the as-of answer, every MCP result and every compiled projection; the only graph edge is the record-to-subject incidence a record already names. | `src/architecture.test.ts`, `src/domain/projection.test.ts`, `src/projection/projection.test.ts` |
+| 7 | Every promoted result crosses an explicit validation boundary. | The rail writes UNADMITTED records only and refuses what it cannot vouch for; browser and page layers import only types and the pure source-use evaluator from the rails; the rails import nothing from above them; admission is absent and stated so. | `src/architecture.test.ts`, `src/data-os/local-candidate-build.test.ts` |
 
-And one operational rule: build shared information before multiplying reasoning processes.
+Operational rule: build shared information before multiplying reasoning processes.
 
-Each rule's enforcement here and the tests that prove it are listed in `src/domain/doctrine.ts` and on `/product`. Rules 5, 6 and 7 gained direct tests in this cycle (`src/architecture.test.ts`): the fixture corpus is byte-identical before and after every feed payload and every MCP tool; a record's `notation://` identity is the same string in the records feed, the as-of answer and the tool results; browser and page layers import only types and the pure source-use evaluator from `src/data-os`, and the rails import nothing from above them.
+## Projection, here
 
-## Projection fabric
-
-Three instruments answer three different questions over the same corpus; none of them is a data store and none of them derives a relation from where things land.
-
-| Engine | Question | Role |
-|---|---|---|
-| kepler.gl | Where is the pattern? | analytical cartography over many geospatial observations |
-| CesiumJS | Where does this exist, and how does it move through geographic space and time? | geodetic realization on a WGS84 globe |
-| Three.js | How is the system constituted, in whatever space it lives in? | structural and computational geometry, Morpho |
-| table | What are the records? | the workbench listing |
-
-`ProjectionSpec` names the source (a corpus release, a canonical version or an inquiry state), the selection, the coordinate semantics (GEODETIC, INTRINSIC_PHYSICAL, FEATURE_SPACE, GRAPH_LAYOUT, MODEL_SPACE, NONE), the representation, the intent (PATTERN, REALIZATION, STRUCTURE, LISTING) and the provenance needed to reproduce it. `routeProjection` is pure and total: geodetic patterns over points, lines or polygons go to kepler.gl; anything else geodetic goes to CesiumJS; anything not geographic goes to Three.js; listings and tables go to the table. The plan carries the referents unchanged, `derivesRelations: false` and `mutatesSource: false`.
-
-Node.js is the workbench and application runtime, owning sessions, transport and projection requests, never canonical state. Extraction is an interface, not a vendor: no model vendor has an architectural role here.
+There is one router, `routeProjection` in `src/projection/spec.ts`, and one closed spec, `payload.projection-spec.v1`, compiled read-only over one exact fixture release by `src/projection/compile.ts` and served by `GET /api/projections/sources/:releaseId` and `POST /api/projections/preview` ([Projection fabric](PROJECTION_FABRIC.md)). `src/domain/projection.ts` records the instruments' questions and roles and the routing table as data; `src/domain/projection.test.ts` asserts the table agrees with the router for every combination of mode, coordinate semantics and representation, that the compiler returns what the table says, keeps identity and states its non-claims. kepler.gl, CesiumJS and Three.js are routed to, not installed; geometry requests return `UNAVAILABLE` and nothing is invented.
 
 ## Verification tiers
 
 | Tier | Name | Here |
 |---|---|---|
 | V0 | provenance | reached |
-| V1 | deterministic reproducibility | reached: digests, captures, manifests and the production demonstration regenerate under test |
+| V1 | deterministic reproducibility | reached: digests, captures, manifests, the production demonstration and projections regenerate under test |
 | V2 | signed releases and manifests | not reached: commitments exist, nothing signs them |
 | V3 | independent recomputation | not reached: verification is internal recompute, stated as such |
 | V4 | cryptographic execution attestation | not reached |
 | V5 | formal or zero-knowledge proof | not reached, and selective by design |
-
-## What the earlier iterations became
-
-| Earlier concept | Where it lives now |
-|---|---|
-| PayloadOS as the company | the shared production layer, Payload OS, beneath the domain products |
-| DAF, EvidencePool | acquisition fabric, evidence substrate; here the local evidence rail |
-| Archive, Odyssey, Oracle, Librarian | corpus vault, query engine, operator interface: functions kept, labels retired |
-| Computational Commons, InquiryState | corpus fabric and the inquiry state; the intake draft is the first instance here |
-| Deterministic State Architecture | the state fabric's kernel, specified outside this repository |
-| Morpho, STE/SCL/SIL, Model-Complexity, FEP/SCG | compute fabric, representation audit, control plane; none present here |
-| Tradewind, LANDSHARK, Caravan | products over the domain corpora |
-| Kepler, Cesium, Three.js, Node.js | the projection fabric and its runtime |
-| Mistral | no architectural role |
-| blockchain, RWA | not core; an external commitment adapter if a customer case ever justifies it |

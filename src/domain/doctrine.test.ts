@@ -30,8 +30,8 @@ describe('doctrine as data', () => {
     expect(VERIFICATION_TIERS.filter((t) => t.reachedHere).map((t) => t.tier)).toEqual(['V0', 'V1']);
   });
 
-  it('installs no projection engine but the table', () => {
-    expect(PROJECTION_ENGINES_IN_REPOSITORY.map((e) => [e.engine, e.presence])).toEqual([['kepler.gl', 'ABSENT'], ['CesiumJS', 'ABSENT'], ['Three.js', 'ABSENT'], ['table', 'PRESENT']]);
+  it('installs no projection engine; only the records projection exists, over fixtures', () => {
+    expect(PROJECTION_ENGINES_IN_REPOSITORY.map((e) => [e.engine, e.presence])).toEqual([['kepler.gl', 'ABSENT'], ['CesiumJS', 'ABSENT'], ['Three.js', 'ABSENT'], ['records', 'FIXTURE']]);
     const pkg = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8')) as { dependencies: Record<string, string> };
     for (const dep of Object.keys(pkg.dependencies)) expect(dep, `${dep} is a projection engine the doctrine says is absent`).not.toMatch(/kepler|cesium|^three$/);
   });

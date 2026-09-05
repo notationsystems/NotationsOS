@@ -85,7 +85,7 @@ test('the product page states the firm, the twelve stages, the three customer ca
   await expect(page.locator('[data-doctrine-rule]')).toHaveCount(7);
   await expect(page.getByTestId('operational-rule')).toContainText('shared information');
   await expect(page.locator('[data-engine="kepler.gl"][data-presence="ABSENT"]')).toHaveCount(1);
-  await expect(page.locator('[data-engine="table"][data-presence="PRESENT"]')).toHaveCount(1);
+  await expect(page.locator('[data-engine="records"][data-presence="FIXTURE"]')).toHaveCount(1);
   await expect(page.locator('[data-tier][data-reached="true"]')).toHaveCount(2);
 });
 
