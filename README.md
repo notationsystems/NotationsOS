@@ -6,6 +6,8 @@ This repository holds the product surface over a demonstration corpus and one op
 
 The corpus and ruling workbench are fixture only. The `/api/v1` endpoints serve the committed demonstration corpus and every response says `fixture_only: true`. Every fixture-backed screen says so. Payload OS also has an agent and apparatus stable at `/agents` and a shared message board at `/board`. These open as read-only seed definitions and messages; the opt-in `LOCAL_SANDBOX` mode records local registrations, messages and acknowledgements separately from the immutable corpus fixtures. A participant inbox and JavaScript/Python clients let local processes use the board. A manually started contract-review worker inspects declared input/output compatibility, posts a result and acknowledges its request; it changes no corpus facts or rulings and executes no model or customer workload.
 
+A separate local evidence intake command evaluates an operator-declared source policy for exact `INTERNAL INGEST`, stores content-addressed bytes and an acquisition receipt, and reopens them for integrity checks. This establishes a local evidence rail only: normalization, canonical domain admission and release activation remain absent from that path.
+
 ## Run
 
 ```
@@ -19,6 +21,15 @@ npm run build && npm start
 The coordination launcher binds to `127.0.0.1` and uses `PORT` when set, otherwise port 3000. Visit `/agents` to inspect and register definitions and `/board` to post, reply and acknowledge. Local history persists in the git-ignored `.payload/coordination/events.json`. Selecting an author simulates an identity; it is not authentication. The same `GET` / `POST /api/coordination` JSON interface and `GET /api/coordination/inbox` are available to C++, Rust, Python and JavaScript clients; dependency-free JavaScript and Python clients are included under `clients/`.
 
 Run the contract reviewer once to register `agent.contract-review.v1`, post a directed `REQUEST` with topic `contract-review` and body `{"participantId":"agent.release"}`, then run it again to receive a result. `--watch` repeats passes with a two-second wait. Each pending-work pass starts its inbox scan at zero; durable acknowledgements exclude handled inputs. `PAYLOAD_COORDINATION_URL` selects the worker's local server URL. See [Agent coordination](docs/AGENT_COORDINATION.md) for the two-terminal workflow, client examples, cursor semantics and recovery behavior.
+
+To exercise local evidence intake without a web server, use the included synthetic notice:
+
+```sh
+npm run evidence -- capture --request examples/evidence/request.json --input examples/evidence/notice.txt
+npm run evidence -- inspect --acquisition demo-caravan-local-notice-001
+```
+
+The default store is `.payload/evidence`; `--root <directory>` selects another local root. An identical retry returns the original acquisition and timestamp; a changed valid, policy-allowed request under the same id conflicts, while invalid requests fail earlier checks. Inspection recomputes policy at the original capture time and byte/receipt integrity without returning raw bytes or modifying storage. It grants no current access or retention permission and checks no subsequent external revocation. Inputs are bounded at 8 MiB and metadata at 64 KiB. See [Local evidence intake](docs/LOCAL_EVIDENCE_INTAKE.md) for exact status, storage and recovery boundaries. The declaration is not independent authorization, and the local files are not production storage or canonical corpus state.
 
 ## Check
 
@@ -41,6 +52,7 @@ Playwright uses the environment's Chromium when `PW_CHROMIUM_PATH` is set (for e
 - `docs/COMPANY_MANDATE.md` — the company mandate, customer categories, economic architecture, and Payload OS product structure.
 - `docs/UX_ARCHITECTURE.md` — object model, navigation, projections, component boundaries, the authority boundary.
 - `docs/AGENT_COORDINATION.md` — the shared agent/apparatus stable, scoped board and inbox, contract synastry, JavaScript/Python clients, local worker and Bench references.
+- `docs/LOCAL_EVIDENCE_INTAKE.md` — local source-policy evaluation, content-addressed evidence, acquisition receipts, inspection and Bench-derived boundaries.
 - `docs/INTERACTION_SPEC.md` — status transitions, refusal interaction, replay, supersession, visibility.
 - `docs/DEMO_CASE.md` — the fixtures, why they are synthetic, what they demonstrate, what is unvalidated.
 
@@ -49,10 +61,11 @@ Playwright uses the environment's Chromium when `PW_CHROMIUM_PATH` is set (for e
 ```
 src/domain      corpus types and as-of selectors (corpus.ts); the operating model as data (product.ts); workbench view model and selectors; domains
 src/adapter     CorpusSource and CaseSource seams; feed payload builders; fixture implementations only
-src/data-os     compatibility contracts for Bench-derived source-use policy and immutable-evidence capture; not a second corpus or customer API
+src/data-os     Bench-derived source policy and capture contracts; local file object store, acquisition receipts and intake CLI; no canonical corpus admission
 src/coordination agent/apparatus definitions, scope and message rules, contract matching, participant inbox, deterministic reviewer and opt-in local event log
 clients         dependency-free JavaScript and Python coordination clients
-scripts         local server launcher and contract-review worker entry point
+scripts         local server launcher, contract-review worker and evidence-intake entry points
+examples/evidence synthetic notice and operator-declared intake manifest
 src/fixtures    Caravan corpus releases, records, retractions and rights; profile and cases; manifest builder; digest plan; committed digests
 src/components  primitives, case workspace, ruling viewer, replay, queue, intake, shell
 src/app         product model: /product

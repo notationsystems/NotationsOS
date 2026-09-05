@@ -1,0 +1,21 @@
+{
+  "schema": "payload.local-intake-request.v1",
+  "acquisitionId": "demo-caravan-local-notice-001",
+  "evidenceId": "demo-evidence-caravan-local-notice-001",
+  "sourceRegistration": {
+    "registrationId": "demo-local-notice-policy-v1",
+    "sourceId": "notation://source/notation-systems/local-demo",
+    "displayName": "Synthetic local demonstration notice",
+    "sourceClass": "SYNTHETIC_DEMONSTRATION",
+    "licenseId": "local-demo-declaration-not-a-source-license",
+    "policyVersion": "1.0.0",
+    "effectiveFrom": "2026-09-01T00:00:00Z",
+    "permittedPurposes": ["CARAVAN_LOCAL_DEVELOPMENT"],
+    "allowedOperations": ["INGEST"],
+    "allowedAudiences": ["INTERNAL"],
+    "retention": { "mode": "INDEFINITE" }
+  },
+  "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+  "mediaType": "text/plain; charset=utf-8",
+  "capturedAt": "2026-09-05T00:00:00Z"
+}
