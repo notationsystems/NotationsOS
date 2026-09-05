@@ -7,8 +7,8 @@
 | State | Meaning | Invariants | In this repository |
 |---|---|---|---|
 | Evidence, E | what has been observed | append-only, content-addressed, a record of what a source said | evidence artifacts with capture digests and receipts; acquisitions on the local rail |
-| Canonical, K | what has been admitted under a schema and a validation regime, as a version | immutable per version, schema-constrained, deterministic identity | released records in certified releases; admission absent |
-| Inquiry, I | what one investigation is manipulating; allowed to be wrong | exploratory, mutable, never a source of truth, promotion crosses validation | the intake draft; candidates on the rail; no general inquiry workspace |
+| Canonical, K | what has been admitted under a schema and a validation regime, as a version | immutable per version, schema-constrained, deterministic identity | released records in certified releases; corpus admission absent. A deterministic local notation-state kernel exists for authored state (Rust validation and replay, versioned local snapshots); it admits no corpus record |
+| Inquiry, I | what one investigation is manipulating; allowed to be wrong | exploratory, mutable, never a source of truth, promotion crosses validation | the notation workspace's drafts, unsaved commands and saved local versions; the intake draft; candidates on the rail |
 
 The identity chain is kept distinct, with the morphisms between its members preserved: evidence ≠ observation ≠ claim ≠ canonical state ≠ representation ≠ model ≠ execution ≠ verification.
 

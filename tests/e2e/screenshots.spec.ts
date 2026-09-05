@@ -29,6 +29,9 @@ test('desktop screenshots', async ({ page }) => {
   await page.goto('/products');
   await page.getByTestId('correction-demonstration').waitFor();
   await page.screenshot({ path: `${OUT}/00f-information-product.png`, fullPage: true });
+  await page.goto('/notations');
+  await page.getByTestId('evidence-fixture-marker').waitFor();
+  await page.screenshot({ path: `${OUT}/00g-notations-disabled-with-evidence-references.png`, fullPage: true });
   await page.goto('/cases');
   await page.getByRole('table', { name: 'Case queue' }).waitFor();
   await page.screenshot({ path: `${OUT}/01-case-queue.png`, fullPage: true });

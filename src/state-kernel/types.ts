@@ -15,6 +15,18 @@ export interface NotationState {
   canUndo: boolean;
   canRedo: boolean;
 }
+/**
+ * Frontend contract request (optional until the backend supplies it): the
+ * workspace's limits and usage as the kernel and the store know them. The
+ * frontend falls back to the documented limits and derives usage from the
+ * snapshot when this is absent, and says which it did.
+ */
+export interface WorkspaceCapacity {
+  commands: { used: number; limit: number };
+  versions: { used: number; limit: number };
+  notations: { used: number; limit: number };
+  relations: { used: number; limit: number };
+}
 export interface StateKernelSnapshot {
   schema: 'payload.local-notation-workspace.v1';
   mode: 'LOCAL_DEVELOPMENT';
@@ -24,6 +36,7 @@ export interface StateKernelSnapshot {
   state: NotationState;
   persistence: 'LOCAL_VERSIONED_FILES' | 'DISABLED';
   canonicalAdmission: false;
+  capacity?: WorkspaceCapacity;
 }
 export interface StateKernelRequest {
   schema: 'payload.notation-command-batch.v1';

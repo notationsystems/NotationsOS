@@ -80,7 +80,7 @@ test('the product page states the firm, the twelve stages, the three customer ca
   await expect(page.locator('[data-step]')).toHaveCount(4);
   await expect(page.getByLabel('Product architecture tree')).toContainText('Landshark — parcels, zoning, entitlements, development state');
   await expect(page.locator('[data-fabric]')).toHaveCount(5);
-  await expect(page.locator('[data-fabric="state"][data-presence="ABSENT"]')).toHaveCount(1);
+  await expect(page.locator('[data-fabric="state"][data-presence="PRESENT"]')).toHaveCount(1);
   await expect(page.locator('[data-information-state]')).toHaveCount(3);
   await expect(page.locator('[data-doctrine-rule]')).toHaveCount(7);
   await expect(page.getByTestId('operational-rule')).toContainText('shared information');
@@ -154,4 +154,15 @@ test('the information product states its question, fields, correction at two kno
   await expect(page.locator('[data-acceptance-step][data-reached="true"]')).toHaveCount(2);
   await expect(page.locator('[data-acceptance-step][data-reached="false"]')).toHaveCount(2);
   await expect(page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Products' })).toBeVisible();
+});
+
+test('notations without the local kernel: the workspace says DISABLED and the evidence-reference panel is a visibly marked fixture', async ({ page }) => {
+  await page.goto('/notations');
+  await expect(page.getByRole('heading', { level: 1, name: 'Notations', exact: true })).toBeVisible();
+  await expect(page.getByText('DISABLED', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('New notation title', { exact: true })).toBeDisabled();
+  await expect(page.getByTestId('evidence-fixture-marker')).toContainText('FIXTURE');
+  await expect(page.locator('[data-reference-id]')).toHaveCount(5);
+  for (const state of ['RESOLVED', 'CHANGED', 'UNAVAILABLE', 'UNRESOLVED']) await expect(page.locator(`[data-reference-id][data-resolution="${state}"]`).first()).toBeVisible();
+  await expect(page.getByTestId('interpretation').first()).toContainText('Authored interpretation');
 });

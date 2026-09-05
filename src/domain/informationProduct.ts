@@ -74,7 +74,7 @@ export const CARAVAN_LOT_STATE: InformationProduct = {
   },
   acceptance: [
     { step: 'A permitted source becomes an inspectable candidate', reachedHere: true, how: 'The local rail: declared policy, exact INGEST and DERIVE decisions, a Carrier candidate with its provenance, shown on /candidates.' },
-    { step: 'The candidate crosses a recorded admission boundary', reachedHere: false, how: 'Admission is absent. Candidates stay UNADMITTED; the state kernel is specified outside this repository.' },
+    { step: 'The candidate crosses a recorded admission boundary', reachedHere: false, how: 'Admission is absent. Candidates stay UNADMITTED. A deterministic local notation-state kernel now exists for authored state; it does not admit corpus records.' },
     { step: 'The admitted information reaches a versioned customer interface', reachedHere: false, how: 'The feed serves committed demonstration releases, not admitted candidates. The interface and its delivered-record contract exist; the bridge from candidate to release does not.' },
     { step: 'A later correction remains traceable without erasing history', reachedHere: true, how: 'The demonstration corpus carries one correction and one withdrawal; as-of queries reproduce the earlier and the later answer; affected records keep their history.' },
   ],

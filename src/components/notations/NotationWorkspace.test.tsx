@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { emptyNotationState, type Notation, type StateKernelFailure, type StateKernelRequest, type StateKernelSnapshot } from '@/state-kernel/types';
 import { NotationWorkspace } from './NotationWorkspace';
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 const notationId = '00000000-0000-4000-8000-000000000001';
 const original: Notation = { id: notationId, title: 'Carrier observation', body: 'An authored local note.' };
 const changed: Notation = { ...original, title: 'Carrier context', body: 'Revised local note.' };
@@ -41,7 +43,7 @@ beforeEach(() => {
   let sequence = 0;
   vi.spyOn(crypto, 'randomUUID').mockImplementation(() => `00000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}`);
 });
-afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); sessionStorage.clear(); });
 
 describe('NotationWorkspace', () => {
   it('loads through the client API and keeps disabled local state visibly noncanonical and uneditable', async () => {

@@ -19,7 +19,8 @@ describe('doctrine as data', () => {
   it('names five fabrics in order, three information states, and eight distinct identities', () => {
     expect(FABRICS.map((f) => f.order)).toEqual([1, 2, 3, 4, 5]);
     expect(FABRICS.map((f) => f.id)).toEqual(['acquisition', 'corpus', 'state', 'compute', 'projection']);
-    expect(FABRICS.find((f) => f.id === 'state')?.presence).toBe('ABSENT');
+    expect(FABRICS.find((f) => f.id === 'state')?.presence).toBe('PRESENT');
+    expect(FABRICS.find((f) => f.id === 'state')?.inThisRepository).toMatch(/Canonical corpus admission remains absent/);
     expect(INFORMATION_STATES.map((s) => s.symbol)).toEqual(['E', 'K', 'I']);
     expect(INFORMATION_STATES.find((s) => s.id === 'INQUIRY')?.invariants).toContain('promotion crosses validation');
     expect(new Set(IDENTITY_CHAIN).size).toBe(8);
