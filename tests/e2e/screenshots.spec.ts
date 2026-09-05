@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
 const OUT = 'docs/screenshots';
@@ -36,6 +36,11 @@ test('desktop screenshots', async ({ page }) => {
   await page.goto('/notations');
   await page.getByTestId('evidence-fixture-marker').waitFor();
   await page.screenshot({ path: `${OUT}/00g-notations-disabled-with-evidence-references.png`, fullPage: true });
+  await page.goto('/earth');
+  await expect(page.getByTestId('twin-status')).toHaveAttribute('data-state', 'READY', { timeout: 45_000 });
+  await page.getByTestId('earth-subsolar').filter({ hasText: 'computed' }).waitFor({ timeout: 15_000 });
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: `${OUT}/00j-earth-twin.png`, fullPage: false });
   await page.goto('/cases');
   await page.getByRole('table', { name: 'Case queue' }).waitFor();
   await page.screenshot({ path: `${OUT}/01-case-queue.png`, fullPage: true });

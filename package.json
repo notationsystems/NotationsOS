@@ -4,7 +4,9 @@
   "private": true,
   "description": "Payload OS — the shared information-production system and distribution-workbench prototype for Notation Systems.",
   "scripts": {
+    "predev": "node scripts/earth-assets.mjs",
     "dev": "next dev",
+    "earth:assets": "node scripts/earth-assets.mjs",
     "dev:coordination": "node scripts/coordination-dev.mjs",
     "dev:state-kernel": "npm run kernel:build && node scripts/state-kernel-dev.mjs",
     "dev:production": "npm run production:build && node scripts/production-dev.mjs",
@@ -14,6 +16,7 @@
     "agent:contract-review": "esbuild scripts/contract-review.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/contract-review-agent.mjs --log-level=warning && node .stamp/contract-review-agent.mjs",
     "agent:candidate-build-review": "esbuild scripts/candidate-build-review.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/candidate-build-review-agent.mjs --log-level=warning && node .stamp/candidate-build-review-agent.mjs",
     "evidence": "esbuild scripts/evidence.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/evidence.mjs --log-level=warning && node .stamp/evidence.mjs",
+    "prebuild": "node scripts/earth-assets.mjs",
     "build": "next build && node scripts/check-state-kernel-traces.mjs",
     "start": "next start",
     "lint": "eslint",
@@ -31,6 +34,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
+    "cesium": "1.124.0",
     "lucide-react": "1.14.0",
     "next": "16.2.6",
     "react": "19.2.4",

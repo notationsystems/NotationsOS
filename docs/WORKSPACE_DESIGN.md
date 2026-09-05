@@ -34,6 +34,10 @@ The rail is shown as a process, read only from what it recorded:
 - **Where coverage stops** (`coverageGaps`): INGEST-only registrations, quarantines and refused steps, each with what stopped, the remediation someone could take, and the field it is read from. The rail takes none of the remediations; the screen performs none.
 - **The inspector** on any acquisition, normalization run, build or refusal: provenance as a sequence (`acquisitionSequence`, `normalizationSequence`, `buildSequence`) with each step's identity, exact digest, time and clock, done or refused; for a candidate, evidence beside record: the captured bytes' identity and digest against the candidate's, then field by field the value in the source and the value in the record with what the adapter did between them (`fieldMapping`: copied, trimmed, or missing and not inferred). The source bytes themselves appear only when a committed file has exactly the evidence's content digest (`readCommittedSources` in the adapter, matched on the server); otherwise an explicit unavailable state names the storage key this screen does not open. Nothing on this rail is authored, and the inspector says so.
 
+## Slice three: the Earth Twin (`/earth`)
+
+Documented in [Earth Twin](EARTH_TWIN.md). The projection fabric's geodetic instrument on the same shell and inspector pattern: the globe is the surface, sticky beside a scrolling inspector from 1024 px and above it on narrow screens; the inspector says what the instrument is, what each layer is and where it comes from, what time it shows, what the corpus answered, which world signals are named and why none is on the globe, and what the current view's link is. It is keyless and offline by construction, and the browser test proves no request leaves the origin.
+
 ## What the design does not bend
 
 - Fixtures are identified on the surface (the fixture banner, `FIXTURE` markers), never implied by polish.

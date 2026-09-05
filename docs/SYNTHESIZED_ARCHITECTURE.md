@@ -55,7 +55,7 @@ These rules apply across all three domain products. Visual adjacency is not a se
 
 ## Projection instruments, not information systems
 
-The assigned roles below are architectural choices from the supplied synthesis, not claims that renderer dependencies or browser integrations are already installed.
+The assigned roles below are architectural choices from the supplied synthesis. Of the three engines, CesiumJS is now installed and rendering as the [Earth Twin](EARTH_TWIN.md), keyless and offline, fed no fixture geometry yet; kepler.gl and Three.js remain routed to, not installed.
 
 | Instrument | Assigned question and coordinate meaning | Target role |
 |---|---|---|

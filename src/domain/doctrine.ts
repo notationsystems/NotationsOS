@@ -24,7 +24,7 @@ export const FABRICS: readonly Fabric[] = [
   { id: 'corpus', order: 2, title: 'Corpus fabric', transforms: 'Evidence → computational commons', inThisRepository: 'A fixed Carrier adapter normalizes captured bytes after a separate DERIVE decision into UNADMITTED, UNRESOLVED candidates or a quarantine; a time-bounded candidate build assembles them. The demonstration releases stand in for compiled inventory.', presence: 'PRESENT', where: '/candidates' },
   { id: 'state', order: 3, title: 'State fabric', transforms: 'Candidate → validation → version', inThisRepository: 'A deterministic local notation-state kernel is implemented: Rust validates commands, keeps stable identities through undo and redo, and replays saved history; Node persists versioned snapshots; the workspace at /notations authors against it. Canonical corpus admission remains absent: releases are committed fixtures, and no candidate crosses an admission boundary here.', presence: 'PRESENT', where: '/notations' },
   { id: 'compute', order: 4, title: 'Compute and decision fabric', transforms: 'State → model → result → decision', inThisRepository: 'The ruling workbench is one optional application over the corpus: profiles, checks, refusals with remedies, all stored as the substrate would return them. No model, simulation or optimizer runs here.', presence: 'FIXTURE', where: '/cases' },
-  { id: 'projection', order: 5, title: 'Projection fabric', transforms: 'State or inquiry → human- and machine-operable representation', inThisRepository: 'The feed API, the MCP tools, the stream and every page are projections of committed releases, and a closed ProjectionSpec with a source-pinned compiler serves records and a record-to-subject graph read-only over one exact release. kepler.gl, CesiumJS and Three.js are routed to, not installed; geometry requests return UNAVAILABLE.', presence: 'FIXTURE', where: '/api' },
+  { id: 'projection', order: 5, title: 'Projection fabric', transforms: 'State or inquiry → human- and machine-operable representation', inThisRepository: 'The feed API, the MCP tools, the stream and every page are projections of committed releases, and a closed ProjectionSpec with a source-pinned compiler serves records and a record-to-subject graph read-only over one exact release. CesiumJS is installed and renders the Earth Twin at /earth from bundled imagery, keyless, with a computed sun; kepler.gl and Three.js are routed to, not installed. Geometry requests still return UNAVAILABLE: the fixture declares none and nothing is invented.', presence: 'FIXTURE', where: '/api' },
 ];
 
 export interface InformationState {
@@ -85,7 +85,8 @@ export const EXTRACTION_INTERFACE = {
   inThisRepository: 'One deterministic adapter, the Caravan Carrier JSON contract, with a fixed contract digest. No model vendor has an architectural role.',
 } as const;
 
-export const PROJECTION_ENGINE_PRESENCE: Record<ProjectionEngine, Presence> = { 'kepler.gl': 'ABSENT', CesiumJS: 'ABSENT', 'Three.js': 'ABSENT', records: 'FIXTURE' };
+/** CesiumJS is present as the Earth Twin's engine (src/domain/earth.ts): installed, rendering a keyless globe, fed no fixture geometry yet. */
+export const PROJECTION_ENGINE_PRESENCE: Record<ProjectionEngine, Presence> = { 'kepler.gl': 'ABSENT', CesiumJS: 'PRESENT', 'Three.js': 'ABSENT', records: 'FIXTURE' };
 
 export const PROJECTION_ENGINES_IN_REPOSITORY = PROJECTION_ENGINES.map((engine) => ({ engine, ...ENGINE_ROLE[engine], presence: PROJECTION_ENGINE_PRESENCE[engine] }));
 

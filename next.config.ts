@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   outputFileTracingExcludes: {
     '/*': ['./.payload/**/*', './.stamp/**/*', './.git/**/*', './.env*', './native/state-kernel/target/**/*', './next.config.ts'],
   },
+  // CesiumJS's KML support imports a zip.js subpath its package exports map does not expose to Turbopack.
+  // The Earth Twin never reads KML; resolve the subpath to the package's main entry so the engine bundles.
+  turbopack: { resolveAlias: { '@zip.js/zip.js/lib/zip-no-worker.js': '@zip.js/zip.js' } },
   async headers() {
     return [
       {

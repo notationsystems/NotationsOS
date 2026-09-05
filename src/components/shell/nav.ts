@@ -28,6 +28,7 @@ export const NAV_AREAS: readonly NavArea[] = [
     { href: '/rulings', label: 'Rulings', match: /^\/rulings/ },
     { href: '/replay', label: 'Replay', match: /^\/replay/ },
     { href: '/profiles', label: 'Profiles', match: /^\/profiles/ },
+    { href: '/earth', label: 'Earth Twin', match: /^\/earth/ },
   ] },
   { id: 'coordination', label: 'Coordination', activity: 'Participants, requests, results and blockers', items: [
     { href: '/agents', label: 'Stable', match: /^\/agents/ },

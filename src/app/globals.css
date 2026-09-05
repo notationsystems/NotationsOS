@@ -339,6 +339,25 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .sequence li[data-outcome='NONE']::before { border-style: dashed; }
 .source-bytes { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 260px; overflow: auto; font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.5; color: var(--text-primary); }
 
+/* ═══ Earth Twin: the globe fills the surface; the inspector is the column beside it, the panel beneath it on narrow screens ═══ */
+.earth-layout { display: grid; grid-template-columns: minmax(0, 1fr); }
+.earth-stage { position: relative; height: 56vh; min-height: 320px; background: var(--bg-void); overflow: hidden; }
+.earth-canvas, .earth-canvas .cesium-viewer, .earth-canvas .cesium-widget, .earth-canvas canvas { width: 100%; height: 100%; }
+.earth-canvas .cesium-viewer-bottom { display: none; }
+.earth-hud { position: absolute; top: 10px; left: 12px; display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: var(--radius-md); background: rgba(4, 4, 10, 0.72); border: 1px solid var(--border-default); pointer-events: none; }
+.earth-credits { position: absolute; bottom: 6px; left: 12px; right: 12px; font-size: var(--text-2xs); color: var(--text-muted); }
+.earth-credits .cesium-credit-logoContainer img { height: 18px; }
+.earth-credits a { color: var(--text-secondary); }
+.earth-unavailable { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 24px; max-width: 520px; margin: 0 auto; }
+.earth-stage { grid-column: 1; }
+/* The shared inspector names a grid area the Earth layout does not define; place it explicitly instead. */
+.earth-inspector { grid-area: auto; grid-column: 1; border-radius: 0; border-left: 0; border-right: 0; animation: none; }
+@media (min-width: 1024px) {
+  .earth-layout { grid-template-columns: minmax(0, 1fr) var(--inspector-w); }
+  .earth-stage { position: sticky; top: var(--topbar-h); height: calc(100vh - var(--topbar-h)); min-height: 0; }
+  .earth-inspector { grid-column: 2; position: static; max-height: none; overflow: visible; border-left: 1px solid var(--border-default); }
+}
+
 /* ═══ Selection in lists and tables ═══ */
 .row-selectable { transition: background var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease); }
 .row-selectable:hover { background: rgba(255, 255, 255, 0.035); }

@@ -39,7 +39,7 @@ export const PROJECTION_ROUTING: readonly ProjectionRoute[] = [
   { mode: 'STRUCTURE', coordinateSemantics: 'GRAPH_LAYOUT', representation: 'GRAPH', engine: 'Three.js', currentResult: 'READY', note: 'Records plus a record-to-subject incidence graph; no layout, no inferred edge.' },
   { mode: 'MAP', coordinateSemantics: 'GEODETIC', representation: 'POINT', engine: 'kepler.gl', currentResult: 'UNAVAILABLE', note: 'No fixture geometry; nothing is invented.' },
   { mode: 'MAP', coordinateSemantics: 'GEODETIC', representation: 'DENSITY', engine: 'kepler.gl', currentResult: 'UNAVAILABLE', note: 'No fixture geometry; nothing is invented.' },
-  { mode: 'GLOBE', coordinateSemantics: 'GEODETIC', representation: 'GLOBAL_3D', engine: 'CesiumJS', currentResult: 'UNAVAILABLE', note: 'No fixture geometry; nothing is invented.' },
+  { mode: 'GLOBE', coordinateSemantics: 'GEODETIC', representation: 'GLOBAL_3D', engine: 'CesiumJS', currentResult: 'UNAVAILABLE', note: 'No fixture geometry; nothing is invented. The Earth Twin at /earth renders the globe and shows this refusal beside the selected record.' },
   { mode: 'STRUCTURE', coordinateSemantics: 'INTRINSIC_PHYSICAL', representation: 'MESH', engine: 'Three.js', currentResult: 'UNAVAILABLE', note: 'No fixture geometry.' },
   { mode: 'STRUCTURE', coordinateSemantics: 'INTRINSIC_PHYSICAL', representation: 'FIELD', engine: 'Three.js', currentResult: 'UNAVAILABLE', note: 'No fixture geometry.' },
   { mode: 'STRUCTURE', coordinateSemantics: 'FEATURE_SPACE', representation: 'MESH', engine: 'Three.js', currentResult: 'UNAVAILABLE', note: 'No fixture geometry.' },
