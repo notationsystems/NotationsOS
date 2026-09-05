@@ -57,7 +57,7 @@ export default function ProductPage() {
 
       <Section title="Shared OS coordination" id="pm-coordination">
         <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>The <Link href="/agents" style={{ color: 'var(--info)' }}>agent and apparatus stable</Link> records definitions, capabilities, and compatible input/output contracts. The <Link href="/board" style={{ color: 'var(--info)' }}>message board</Link> records requests, handoffs, blockers, results, and acknowledgements with corpus release context.</p>
-        <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }}>Present as a local coordination prototype with a demonstration registry. Local messages can be saved when the sandbox is enabled. Registration and coordination do not launch workers, authenticate customers, or execute models.</p>
+        <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }}>Present as a local coordination prototype with a demonstration registry, participant inboxes, and JavaScript/Python clients. A manually started local worker reviews declared contracts and records results and receipts. The board does not launch workers, authenticate customers, or execute models.</p>
       </Section>
 
       <Section title="The value proposition, kept concrete" id="pm-value">

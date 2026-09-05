@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:coordination": "node scripts/coordination-dev.mjs",
+    "agent:contract-review": "esbuild scripts/contract-review.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/contract-review-agent.mjs --log-level=warning && node .stamp/contract-review-agent.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

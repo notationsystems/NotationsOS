@@ -76,7 +76,7 @@ function register(state: CoordinationState, scope: Scope, value: unknown) {
   };
   const existing = state.participants.find((item) => item.id === next.id && item.scope === scope);
   if (existing) {
-    if (JSON.stringify(existing) === JSON.stringify(next)) return;
+    if ((Object.keys(next) as Array<keyof Participant>).every((key) => JSON.stringify(existing[key]) === JSON.stringify(next[key]))) return;
     refuse('REGISTRATION_CONFLICT', 'This participant id is already registered. Register a new version under a new id.', 409);
   }
   if (state.participants.filter((item) => item.scope === scope).length >= 200) refuse('CAPACITY', 'The local stable supports at most 200 definitions.', 409);

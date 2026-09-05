@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { applyCommand, connectionsFor, CoordinationError } from '../../src/coordination/ledger';
 import { createSeed, DEMO_SCOPE, RELEASE_CONTEXTS } from '../../src/coordination/seed';
-import type { CoordinationCommand, CoordinationSnapshot, CoordinationState } from '../../src/coordination/types';
+import type { CoordinationCommand, CoordinationInbox, CoordinationSnapshot, CoordinationState } from '../../src/coordination/types';
 
 const SURFACES = [
   { path: '/agents', heading: 'Agent & apparatus stable', screenshot: 'coordination-stable.png' },
@@ -100,6 +100,41 @@ test('coordination: the fixture API exposes the shared register with writes expl
   expect(body.participants.every((participant) => participant.scope === DEMO_SCOPE)).toBe(true);
   expect(body.messages.every((message) => message.scope === DEMO_SCOPE)).toBe(true);
   expect(body.releaseContexts).toEqual(RELEASE_CONTEXTS);
+});
+
+test('coordination: the fixture inbox scopes pending handoffs, opts into broadcasts and validates queries', async ({ request }) => {
+  const seed = createSeed();
+  const response = await request.get('/api/coordination/inbox?participant=agent.release');
+  expect(response.status()).toBe(200);
+  expect(response.headers()).toMatchObject({
+    'x-payload-fixture-only': 'true', 'x-payload-coordination': 'sandbox-v1', 'cache-control': 'no-store',
+  });
+  const inbox = await response.json() as CoordinationInbox;
+  expect(inbox).toEqual({
+    schema: 'payload.coordination-inbox.v1', fixture_only: true, mode: 'FIXTURE', canWrite: false,
+    scope: DEMO_SCOPE, participantId: 'agent.release', afterSequence: 0,
+    nextSequence: 3, highWaterSequence: 3, hasMore: false,
+    messages: [seed.messages[2]], acknowledgements: [],
+  });
+  expect(inbox.messages.every((message) => message.scope === DEMO_SCOPE && message.recipientId === 'agent.release')).toBe(true);
+
+  const broadcastResponse = await request.get('/api/coordination/inbox?participant=agent.release&broadcasts=true&limit=1');
+  expect(broadcastResponse.status()).toBe(200);
+  const firstPage = await broadcastResponse.json() as CoordinationInbox;
+  expect(firstPage).toMatchObject({ messages: [seed.messages[0]], afterSequence: 0, nextSequence: 1, highWaterSequence: 3, hasMore: true });
+  const nextResponse = await request.get(`/api/coordination/inbox?participant=agent.release&broadcasts=true&limit=1&after=${firstPage.nextSequence}`);
+  expect(nextResponse.status()).toBe(200);
+  expect(await nextResponse.json()).toMatchObject({ messages: [seed.messages[2]], afterSequence: 1, nextSequence: 3, hasMore: false });
+
+  for (const [query, status, code] of [
+    ['participant=agent.release&after=-1', 400, 'INVALID_INBOX_QUERY'],
+    ['participant=agent.release&scope=another-scope', 400, 'INVALID_INBOX_QUERY'],
+    ['participant=agent.unknown', 404, 'UNKNOWN_PARTICIPANT'],
+  ] as const) {
+    const invalid = await request.get(`/api/coordination/inbox?${query}`);
+    expect(invalid.status(), query).toBe(status);
+    expect(await invalid.json()).toMatchObject({ fixture_only: true, error: code, detail: expect.any(String) });
+  }
 });
 
 test('coordination: both surfaces have no serious or critical accessibility violations', async ({ page }) => {

@@ -88,3 +88,30 @@ export type CoordinationCommand =
   | { operation: 'register'; participant: Participant }
   | { operation: 'post'; message: MessageDraft }
   | { operation: 'acknowledge'; messageId: string; participantId: string };
+
+export interface InboxQuery {
+  participantId: string;
+  afterSequence: number;
+  limit: number;
+  includeAcknowledged: boolean;
+  includeBroadcasts: boolean;
+  kind: MessageKind | null;
+}
+
+export interface InboxPage {
+  participantId: string;
+  afterSequence: number;
+  nextSequence: number;
+  highWaterSequence: number;
+  hasMore: boolean;
+  messages: BoardMessage[];
+  acknowledgements: Acknowledgement[];
+}
+
+export interface CoordinationInbox extends InboxPage {
+  schema: 'payload.coordination-inbox.v1';
+  fixture_only: true;
+  scope: Scope;
+  mode: CoordinationSnapshot['mode'];
+  canWrite: boolean;
+}

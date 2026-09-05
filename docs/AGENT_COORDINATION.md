@@ -12,8 +12,11 @@ These are shared Payload OS coordination facilities across Caravan, Tradewind an
 | `/board` | Read and filter messages by topic and kind; post directed or broadcast messages, reply within a thread and acknowledge messages when enabled |
 | `GET /api/coordination` | Return the full snapshot for the server's coordination scope: definitions, messages, acknowledgements, connections and available release contexts |
 | `POST /api/coordination` | Accept `register`, `post` and `acknowledge` commands in local sandbox mode, returning the updated full snapshot |
+| `GET /api/coordination/inbox` | Read a registered participant's directed messages, with bounded cursor pagination, receipt filtering and optional broadcasts |
+| JavaScript and Python clients | Read the snapshot and inbox; register, post and acknowledge through the same HTTP contracts |
+| `npm run agent:contract-review` | Manually run a local deterministic worker that reviews declared contracts, posts a result and then acknowledges its request |
 
-The seed includes evidence, corpus, coordination, compute, delivery and verification apparatus definitions, and source acquisition, normalization, identity, release, recall and simulation agent definitions. `REFERENCE`, `PLANNED` and `LOCAL` describe the definition's status. Neither a seed entry nor a registration proves that a process is running. Runtime labels support C++, Rust, Python, JavaScript and `Unassigned`; registering one does not install or execute that runtime.
+The seed includes evidence, corpus, coordination, compute, delivery and verification apparatus definitions, and source acquisition, normalization, identity, release, recall and simulation agent definitions. `REFERENCE`, `PLANNED` and `LOCAL` describe the definition's status. Neither a seed entry nor a registration proves that a process is running. Runtime labels support C++, Rust, Python, JavaScript and `Unassigned`; registering one does not install or execute that runtime. The contract-review worker is registered through the API when its command starts, without changing the committed seed.
 
 ## State and contract synastry
 
@@ -61,7 +64,7 @@ The fixture flag continues to identify the demonstration environment even when c
 
 ## HTTP and JSON interface
 
-C++, Rust, Python and JavaScript clients can use the same plain HTTP and JSON interface. No model provider or language-specific agent framework is required. Read with `GET http://127.0.0.1:3000/api/coordination`. Send a command with `POST` to that URL and `Content-Type: application/json`. Successful reads and writes return HTTP 200 and the full snapshot. Responses are uncached and carry `X-Payload-Fixture-Only: true` and `X-Payload-Coordination: sandbox-v1`.
+C++, Rust, Python and JavaScript clients can use the same plain HTTP and JSON interface. No model provider or language-specific agent framework is required. Read with `GET http://127.0.0.1:3000/api/coordination`. Send a command with `POST` to that URL and `Content-Type: application/json`. Successful reads and writes on this endpoint return HTTP 200 and the full snapshot; the inbox endpoint returns a participant-specific page. Responses are uncached and carry `X-Payload-Fixture-Only: true` and `X-Payload-Coordination: sandbox-v1`.
 
 All fields shown in each command are required; unknown fields are rejected. This registration declares a local review agent without launching it:
 
@@ -125,6 +128,104 @@ This acknowledgement applies to the seeded verification-to-release handoff `MSG-
 
 The local route accepts loopback hosts and checks any supplied Host, Origin and browser fetch-site headers. These are local request checks, not credentials or production authentication. Command bodies are limited to 16 KiB. Errors return `{ "fixture_only": true, "error": "CODE", "detail": "Explanation" }`; examples include `READ_ONLY` (403), `INVALID_RELEASE_CONTEXT` (400), `UNKNOWN_PARTICIPANT` (404), `IDEMPOTENCY_CONFLICT` (409) and `BOARD_BUSY` (503).
 
+## Participant inbox and polling
+
+```text
+GET /api/coordination/inbox?participant=agent.contract-review.v1&after=0&limit=50&acknowledged=false&broadcasts=false
+```
+
+The participant must already be registered. Add `&kind=REQUEST` to select one of the five message kinds, or omit `kind` to receive all kinds. Unknown query fields, repeated fields, invalid booleans and unsupported kinds are rejected. `after` is a nonnegative safe integer; `limit` is 1–100 and defaults to 50. An `after` cursor beyond the current board history returns `CURSOR_AHEAD` (409), with instructions to read again from zero.
+
+The server uses its bound scope and the participant's declared domains. An inbox excludes the participant's own messages, messages addressed to somebody else, and messages whose release domain the participant does not declare. Broadcasts are excluded unless `broadcasts=true`. Already acknowledged messages are excluded unless `acknowledged=true`. This filters the demonstration inbox; it does not create authenticated access or customer tenant isolation.
+
+The response has schema `payload.coordination-inbox.v1`, the fixture/mode/scope fields, participant id, `messages`, relevant `acknowledgements`, `afterSequence`, `nextSequence`, `highWaterSequence` and `hasMore`. Messages arrive in ascending sequence order. While `hasMore` is true, use `nextSequence` as the next `after` value to continue that scan. At the end of a scan, `nextSequence` equals the board's current high-water sequence, including messages excluded by the filters.
+
+A cursor records how far a scan looked; an acknowledgement is the durable receipt. For pending-work polling, begin each new pass at `after=0` with `acknowledged=false`, and always do so after restarting. Paginate within the pass, complete the chosen work, save its result, then acknowledge the input. Persisting only the last cursor could skip an earlier message whose result or acknowledgement failed. Resetting the scan to zero lets durable receipts exclude completed inputs while retaining pending ones. Messages the worker does not handle remain unacknowledged.
+
+## Run the local contract-review worker
+
+In terminal one, start the local server from the repository root:
+
+```sh
+npm run dev:coordination
+```
+
+In terminal two, register the worker and make an initial pass:
+
+```sh
+npm run agent:contract-review -- --once
+```
+
+This registers `agent.contract-review.v1` using the server's scope. Post a request with either client example below, then run the same `--once` command again. Inspect the resulting thread and acknowledgement on `/board`. A plain `npm run agent:contract-review` also runs once; `npm run agent:contract-review -- --watch` repeats passes with a two-second wait between them until stopped. `PAYLOAD_COORDINATION_URL` can select a different local server URL; the default is `http://127.0.0.1:3000`.
+
+The worker handles only `REQUEST` or `HANDOFF` messages directed to `agent.contract-review.v1` with topic `contract-review`. The body must be JSON with exactly one field, for example `{"participantId":"agent.release"}`. It checks that target's declared input contracts against registered suppliers in the same scope with common domains. It reports matched input counts, supplier connections and `missingInputs` in a `RESULT` reply, preserving the request's topic, release, build and knowledge cutoff. This result combines declared suppliers; the stable's `MATCH` and `PARTIAL` labels still describe individual connections. Large reports state how many connection or missing-input details were omitted to fit the board's body limit. Invalid bodies and unknown targets produce an error result so their requests can be acknowledged explicitly.
+
+The result uses a request id derived from the worker id and input message id. The worker saves the result before acknowledging the request. If acknowledgement fails, a later pass reuses the saved result and retries the receipt, even if the stable has changed in between. Each pass processes at most 50 requests by default and prints processed, recovered and skipped counts. Unsupported topics and message kinds remain pending. The worker performs deterministic declaration review; it invokes no model and performs no corpus, source, simulation or customer-workload execution. Starting the worker is an explicit local process operation; posting to the board does not start it.
+
+## JavaScript and Python clients
+
+The clients require no additional libraries. JavaScript uses Node's `fetch`; Python uses its standard library. Both expose `snapshot`, `register`, `post`, `acknowledge` and `inbox`, with bounded timeouts and retries for transient failures. `post` requires a caller-supplied `requestId`. Automatic retries reuse the serialized command; an application retry should retain that same id and payload. Each client raises `CoordinationClientError` with `status`, `code` and `detail` when a request fails.
+
+After the worker has registered, run `node` from the repository root and enter:
+
+```javascript
+const { CoordinationClient } = await import('./clients/javascript/coordination.mjs');
+const client = new CoordinationClient('http://127.0.0.1:3000');
+const snapshot = await client.snapshot();
+await client.post({
+  requestId: 'demo-contract-review-js-001',
+  authorId: 'apparatus.coordination',
+  recipientId: 'agent.contract-review.v1',
+  kind: 'REQUEST',
+  topic: 'contract-review',
+  title: 'Review the release agent contracts',
+  body: JSON.stringify({ participantId: 'agent.release' }),
+  context: snapshot.releaseContexts[0] ?? null,
+  replyTo: null,
+});
+```
+
+Exit the interpreter, run the worker once again, then read results through a new client session:
+
+```javascript
+await client.inbox('apparatus.coordination', {
+  afterSequence: 0, limit: 50, includeAcknowledged: false,
+  includeBroadcasts: false, kind: 'RESULT',
+});
+```
+
+In the new session, repeat the import and client construction first. A result can be acknowledged with `await client.acknowledge(messageId, 'apparatus.coordination')` after inspection.
+
+Alternatively, run `python` from the repository root and enter:
+
+```python
+import json
+from clients.python.payload_coordination import CoordinationClient
+
+client = CoordinationClient("http://127.0.0.1:3000")
+snapshot = client.snapshot()
+client.post({
+    "requestId": "demo-contract-review-py-001",
+    "authorId": "apparatus.coordination",
+    "recipientId": "agent.contract-review.v1",
+    "kind": "REQUEST",
+    "topic": "contract-review",
+    "title": "Review the release agent contracts",
+    "body": json.dumps({"participantId": "agent.release"}),
+    "context": next(iter(snapshot["releaseContexts"]), None),
+    "replyTo": None,
+})
+```
+
+After another worker pass, recreate the Python client and call:
+
+```python
+client.inbox("apparatus.coordination", after_sequence=0, limit=50,
+             include_acknowledged=False, include_broadcasts=False, kind="RESULT")
+```
+
+Python acknowledges with `client.acknowledge(message_id, "apparatus.coordination")`. Both clients accept a complete participant definition through `client.register(...)`; all required fields are shown in the registration command above. Identical retries remain idempotent. Use a new request id for a new review; reusing either example id with changed content returns a conflict.
+
 ## Local persistence and recovery
 
 `src/coordination/store.ts` records accepted state-changing commands with their original server timestamps in `.payload/coordination/events.json`, under log schema `payload.coordination-log.v1`. The `.payload/` directory is git-ignored. Reading replays this log over the seed; restarting with the same seed and valid log reconstructs the original registrations, message ids, sequence, timestamps and acknowledgements. Idempotent retries do not add an event.
@@ -151,4 +252,4 @@ The Bench prototype supplies reference contracts and authority boundaries. The f
 
 ## Present limits
 
-The implemented portion is the stable, contract connection calculation, scoped board and opt-in local persistence. No worker is launched, no model is invoked, no task is scheduled, and no customer workload is executed. The six stated absences remain: live source connectors, production storage and identity, deployed customer delivery, managed execution of customer workloads, independent verification, and a completed pilot.
+The implemented portion is the stable, contract connection calculation, scoped board, participant inbox, opt-in local persistence, JavaScript and Python clients, and a manually started local contract-review worker. The worker can poll, inspect definitions, post results and acknowledge requests. The board has no process launcher or managed agent fleet; no model, corpus-production workflow or customer workload is executed by this worker. Caller identities remain simulated. The six stated absences remain: live source connectors, production storage and identity, deployed customer delivery, managed execution of customer workloads, independent verification, and a completed pilot.

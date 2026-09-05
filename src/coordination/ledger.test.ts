@@ -97,6 +97,17 @@ describe('stable registration', () => {
     }, ALLOWED, LATER), 'REGISTRATION_CONFLICT', 409);
   });
 
+  it('reuses the exact local seed definition independently of JSON object property order', () => {
+    const seed = createSeed();
+    const local = seed.participants.find((p) => p.id === 'apparatus.coordination')!;
+    expect(local.status).toBe('LOCAL');
+    const reversed = Object.fromEntries(Object.entries(local).reverse()) as unknown as Participant;
+    expect(Object.keys(reversed)).not.toEqual(Object.keys(local));
+    for (const participant of [local, reversed]) {
+      expect(applyCommand(seed, DEMO_SCOPE, { operation: 'register', participant }, RELEASE_CONTEXTS, LATER)).toEqual(seed);
+    }
+  });
+
   it('refuses a registration that selects another information perimeter', () => {
     const state = initialState();
     const before = structuredClone(state);

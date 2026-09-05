@@ -12,3 +12,5 @@ test-results/
 npm-debug.log*
 .stamp/
 .payload/
+__pycache__/
+*.pyc
