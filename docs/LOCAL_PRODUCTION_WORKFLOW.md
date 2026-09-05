@@ -21,6 +21,7 @@ Authoritative types and closed validators: [`contracts.ts`](../src/production/co
 | Route | Meaning |
 |---|---|
 | `GET /api/production` | Disabled descriptor without local reads by default; enabled/guarded `payload.production-catalog.v1` with bounded registrations and run summaries |
+| `GET /api/production/source-inventory` | Guarded, pinned prototype source inventory; not live source status, registration, selection, or permission |
 | `POST /api/production` | One closed command; returns `{status, historicalRetry, run}` |
 | `POST /api/production/inspect` | Read-only `payload.production-inspection-request.v1` → `payload.production-inspection.v1` |
 | `POST /api/gat/audits` | Explicit IFC audit against preserved source references |
@@ -121,6 +122,8 @@ Limits: 2 MiB JSON, 1 MiB decoded capture, 10-second body deadline, 64 members, 
 The adapter starts only `.stamp/production-worker.mjs` through the current Node executable, without a shell: two workers per server process, 15 seconds each, combined 2 MiB stdout/stderr cap. Killed workers keep their slot until closure. Local histories, runtime installations and scratch are excluded from deployment traces; the build is not a provisioned portable execution service.
 
 [`connector.ts`](../src/production/connector.ts) declares future scope, transport, pagination, resource limits, retries/cursors, credential reference and extraction version. It activates **no connector**. No URL is fetched, scheduler/fleet created or customer workload accepted. Field-level comparison, independent rights verification, canonical identity/admission, release activation and public delivery remain absent.
+
+[Source integration inventory](SOURCE_INTEGRATION_INVENTORY.md) establishes the 21 named entries in the existing Payload Terminal registry as integration inputs. Seven external adapter declarations, one curated assembly and thirteen entries without adapters remain distinct; none is represented as a connected Payload OS source. The first live connector still requires exact source and collection-scope selection.
 
 ```console
 npm run check

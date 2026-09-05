@@ -23,6 +23,14 @@ async function inspect(client: APIRequestContext, kind: ProductionObjectKind, re
 }
 
 test('actual HTTP Carrier workflow, historical retry and failure preservation', async ({ request }) => {
+  const inventoryResponse = await request.get('/api/production/source-inventory');
+  expect(inventoryResponse.status(), await inventoryResponse.text()).toBe(200);
+  const inventory = await inventoryResponse.json();
+  expect(inventory).toMatchObject({ schema: 'payload.source-integration-inventory.v1',
+    summary: { total: 21, prototypeAdaptersDeclared: 8, prototypeWithoutAdapter: 13, integrated: 0, selected: 0 },
+    connectionEstablished: false, liveCollectionEnabled: false, currentRightsGrant: false });
+  expect(inventory.entries.find((entry: { sourceId: string }) => entry.sourceId === 'fmcsa-qcmobile')).toMatchObject({
+    prototypeStanding: 'ADAPTER_DECLARED', integrationState: 'NOT_INTEGRATED', lastAcquisition: null });
   const corpus = output(await execute(request, 'http-caravan-corpus', { kind: 'REGISTER_CORPUS', definition: CARAVAN_DEMO_DEFINITION }), 'CORPUS');
   const source = output(await execute(request, 'http-caravan-source', { kind: 'REGISTER_SOURCE', source: caravanDemoSource(corpus) }), 'SOURCE');
   const fields = { kind: 'ACQUIRE', source, purpose: CARAVAN_DEMO_PURPOSE, contentBase64: caravanDemoContent() };
@@ -45,6 +53,9 @@ test('actual HTTP Carrier workflow, historical retry and failure preservation', 
   const catalog = await (await request.get('/api/production')).json();
   expect(catalog.mode).toBe('LOCAL_DEVELOPMENT');
   expect(catalog.canonicalAdmission).toBe(false);
+  // Local fixture production never promotes prototype inventory into a live connection.
+  expect(await (await request.get('/api/production/source-inventory')).json()).toEqual(inventory);
+  expect(await (await request.get('/api/production')).json()).toEqual(catalog);
 });
 
 test('actual HTTP IFC capture to pinned supported/blocked GAT reports and historical inspection', async ({ request }) => {
