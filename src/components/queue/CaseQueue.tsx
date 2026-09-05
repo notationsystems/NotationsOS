@@ -96,58 +96,58 @@ export function CaseQueue({ cases, lastSeenAt }: { cases: ClaimCaseBundle[]; las
 
       {/* Filters */}
       <form className="surface p-3 grid gap-2 grid-cols-2 md:grid-cols-4 xl:grid-cols-8" aria-label="Queue filters" onSubmit={(e) => e.preventDefault()}>
-        <label className="flex flex-col gap-1 col-span-2">
+        <label className="flex flex-col gap-1 min-w-0 col-span-2">
           <span className="label-sm">Search case, manifest, lot, shipment, claim</span>
-          <input type="search" value={f.q} onChange={(e) => set('q', e.target.value)} placeholder="7C-104, BAL-77812, RUL-…" className="surface-inset px-2 py-1.5 text-[13px] mono" />
+          <input type="search" value={f.q} onChange={(e) => set('q', e.target.value)} placeholder="7C-104, BAL-77812, RUL-…" className="surface-inset px-2 py-1.5 text-[13px] w-full min-w-0 mono" />
         </label>
-        <label className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1 min-w-0">
           <span className="label-sm">Status</span>
-          <select value={f.status} onChange={(e) => set('status', e.target.value as Filters['status'])} className="surface-inset px-2 py-1.5 text-[13px]">
+          <select value={f.status} onChange={(e) => set('status', e.target.value as Filters['status'])} className="surface-inset px-2 py-1.5 text-[13px] w-full min-w-0">
             <option value="ACTION">Requires action</option>
             <option value="ALL">All</option>
             {RULING_STATUSES.map((s) => <option key={s} value={s}>{STATUS_SEMANTICS[s].label}</option>)}
           </select>
         </label>
-        <label className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1 min-w-0">
           <span className="label-sm">Sponsor / counterparty</span>
-          <select value={f.party} onChange={(e) => set('party', e.target.value)} className="surface-inset px-2 py-1.5 text-[13px]">
+          <select value={f.party} onChange={(e) => set('party', e.target.value)} className="surface-inset px-2 py-1.5 text-[13px] w-full min-w-0">
             <option value="">Any</option>
             {parties.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
           </select>
         </label>
-        <label className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1 min-w-0">
           <span className="label-sm">Profile</span>
-          <select value={f.profile} onChange={(e) => set('profile', e.target.value)} className="surface-inset px-2 py-1.5 text-[13px] mono">
+          <select value={f.profile} onChange={(e) => set('profile', e.target.value)} className="surface-inset px-2 py-1.5 text-[13px] w-full min-w-0 mono">
             <option value="">Any</option>
             {profiles.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
         </label>
-        <label className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1 min-w-0">
           <span className="label-sm">Visibility</span>
-          <select value={f.visibility} onChange={(e) => set('visibility', e.target.value as Filters['visibility'])} className="surface-inset px-2 py-1.5 text-[13px]">
+          <select value={f.visibility} onChange={(e) => set('visibility', e.target.value as Filters['visibility'])} className="surface-inset px-2 py-1.5 text-[13px] w-full min-w-0">
             <option value="ALL">Any</option>
             {VISIBILITY_CLASSES.map((v) => <option key={v} value={v}>{VISIBILITY_SEMANTICS[v].label}</option>)}
           </select>
         </label>
-        <label className="flex flex-col gap-1">
+        <label className="flex flex-col gap-1 min-w-0">
           <span className="label-sm">Assigned reviewer</span>
-          <select value={f.reviewer} onChange={(e) => set('reviewer', e.target.value)} className="surface-inset px-2 py-1.5 text-[13px]">
+          <select value={f.reviewer} onChange={(e) => set('reviewer', e.target.value)} className="surface-inset px-2 py-1.5 text-[13px] w-full min-w-0">
             <option value="">Any</option>
             {reviewers.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
           </select>
         </label>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 min-w-0">
           <span className="label-sm">World state valid (from / to)</span>
-          <div className="flex gap-1">
-            <input aria-label="Valid from" type="date" value={f.validFrom} onChange={(e) => set('validFrom', e.target.value)} className="surface-inset px-1 py-1 text-[12px] mono w-full" />
-            <input aria-label="Valid to" type="date" value={f.validTo} onChange={(e) => set('validTo', e.target.value)} className="surface-inset px-1 py-1 text-[12px] mono w-full" />
+          <div className="flex gap-1 min-w-0">
+            <input aria-label="Valid from" type="date" value={f.validFrom} onChange={(e) => set('validFrom', e.target.value)} className="surface-inset px-1 py-1 text-[12px] mono w-full min-w-0 flex-1" />
+            <input aria-label="Valid to" type="date" value={f.validTo} onChange={(e) => set('validTo', e.target.value)} className="surface-inset px-1 py-1 text-[12px] mono w-full min-w-0 flex-1" />
           </div>
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 min-w-0">
           <span className="label-sm">Information known (from / to)</span>
-          <div className="flex gap-1">
-            <input aria-label="Known from" type="date" value={f.knownFrom} onChange={(e) => set('knownFrom', e.target.value)} className="surface-inset px-1 py-1 text-[12px] mono w-full" />
-            <input aria-label="Known to" type="date" value={f.knownTo} onChange={(e) => set('knownTo', e.target.value)} className="surface-inset px-1 py-1 text-[12px] mono w-full" />
+          <div className="flex gap-1 min-w-0">
+            <input aria-label="Known from" type="date" value={f.knownFrom} onChange={(e) => set('knownFrom', e.target.value)} className="surface-inset px-1 py-1 text-[12px] mono w-full min-w-0 flex-1" />
+            <input aria-label="Known to" type="date" value={f.knownTo} onChange={(e) => set('knownTo', e.target.value)} className="surface-inset px-1 py-1 text-[12px] mono w-full min-w-0 flex-1" />
           </div>
         </div>
         <div className="col-span-2 md:col-span-4 xl:col-span-8 flex items-center justify-between">

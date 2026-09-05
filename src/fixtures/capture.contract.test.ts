@@ -15,7 +15,7 @@ import { captureEvidence, InMemoryContentAddressedStore, storageKeyFor, verifyEv
 import { deliveryDecision, currentRelease, derivePermittedUses, USE_REQUESTS } from '@/domain/corpus';
 
 describe('fixture captures reproduce under the data-os evidence-capture contract', () => {
-  const artifacts = new Map<string, FIXTURE_CASES[number]['evidence'][number]>();
+  const artifacts = new Map<string, (typeof FIXTURE_CASES)[number]['evidence'][number]>();
   for (const c of FIXTURE_CASES) for (const e of c.evidence) artifacts.set(e.evidenceId, e);
 
   it('captures every artifact only under an explicitly ALLOWED INGEST decision and reproduces the stamped binding', () => {

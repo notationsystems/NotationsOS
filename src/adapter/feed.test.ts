@@ -35,10 +35,12 @@ describe('feed payloads', () => {
     expect(JSON.stringify(all)).not.toContain('contract.moisture_max');
   });
 
-  it('the public projection withholds counterparty records', async () => {
+  it('the public projection withholds every record: publishing needs approval before visibility is even consulted', async () => {
     const pub = await recordsPayload(CURRENT, 'PUBLIC_RULING');
     expect(pub?.count).toBe(0);
-    expect(pub?.withheld.byVisibility).toBeGreaterThan(0);
+    expect(pub?.withheld.byRights).toBeGreaterThan(0);
+    expect(pub?.withheld.byVisibility).toBe(0);
+    expect(pub?.withheld.reasons).toMatchObject({ EXPLICIT_APPROVAL_REQUIRED: expect.any(Number) });
   });
 
   it('as-of returns a typed refusal with a remedy, never a zero', async () => {
@@ -106,7 +108,7 @@ describe('certification, rights and attribution', () => {
     }
     const p = await recordsPayload(CURRENT, 'COUNTERPARTY_SHARED', { subjectId: 'SAMPLE-S-4402' });
     const rec = p!.records.find((r) => r.recordId === 'REC-0201')!;
-    expect(rec.rights?.attribution).toBe('Northgate Inspection Services LIMS — Inspection-certificate licence (demonstration)');
+    expect(rec.rights?.attribution).toBe('Northgate Inspection Services LIMS — northgate-certificate-licence-2026');
     expect(rec.rights?.permittedUses).toContain('customer_delivery');
     const a = await asOfPayload(CURRENT, { subjectId: 'LOT-5B-221', predicate: 'quantity.gross', validAt: '2026-08-17T16:00:00Z', knownAt: '2026-09-01T12:00:00Z' });
     expect(a?.answer?.rights?.sourceName).toBe('Terminal weighbridge');

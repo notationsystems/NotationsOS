@@ -175,6 +175,12 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
 }
+/* A horizontal scroll region is the containing block for anything positioned
+   inside it (visually-hidden text in table cells, for one). Otherwise those
+   boxes escape the clip, sit at their static position far to the right, and
+   widen the document's scrollable overflow; mobile Chrome then reports a
+   layout viewport as wide as the widest table. */
+[class~='overflow-x-auto'] { position: relative; }
 .surface-raised {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-default);

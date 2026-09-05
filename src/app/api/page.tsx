@@ -68,7 +68,8 @@ export default async function ApiPage() {
         </header>
 
         <Section title="Endpoints" id="api-endpoints">
-          <table className="ledger-table text-[12.5px]">
+          <div className="surface overflow-x-auto" tabIndex={0}>
+          <table className="ledger-table text-[12.5px]" aria-label="Endpoints">
             <thead><tr><th scope="col">Endpoint</th><th scope="col">Returns</th></tr></thead>
             <tbody>
               <tr><td className="id">GET /api/v1/releases[?corpus=]</td><td>Release history: id, status, knowledge cutoff, build, methodology, digest, supersession.</td></tr>
@@ -81,6 +82,7 @@ export default async function ApiPage() {
               <tr><td className="id">GET /api/v1/rulings/:id/manifest</td><td>The <span className="id">notations.result-manifest.v1</span> sidecar and its commitment.</td></tr>
             </tbody>
           </table>
+          </div>
           <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }}>Projections served: <span className="id">COUNTERPARTY_SHARED</span> (default) and <span className="id">PUBLIC_RULING</span>. Internal classes are never served. Times are ISO 8601 UTC. Responses are uncached and carry <span className="id">X-Payload-Fixture-Only: true</span>.</p>
         </Section>
 
@@ -106,6 +108,7 @@ export default async function ApiPage() {
 
         <Section title="MCP tools" id="api-mcp">
           <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>The same feed, exposed as tools for a model client. One logic path: each tool wraps the payload the HTTP endpoint serves. A refusal is a successful return with a remedy; tool errors are for malformed arguments only. Run with <span className="id">npm run mcp</span> (stdio; opens no port).</p>
+          <div className="surface overflow-x-auto" tabIndex={0}>
           <table className="ledger-table text-[12.5px]" aria-label="MCP tools">
             <thead><tr><th scope="col">Tool</th><th scope="col">Arguments</th><th scope="col">Returns</th></tr></thead>
             <tbody>
@@ -118,6 +121,7 @@ export default async function ApiPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </Section>
 
         <Section title="Adapter contracts" id="api-contract" aside={<CopyButton value={`${CORPUS_CONTRACT}\n\n${CASE_CONTRACT}`} />}>
@@ -126,7 +130,8 @@ export default async function ApiPage() {
         </Section>
 
         <Section title="Substrate vocabulary carried by the feed" id="api-vocab">
-          <table className="ledger-table text-[12.5px]">
+          <div className="surface overflow-x-auto" tabIndex={0}>
+          <table className="ledger-table text-[12.5px]" aria-label="Substrate vocabulary">
             <thead><tr><th scope="col">Concept</th><th scope="col">Substrate origin</th><th scope="col">Feed field</th></tr></thead>
             <tbody>
               <tr><td>Evidence class, two axes + interest</td><td className="id">corpus-contract/contract.json 1.0.0</td><td className="id">evidenceClass.claimStrength / productionClass / interest</td></tr>
@@ -141,6 +146,7 @@ export default async function ApiPage() {
               <tr><td>Refusal with remedy</td><td className="id">controlTower.ts {'{'}kind:&apos;refusal&apos;, code, detail, remedy{'}'}</td><td className="id">refusal.code / reason / remedy</td></tr>
             </tbody>
           </table>
+          </div>
         </Section>
       </div>
     </>

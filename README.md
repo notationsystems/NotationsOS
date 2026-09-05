@@ -21,7 +21,7 @@ npm run typecheck      # tsc --noEmit
 npm run lint           # eslint
 npm test               # vitest: node tests for selectors/fixtures, jsdom tests for screens
 npm run stamp:digests  # recompute committed sha256 digests after editing a fixture
-npm run e2e            # playwright: smoke, axe (WCAG 2.2 AA), keyboard, mobile
+npm run e2e            # playwright: smoke, axe (WCAG 2.2 AA), keyboard, mobile, no horizontal document overflow
 npm run screenshots    # writes docs/screenshots/*.png
 npm run mcp            # MCP server over the fixture feed (stdio)
 ```
@@ -49,5 +49,5 @@ src/components  primitives, case workspace, ruling viewer, replay, queue, intake
 src/app         product model: /product
                 corpus: /releases, /releases/[releaseId], /stream, /retractions, /api, /api/v1/* (fixture feed)
                 workbench: /cases, /cases/new, /cases/[caseId], /rulings, /rulings/[rulingId], /replay/[caseId], /profiles, /evidence
-tests/e2e       Playwright smoke, accessibility, keyboard, mobile, screenshots
+tests/e2e       Playwright smoke, accessibility, keyboard, mobile, overflow guard, screenshots
 ```

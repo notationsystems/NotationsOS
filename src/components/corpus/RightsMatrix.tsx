@@ -49,7 +49,7 @@ export function RightsMatrix({ sources, at }: { sources: RightsSchedule[]; at: s
           ))}
         </tbody>
       </table>
-      <p className="m-0 px-3 py-2 text-[11.5px]" style={{ color: 'var(--text-muted)' }}>✓ permitted · ✕ prohibited. A use absent from a source&apos;s schedule is prohibited; nothing defaults to permitted. Explicit non-use statements are on the release page.</p>
+      <p className="m-0 px-3 py-2 text-[11.5px]" style={{ color: 'var(--text-muted)' }}>✓ allowed · ◐ approval required · ✕ denied. Each cell is one source-use request evaluated against the source&apos;s registration at {fmtUtc(at)}; hover a cell for the policy reasons. Nothing defaults to allowed. Explicit non-use statements are below.</p>
     </div>
   );
 }
