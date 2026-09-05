@@ -1,0 +1,576 @@
+{
+  "schema": "payload-os.production-demo.v0",
+  "fixture_only": true,
+  "mode": "LOCAL_DEVELOPMENT",
+  "instants": {
+    "capturedAt": "2026-09-05T00:00:00Z",
+    "storedAt": "2026-09-05T00:05:00.000Z",
+    "normalizedAt": "2026-09-05T00:10:00.000Z",
+    "knownThrough": "2026-09-05T00:30:00.000Z",
+    "builtAt": "2026-09-05T01:00:00.000Z",
+    "earlyCutoff": "2026-09-05T00:05:00.000Z"
+  },
+  "contracts": {
+    "adapter": {
+      "id": "caravan.carrier-json/v1",
+      "version": "1.0.0"
+    },
+    "candidateBuild": {
+      "id": "payload.local-caravan-candidate-build/v1",
+      "version": "1.0.0"
+    }
+  },
+  "inputs": [
+    {
+      "path": "examples/carrier/acquisition.json",
+      "contentDigest": "sha256:b7ece91fd803c17924cd37b85f4a5832ab4d768683845e44491d7f3306f2f5df",
+      "byteLength": 878
+    },
+    {
+      "path": "examples/carrier/source.json",
+      "contentDigest": "sha256:6002901fce9ebf2bb7f4f915ed2c0b4c2b5e14de888fa6fb6a1fbe96c129a154",
+      "byteLength": 275
+    },
+    {
+      "path": "examples/carrier/normalization.json",
+      "contentDigest": "sha256:2e01175d63eb566d1cbfd75edc95d5ccba094a31a325d2e5aefdaded7af1d091",
+      "byteLength": 470
+    },
+    {
+      "path": "examples/evidence/request.json",
+      "contentDigest": "sha256:6c260c8a93e59a9ca7c665e2e9576888ce5e56f123d9846109d1eaae429a3ed2",
+      "byteLength": 852
+    },
+    {
+      "path": "examples/evidence/notice.txt",
+      "contentDigest": "sha256:8d4c4247b5146c1e36b4174015ff70cfb68e546742b10cf16ec16b513b3c8f17",
+      "byteLength": 271
+    }
+  ],
+  "acquisitions": [
+    {
+      "schema": "payload.local-acquisition.v1",
+      "mode": "LOCAL_DEVELOPMENT",
+      "policyAuthority": "OPERATOR_DECLARATION",
+      "sourceTruthClaimed": false,
+      "canonicalAdmission": false,
+      "request": {
+        "manifest": {
+          "acquisitionId": "demo-caravan-carrier-001",
+          "capturedAt": "2026-09-05T00:00:00Z",
+          "evidenceId": "demo-evidence-caravan-carrier-001",
+          "mediaType": "application/json",
+          "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+          "schema": "payload.local-intake-request.v1",
+          "sourceRegistration": {
+            "allowedAudiences": [
+              "INTERNAL"
+            ],
+            "allowedOperations": [
+              "INGEST",
+              "DERIVE"
+            ],
+            "displayName": "Synthetic local carrier records; no real company asserted",
+            "effectiveFrom": "2026-09-01T00:00:00Z",
+            "licenseId": "synthetic-demonstration-not-an-external-source-license",
+            "permittedPurposes": [
+              "CARAVAN_LOCAL_DEVELOPMENT"
+            ],
+            "policyVersion": "1.0.0",
+            "registrationId": "demo-carrier-declared-policy-v1",
+            "retention": {
+              "mode": "INDEFINITE"
+            },
+            "sourceClass": "OPERATOR_DECLARATION",
+            "sourceId": "notation://source/notation-systems/carrier-demo"
+          }
+        },
+        "contentDigest": "sha256:6002901fce9ebf2bb7f4f915ed2c0b4c2b5e14de888fa6fb6a1fbe96c129a154",
+        "byteLength": 275
+      },
+      "requestDigest": "sha256:22d938bc6deb2a1dce7a496aa4de70335c3862a2f5493142a063a55c9aa79661",
+      "decision": {
+        "decisionId": "source-use:demo-caravan-carrier-001:ingest",
+        "requestId": "demo-caravan-carrier-001:ingest",
+        "registrationId": "demo-carrier-declared-policy-v1",
+        "sourceId": "notation://source/notation-systems/carrier-demo",
+        "request": {
+          "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+          "operation": "INGEST",
+          "audience": "INTERNAL",
+          "requestedAt": "2026-09-05T00:00:00Z"
+        },
+        "state": "ALLOWED",
+        "reasons": [
+          "EXPLICIT_POLICY_GRANT"
+        ],
+        "evaluatedAt": "2026-09-05T00:00:00Z"
+      },
+      "capture": {
+        "evidence": {
+          "kind": "BinaryEvidence",
+          "schema": "notations.binary-evidence.v1",
+          "evidenceId": "demo-evidence-caravan-carrier-001",
+          "mediaType": "application/json",
+          "contentDigest": "sha256:6002901fce9ebf2bb7f4f915ed2c0b4c2b5e14de888fa6fb6a1fbe96c129a154",
+          "byteLength": 275,
+          "storageKey": "sha256/60/6002901fce9ebf2bb7f4f915ed2c0b4c2b5e14de888fa6fb6a1fbe96c129a154",
+          "sourceId": "notation://source/notation-systems/carrier-demo",
+          "capturedAt": "2026-09-05T00:00:00Z",
+          "sourceTruthClaimed": false
+        },
+        "receipt": {
+          "kind": "StorageReceipt",
+          "schema": "notations.storage-receipt.v1",
+          "receiptId": "demo-caravan-carrier-001:receipt",
+          "evidenceId": "demo-evidence-caravan-carrier-001",
+          "contentDigest": "sha256:6002901fce9ebf2bb7f4f915ed2c0b4c2b5e14de888fa6fb6a1fbe96c129a154",
+          "storageKey": "sha256/60/6002901fce9ebf2bb7f4f915ed2c0b4c2b5e14de888fa6fb6a1fbe96c129a154",
+          "storedAt": "2026-09-05T00:05:00.000Z"
+        }
+      },
+      "digest": "sha256:3ade5a66ddbafda915acbcc8bf253528a86e97c4f0749761ea73722235ef48ac"
+    },
+    {
+      "schema": "payload.local-acquisition.v1",
+      "mode": "LOCAL_DEVELOPMENT",
+      "policyAuthority": "OPERATOR_DECLARATION",
+      "sourceTruthClaimed": false,
+      "canonicalAdmission": false,
+      "request": {
+        "manifest": {
+          "acquisitionId": "demo-caravan-carrier-002",
+          "capturedAt": "2026-09-05T00:00:00Z",
+          "evidenceId": "demo-evidence-caravan-carrier-002",
+          "mediaType": "application/json",
+          "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+          "schema": "payload.local-intake-request.v1",
+          "sourceRegistration": {
+            "allowedAudiences": [
+              "INTERNAL"
+            ],
+            "allowedOperations": [
+              "INGEST",
+              "DERIVE"
+            ],
+            "displayName": "Synthetic local carrier records; no real company asserted",
+            "effectiveFrom": "2026-09-01T00:00:00Z",
+            "licenseId": "synthetic-demonstration-not-an-external-source-license",
+            "permittedPurposes": [
+              "CARAVAN_LOCAL_DEVELOPMENT"
+            ],
+            "policyVersion": "1.0.0",
+            "registrationId": "demo-carrier-declared-policy-v1",
+            "retention": {
+              "mode": "INDEFINITE"
+            },
+            "sourceClass": "OPERATOR_DECLARATION",
+            "sourceId": "notation://source/notation-systems/carrier-demo"
+          }
+        },
+        "contentDigest": "sha256:bb2e203670ec77b4a17964bf4615515855ffc6de12e5efb2bebdf798a032fa0a",
+        "byteLength": 289
+      },
+      "requestDigest": "sha256:cf1165b2d789f3b2c00e799def895dcdc78ac3b259bb22c963274c971a0df8c1",
+      "decision": {
+        "decisionId": "source-use:demo-caravan-carrier-002:ingest",
+        "requestId": "demo-caravan-carrier-002:ingest",
+        "registrationId": "demo-carrier-declared-policy-v1",
+        "sourceId": "notation://source/notation-systems/carrier-demo",
+        "request": {
+          "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+          "operation": "INGEST",
+          "audience": "INTERNAL",
+          "requestedAt": "2026-09-05T00:00:00Z"
+        },
+        "state": "ALLOWED",
+        "reasons": [
+          "EXPLICIT_POLICY_GRANT"
+        ],
+        "evaluatedAt": "2026-09-05T00:00:00Z"
+      },
+      "capture": {
+        "evidence": {
+          "kind": "BinaryEvidence",
+          "schema": "notations.binary-evidence.v1",
+          "evidenceId": "demo-evidence-caravan-carrier-002",
+          "mediaType": "application/json",
+          "contentDigest": "sha256:bb2e203670ec77b4a17964bf4615515855ffc6de12e5efb2bebdf798a032fa0a",
+          "byteLength": 289,
+          "storageKey": "sha256/bb/bb2e203670ec77b4a17964bf4615515855ffc6de12e5efb2bebdf798a032fa0a",
+          "sourceId": "notation://source/notation-systems/carrier-demo",
+          "capturedAt": "2026-09-05T00:00:00Z",
+          "sourceTruthClaimed": false
+        },
+        "receipt": {
+          "kind": "StorageReceipt",
+          "schema": "notations.storage-receipt.v1",
+          "receiptId": "demo-caravan-carrier-002:receipt",
+          "evidenceId": "demo-evidence-caravan-carrier-002",
+          "contentDigest": "sha256:bb2e203670ec77b4a17964bf4615515855ffc6de12e5efb2bebdf798a032fa0a",
+          "storageKey": "sha256/bb/bb2e203670ec77b4a17964bf4615515855ffc6de12e5efb2bebdf798a032fa0a",
+          "storedAt": "2026-09-05T00:05:00.000Z"
+        }
+      },
+      "digest": "sha256:037db623da278bee7a928eb677204457a0bea5eb764a1d7307772b24fa849cb2"
+    },
+    {
+      "schema": "payload.local-acquisition.v1",
+      "mode": "LOCAL_DEVELOPMENT",
+      "policyAuthority": "OPERATOR_DECLARATION",
+      "sourceTruthClaimed": false,
+      "canonicalAdmission": false,
+      "request": {
+        "manifest": {
+          "acquisitionId": "demo-caravan-local-notice-001",
+          "capturedAt": "2026-09-05T00:00:00Z",
+          "evidenceId": "demo-evidence-caravan-local-notice-001",
+          "mediaType": "text/plain; charset=utf-8",
+          "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+          "schema": "payload.local-intake-request.v1",
+          "sourceRegistration": {
+            "allowedAudiences": [
+              "INTERNAL"
+            ],
+            "allowedOperations": [
+              "INGEST"
+            ],
+            "displayName": "Synthetic local demonstration notice",
+            "effectiveFrom": "2026-09-01T00:00:00Z",
+            "licenseId": "local-demo-declaration-not-a-source-license",
+            "permittedPurposes": [
+              "CARAVAN_LOCAL_DEVELOPMENT"
+            ],
+            "policyVersion": "1.0.0",
+            "registrationId": "demo-local-notice-policy-v1",
+            "retention": {
+              "mode": "INDEFINITE"
+            },
+            "sourceClass": "SYNTHETIC_DEMONSTRATION",
+            "sourceId": "notation://source/notation-systems/local-demo"
+          }
+        },
+        "contentDigest": "sha256:8d4c4247b5146c1e36b4174015ff70cfb68e546742b10cf16ec16b513b3c8f17",
+        "byteLength": 271
+      },
+      "requestDigest": "sha256:1de6d08d028208f15a0bd0f0bd69d352b55df900e79283bbfcf5a8c3b258c074",
+      "decision": {
+        "decisionId": "source-use:demo-caravan-local-notice-001:ingest",
+        "requestId": "demo-caravan-local-notice-001:ingest",
+        "registrationId": "demo-local-notice-policy-v1",
+        "sourceId": "notation://source/notation-systems/local-demo",
+        "request": {
+          "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+          "operation": "INGEST",
+          "audience": "INTERNAL",
+          "requestedAt": "2026-09-05T00:00:00Z"
+        },
+        "state": "ALLOWED",
+        "reasons": [
+          "EXPLICIT_POLICY_GRANT"
+        ],
+        "evaluatedAt": "2026-09-05T00:00:00Z"
+      },
+      "capture": {
+        "evidence": {
+          "kind": "BinaryEvidence",
+          "schema": "notations.binary-evidence.v1",
+          "evidenceId": "demo-evidence-caravan-local-notice-001",
+          "mediaType": "text/plain; charset=utf-8",
+          "contentDigest": "sha256:8d4c4247b5146c1e36b4174015ff70cfb68e546742b10cf16ec16b513b3c8f17",
+          "byteLength": 271,
+          "storageKey": "sha256/8d/8d4c4247b5146c1e36b4174015ff70cfb68e546742b10cf16ec16b513b3c8f17",
+          "sourceId": "notation://source/notation-systems/local-demo",
+          "capturedAt": "2026-09-05T00:00:00Z",
+          "sourceTruthClaimed": false
+        },
+        "receipt": {
+          "kind": "StorageReceipt",
+          "schema": "notations.storage-receipt.v1",
+          "receiptId": "demo-caravan-local-notice-001:receipt",
+          "evidenceId": "demo-evidence-caravan-local-notice-001",
+          "contentDigest": "sha256:8d4c4247b5146c1e36b4174015ff70cfb68e546742b10cf16ec16b513b3c8f17",
+          "storageKey": "sha256/8d/8d4c4247b5146c1e36b4174015ff70cfb68e546742b10cf16ec16b513b3c8f17",
+          "storedAt": "2026-09-05T00:05:00.000Z"
+        }
+      },
+      "digest": "sha256:a7882c5170f4151696aa12acd1da62c13d77f8b195eac818495d99bdc820ef2f"
+    }
+  ],
+  "normalizations": [
+    {
+      "schema": "payload.local-normalization-run.v1",
+      "mode": "LOCAL_DEVELOPMENT",
+      "policyAuthority": "OPERATOR_DECLARATION",
+      "canonicalAdmission": false,
+      "sourceTruthClaimed": false,
+      "fieldAccuracyClaimed": false,
+      "independentlyVerified": false,
+      "request": {
+        "manifest": {
+          "acquisitionId": "demo-caravan-carrier-001",
+          "normalizationId": "demo-caravan-carrier-normalization-001",
+          "profile": {
+            "adapterId": "caravan.carrier-json/v1",
+            "id": "demo-carrier-source-profile-v1",
+            "sourceId": "notation://source/notation-systems/carrier-demo",
+            "sourceRegistrationId": "demo-carrier-declared-policy-v1",
+            "version": "1.0.0"
+          },
+          "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+          "schema": "payload.local-normalization-request.v1"
+        },
+        "acquisitionDigest": "sha256:3ade5a66ddbafda915acbcc8bf253528a86e97c4f0749761ea73722235ef48ac",
+        "adapterDigest": "sha256:6e4f2193b2698f8f763bb0a25e72789e283e923cc5764fa1520d1c69dab1fd5c"
+      },
+      "requestDigest": "sha256:bc18567b743473239c8ccae7833928423ffb8d0fec9b6e8ae06e487404680c81",
+      "normalizedAt": "2026-09-05T00:10:00.000Z",
+      "deriveDecision": {
+        "decisionId": "source-use:demo-caravan-carrier-normalization-001:derive",
+        "requestId": "demo-caravan-carrier-normalization-001:derive",
+        "registrationId": "demo-carrier-declared-policy-v1",
+        "sourceId": "notation://source/notation-systems/carrier-demo",
+        "request": {
+          "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+          "operation": "DERIVE",
+          "audience": "INTERNAL",
+          "requestedAt": "2026-09-05T00:10:00.000Z"
+        },
+        "state": "ALLOWED",
+        "reasons": [
+          "EXPLICIT_POLICY_GRANT"
+        ],
+        "evaluatedAt": "2026-09-05T00:10:00.000Z"
+      },
+      "state": "NORMALIZED",
+      "reasons": [
+        "CONTRACT_MATCH"
+      ],
+      "candidate": {
+        "schema": "payload.local-carrier-candidate.v1",
+        "candidateId": "demo-caravan-carrier-normalization-001:candidate",
+        "domain": "CARAVAN",
+        "recordType": "Carrier",
+        "state": "UNADMITTED",
+        "identity": {
+          "state": "UNRESOLVED",
+          "sourceId": "notation://source/notation-systems/carrier-demo",
+          "sourceRecordId": "demo-carrier-001",
+          "canonicalId": null
+        },
+        "fields": {
+          "legalName": "Demonstration Carriers Incorporated",
+          "registrationNumber": "DEMO-REG-001"
+        },
+        "missingFields": [
+          "operatingSite"
+        ],
+        "validTime": {
+          "state": "UNOBSERVED",
+          "from": null,
+          "to": null
+        },
+        "knownAt": "2026-09-05T00:10:00.000Z",
+        "provenance": {
+          "acquisition": {
+            "id": "demo-caravan-carrier-001",
+            "digest": "sha256:3ade5a66ddbafda915acbcc8bf253528a86e97c4f0749761ea73722235ef48ac"
+          },
+          "evidence": {
+            "id": "demo-evidence-caravan-carrier-001",
+            "contentDigest": "sha256:6002901fce9ebf2bb7f4f915ed2c0b4c2b5e14de888fa6fb6a1fbe96c129a154"
+          },
+          "receipt": {
+            "id": "demo-caravan-carrier-001:receipt",
+            "digest": "sha256:4a370d164cff0122ccaac9fbff777a520d3bd0177bc78fb0806a222cbde4f77e"
+          },
+          "sourcePolicy": {
+            "id": "demo-carrier-declared-policy-v1",
+            "digest": "sha256:8d00cd350edda088f103cfc23e1a72b05831c198ca3bb1112c8401a229468be7"
+          },
+          "derivation": {
+            "id": "source-use:demo-caravan-carrier-normalization-001:derive",
+            "digest": "sha256:43f6246a726e40a9cdf8b339bf08677d993c776193cd40263759a2483e36d1be"
+          },
+          "adapter": {
+            "id": "caravan.carrier-json/v1",
+            "version": "1.0.0",
+            "contractDigest": "sha256:6e4f2193b2698f8f763bb0a25e72789e283e923cc5764fa1520d1c69dab1fd5c"
+          }
+        },
+        "digest": "sha256:100af41ab30ca03fea663d1e0ee7f3fedf9b0ec8c18c3e1d1d19bbcd482b9690"
+      },
+      "digest": "sha256:a3b2effe6aca27d890cf6991e6ec15ef17835d91520ea91d38843042398713b8"
+    },
+    {
+      "schema": "payload.local-normalization-run.v1",
+      "mode": "LOCAL_DEVELOPMENT",
+      "policyAuthority": "OPERATOR_DECLARATION",
+      "canonicalAdmission": false,
+      "sourceTruthClaimed": false,
+      "fieldAccuracyClaimed": false,
+      "independentlyVerified": false,
+      "request": {
+        "manifest": {
+          "acquisitionId": "demo-caravan-carrier-002",
+          "normalizationId": "demo-caravan-carrier-normalization-002",
+          "profile": {
+            "adapterId": "caravan.carrier-json/v1",
+            "id": "demo-carrier-source-profile-v1",
+            "sourceId": "notation://source/notation-systems/carrier-demo",
+            "sourceRegistrationId": "demo-carrier-declared-policy-v1",
+            "version": "1.0.0"
+          },
+          "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+          "schema": "payload.local-normalization-request.v1"
+        },
+        "acquisitionDigest": "sha256:037db623da278bee7a928eb677204457a0bea5eb764a1d7307772b24fa849cb2",
+        "adapterDigest": "sha256:6e4f2193b2698f8f763bb0a25e72789e283e923cc5764fa1520d1c69dab1fd5c"
+      },
+      "requestDigest": "sha256:37c7986a5362d749acf4365e81db751473e9d4e54eafd7cd58c1db18a2019d1b",
+      "normalizedAt": "2026-09-05T00:10:00.000Z",
+      "deriveDecision": {
+        "decisionId": "source-use:demo-caravan-carrier-normalization-002:derive",
+        "requestId": "demo-caravan-carrier-normalization-002:derive",
+        "registrationId": "demo-carrier-declared-policy-v1",
+        "sourceId": "notation://source/notation-systems/carrier-demo",
+        "request": {
+          "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+          "operation": "DERIVE",
+          "audience": "INTERNAL",
+          "requestedAt": "2026-09-05T00:10:00.000Z"
+        },
+        "state": "ALLOWED",
+        "reasons": [
+          "EXPLICIT_POLICY_GRANT"
+        ],
+        "evaluatedAt": "2026-09-05T00:10:00.000Z"
+      },
+      "state": "QUARANTINED",
+      "reasons": [
+        "SCHEMA_MISMATCH"
+      ],
+      "candidate": null,
+      "digest": "sha256:5aff329efc26c98ae87f964cd044b222ea8e6acbc0f2d9b4bde616553314c593"
+    }
+  ],
+  "builds": [
+    {
+      "schema": "payload.local-candidate-build.v1",
+      "buildId": "demo-caravan-carrier-build-001",
+      "state": "UNADMITTED",
+      "mode": "LOCAL_DEVELOPMENT",
+      "policyAuthority": "OPERATOR_DECLARATION",
+      "canonicalAdmission": false,
+      "canonicalStateMutated": false,
+      "identityResolved": false,
+      "releaseActivated": false,
+      "sourceTruthClaimed": false,
+      "independentlyVerified": false,
+      "completenessClaimed": false,
+      "request": {
+        "manifest": {
+          "buildId": "demo-caravan-carrier-build-001",
+          "definition": {
+            "domain": "CARAVAN",
+            "id": "demo-caravan-carrier-candidates-v1",
+            "recordType": "Carrier",
+            "sourceClasses": [
+              "OPERATOR_DECLARATION"
+            ],
+            "version": "1.0.0"
+          },
+          "knownThrough": "2026-09-05T00:30:00.000Z",
+          "normalizationIds": [
+            "demo-caravan-carrier-normalization-001"
+          ],
+          "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+          "schema": "payload.local-candidate-build-request.v1"
+        },
+        "contractDigest": "sha256:17c413bb1fc68efad89437f6bbe8cb5bb4743ad48226c5114e7d443d44819147",
+        "members": [
+          {
+            "normalization": {
+              "id": "demo-caravan-carrier-normalization-001",
+              "digest": "sha256:a3b2effe6aca27d890cf6991e6ec15ef17835d91520ea91d38843042398713b8"
+            },
+            "candidate": {
+              "id": "demo-caravan-carrier-normalization-001:candidate",
+              "digest": "sha256:100af41ab30ca03fea663d1e0ee7f3fedf9b0ec8c18c3e1d1d19bbcd482b9690"
+            }
+          }
+        ]
+      },
+      "requestDigest": "sha256:27e6c1609f348c82877d780125ac00ad3edd9cc1100122a1d1fad472b197ccb8",
+      "builtAt": "2026-09-05T01:00:00.000Z",
+      "knownThrough": "2026-09-05T00:30:00.000Z",
+      "definitionDigest": "sha256:0ae81ea87ad2dfdd14cbc77288b19ba057f2ab68e19221c05c918d7cb791ac2e",
+      "recordCount": 1,
+      "recordsRoot": "sha256:096ed67158db921c99b61ac3ae419d8758cd1654ed6b0affcc432eac8ad401c4",
+      "members": [
+        {
+          "normalization": {
+            "id": "demo-caravan-carrier-normalization-001",
+            "digest": "sha256:a3b2effe6aca27d890cf6991e6ec15ef17835d91520ea91d38843042398713b8"
+          },
+          "candidate": {
+            "id": "demo-caravan-carrier-normalization-001:candidate",
+            "digest": "sha256:100af41ab30ca03fea663d1e0ee7f3fedf9b0ec8c18c3e1d1d19bbcd482b9690"
+          },
+          "identity": {
+            "canonicalId": null,
+            "sourceId": "notation://source/notation-systems/carrier-demo",
+            "sourceRecordId": "demo-carrier-001",
+            "state": "UNRESOLVED"
+          },
+          "sourceClass": "OPERATOR_DECLARATION",
+          "knownAt": "2026-09-05T00:10:00.000Z",
+          "validTime": {
+            "from": null,
+            "state": "UNOBSERVED",
+            "to": null
+          },
+          "sourcePolicy": {
+            "id": "demo-carrier-declared-policy-v1",
+            "digest": "sha256:8d00cd350edda088f103cfc23e1a72b05831c198ca3bb1112c8401a229468be7"
+          },
+          "deriveDecision": {
+            "decisionId": "source-use:demo-caravan-carrier-build-001:member:0:derive",
+            "requestId": "demo-caravan-carrier-build-001:member:0:derive",
+            "registrationId": "demo-carrier-declared-policy-v1",
+            "sourceId": "notation://source/notation-systems/carrier-demo",
+            "request": {
+              "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+              "operation": "DERIVE",
+              "audience": "INTERNAL",
+              "requestedAt": "2026-09-05T01:00:00.000Z"
+            },
+            "state": "ALLOWED",
+            "reasons": [
+              "EXPLICIT_POLICY_GRANT"
+            ],
+            "evaluatedAt": "2026-09-05T01:00:00.000Z"
+          }
+        }
+      ],
+      "digest": "sha256:abfd9305fdb28d8fac65d08232d3467a7ef4f32d2eb22e39809e7fb7105aa976"
+    }
+  ],
+  "refusals": [
+    {
+      "step": "NORMALIZE",
+      "requestId": "demo-caravan-local-notice-normalization-001",
+      "error": "DERIVATION_NOT_ALLOWED: OPERATION_NOT_PERMITTED."
+    },
+    {
+      "step": "BUILD",
+      "requestId": "demo-caravan-carrier-build-002",
+      "error": "MEMBER_NOT_ELIGIBLE: demo-caravan-carrier-normalization-002 is not a normalized Carrier candidate."
+    },
+    {
+      "step": "BUILD",
+      "requestId": "demo-caravan-carrier-build-003",
+      "error": "MEMBER_AFTER_CUTOFF: demo-caravan-carrier-normalization-001."
+    }
+  ]
+}

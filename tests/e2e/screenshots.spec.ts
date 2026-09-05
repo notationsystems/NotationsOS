@@ -23,6 +23,9 @@ test('desktop screenshots', async ({ page }) => {
   await page.goto('/retractions');
   await page.getByRole('list', { name: 'Retraction feed' }).waitFor();
   await page.screenshot({ path: `${OUT}/00d-retractions.png`, fullPage: true });
+  await page.goto('/candidates');
+  await page.getByTestId('candidate-boundary').waitFor();
+  await page.screenshot({ path: `${OUT}/00e-candidates.png`, fullPage: true });
   await page.goto('/cases');
   await page.getByRole('table', { name: 'Case queue' }).waitFor();
   await page.screenshot({ path: `${OUT}/01-case-queue.png`, fullPage: true });

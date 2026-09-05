@@ -38,7 +38,7 @@ export const CUSTOMER_CATEGORIES = [
 
 /** The economic architecture, in order. */
 export const ECONOMIC_ARCHITECTURE = [
-  { step: 1, statement: 'Build governed computational corpora', inThisRepository: 'Corpus releases with production records, certification and rights (fixture).' },
+  { step: 1, statement: 'Build governed computational corpora', inThisRepository: 'Corpus releases with production records, certification and rights (fixture); the local candidate rail before admission (present, unadmitted).' },
   { step: 2, statement: 'Distribute them as data systems and products', inThisRepository: 'Feed API, stream, retractions, MCP tools, the Caravan workbench (fixture).' },
   { step: 3, statement: 'Host compute over authorized corpus releases', inThisRepository: 'Release-bound execution context in every answer; managed execution absent.' },
   { step: 4, statement: 'Separately govern any proprietary trading/speculation activity', inThisRepository: 'Recorded as governance and as prohibited uses in every rights schedule; no such activity here.' },
@@ -74,6 +74,7 @@ export const ENGINES: readonly Engine[] = [
       { item: 'MCP tools over the same feed', presence: 'FIXTURE', where: '/api#api-mcp' },
       { item: 'Caravan workbench (ruling application)', presence: 'FIXTURE', where: '/cases' },
       { item: 'Source-use policy and evidence capture contracts (data-os, Bench-derived)', presence: 'PRESENT', where: '/api#api-vocab' },
+      { item: 'Local candidate-production rail: evidence intake, Carrier normalization, time-bounded candidate builds; every record UNADMITTED and outside the feed', presence: 'PRESENT', where: '/candidates' },
       { item: 'Reports', presence: 'ABSENT' },
       { item: 'Live source connectors', presence: 'ABSENT' },
       { item: 'Production storage and identity', presence: 'ABSENT' },

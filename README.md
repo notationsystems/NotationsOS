@@ -90,11 +90,13 @@ scripts         local server launcher, contract-review worker and evidence intak
 examples/evidence synthetic notice and operator-declared intake manifest
 examples/carrier synthetic Carrier JSON, acquisition declaration and normalization request
 src/mcp         MCP tools over the same feed payloads, and the stdio server
+src/fixtures/production  the candidate-production demonstration: pipeline.ts runs examples/ through the real local rails at fixed instants; demo.json is its committed output, drift-tested and separation-tested
 src/fixtures    Caravan corpus releases, records, retractions and rights; profile and cases; manifest builder; digest plan; committed digests
 src/components  primitives, case workspace, ruling viewer, replay, queue, intake, shell
 src/app         product model: /product
                 corpus: /releases, /releases/[releaseId], /stream, /retractions, /api, /api/v1/* (fixture feed)
                 workbench: /cases, /cases/new, /cases/[caseId], /rulings, /rulings/[rulingId], /replay/[caseId], /profiles, /evidence
                 coordination: /agents, /board, /api/coordination, /api/coordination/inbox (read-only fixtures or local sandbox)
+                production: /candidates (the local rail's acquisitions, normalizations, candidate build and refusals, all UNADMITTED; reproduced from examples/ by npm run stamp:production)
 tests/e2e       Playwright smoke, accessibility, keyboard, mobile, overflow guard, screenshots
 ```

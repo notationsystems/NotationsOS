@@ -6,7 +6,7 @@ import { VerticalContext } from './VerticalContext';
 
 /**
  * The corpus and its feed come first, followed by the optional workbench
- * and the shared agent/apparatus coordination register and board.
+ * the candidate-production rail, and the shared agent/apparatus coordination register and board.
  */
 export const NAV_GROUPS: ReadonlyArray<{ group: string; items: ReadonlyArray<{ href: string; label: string; match: RegExp }> }> = [
   {
@@ -26,6 +26,12 @@ export const NAV_GROUPS: ReadonlyArray<{ group: string; items: ReadonlyArray<{ h
       { href: '/evidence', label: 'Evidence', match: /^\/evidence/ },
       { href: '/replay', label: 'Replay', match: /^\/replay/ },
       { href: '/profiles', label: 'Profiles', match: /^\/profiles/ },
+    ],
+  },
+  {
+    group: 'Production',
+    items: [
+      { href: '/candidates', label: 'Candidates', match: /^\/candidates/ },
     ],
   },
   {

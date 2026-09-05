@@ -17,6 +17,7 @@
     "check": "npm run typecheck && npm run lint && npm test",
     "e2e": "playwright test",
     "screenshots": "playwright test --project=screenshots",
+    "stamp:production": "esbuild scripts/stamp-production.entry.ts --bundle --platform=node --format=esm --alias:@=./src --outfile=.stamp/stamp-production.mjs --log-level=warning && node .stamp/stamp-production.mjs",
     "stamp:digests": "esbuild scripts/stamp-digests.entry.ts --bundle --platform=node --format=esm --alias:@=./src --outfile=.stamp/stamp.mjs --log-level=warning && node .stamp/stamp.mjs",
     "mcp": "esbuild src/mcp/server.ts --bundle --platform=node --format=esm --alias:@=./src --outfile=.stamp/mcp.mjs --log-level=warning --banner:js=\"import { createRequire } from \\\"module\\\"; const require = createRequire(import.meta.url);\" && node .stamp/mcp.mjs"
   },

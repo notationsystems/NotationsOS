@@ -109,3 +109,25 @@ test('stream: changing the knowledge time changes the answer, in the page and in
   await expect(page.getByRole('article', { name: 'Record REC-0204' })).toBeVisible();
   await expect(page.getByTestId('asof-url')).toContainText('knownAt=2026-09-01T12%3A00%3A00Z');
 });
+
+test('candidates: the local rail is visible, unadmitted, identity unresolved, and absent from the feed', async ({ page }) => {
+  await page.goto('/candidates');
+  await expect(page.getByRole('heading', { level: 1, name: 'Candidate production' })).toBeVisible();
+  const boundary = page.getByTestId('candidate-boundary');
+  await expect(boundary).toContainText('UNADMITTED');
+  await expect(boundary).toContainText('canonicalId is null');
+  await expect(page.locator('[data-normalization-id][data-state="NORMALIZED"]')).toHaveCount(1);
+  await expect(page.locator('[data-normalization-id][data-state="QUARANTINED"]')).toHaveCount(1);
+  await expect(page.getByTestId('quarantine')).toContainText('SCHEMA_MISMATCH');
+  await expect(page.locator('[data-canonical-id="null"]')).toHaveCount(1);
+  await expect(page.locator('[data-build-id="demo-caravan-carrier-build-001"][data-state="UNADMITTED"]')).toHaveCount(1);
+  await expect(page.locator('[data-cutoff="within"]')).toHaveCount(1);
+  await expect(page.locator('[data-refusal="DERIVATION_NOT_ALLOWED"]')).toHaveCount(1);
+  await expect(page.locator('[data-refusal="MEMBER_AFTER_CUTOFF"]')).toHaveCount(1);
+  await expect(page.locator('[data-decision="DENIED"]')).toHaveCount(0);
+  const feed = await (await page.request.get('/api/v1/releases/REL-CAR-2026.09.01/records')).text();
+  expect(feed).not.toContain('demo-caravan');
+  expect(feed).not.toContain('UNADMITTED');
+  const nav = page.getByRole('navigation', { name: 'Primary' });
+  await expect(nav.getByRole('link', { name: 'Candidates' })).toBeVisible();
+});
