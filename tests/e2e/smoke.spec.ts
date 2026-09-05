@@ -79,6 +79,14 @@ test('the product page states the firm, the twelve stages, the three customer ca
   await expect(page.locator('[data-customer]')).toHaveCount(3);
   await expect(page.locator('[data-step]')).toHaveCount(4);
   await expect(page.getByLabel('Product architecture tree')).toContainText('Landshark — parcels, zoning, entitlements, development state');
+  await expect(page.locator('[data-fabric]')).toHaveCount(5);
+  await expect(page.locator('[data-fabric="state"][data-presence="ABSENT"]')).toHaveCount(1);
+  await expect(page.locator('[data-information-state]')).toHaveCount(3);
+  await expect(page.locator('[data-doctrine-rule]')).toHaveCount(7);
+  await expect(page.getByTestId('operational-rule')).toContainText('shared information');
+  await expect(page.locator('[data-engine="kepler.gl"][data-presence="ABSENT"]')).toHaveCount(1);
+  await expect(page.locator('[data-engine="table"][data-presence="PRESENT"]')).toHaveCount(1);
+  await expect(page.locator('[data-tier][data-reached="true"]')).toHaveCount(2);
 });
 
 test('a release page states certification, the production record and the rights matrix with trading prohibited', async ({ page }) => {

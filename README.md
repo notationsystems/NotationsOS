@@ -93,6 +93,9 @@ scripts         local server launcher, contract-review and candidate-build-revie
 examples/evidence synthetic notice and operator-declared intake manifest
 examples/carrier synthetic Carrier JSON, acquisition declaration and normalization request
 src/mcp         MCP tools over the same feed payloads, and the stdio server
+src/domain/doctrine.ts   the architecture carried forward as data: five fabrics, three states of information, seven rules with where each is enforced and which tests prove it, verification tiers (docs/ARCHITECTURE.md is the prose; /product renders it)
+src/domain/projection.ts the projection contract and its pure router: kepler.gl / CesiumJS / Three.js / table by coordinate semantics and intent; engines named, not installed
+src/architecture.test.ts structural doctrine: browser and page layers take only types and the pure policy evaluator from the rails; the rails import nothing from above; every projection leaves the corpus untouched and identities intact
 src/fixtures/production  the candidate-production demonstration: pipeline.ts runs examples/ through the real local rails at fixed instants; demo.json is its committed output, drift-tested and separation-tested
 src/fixtures    Caravan corpus releases, records, retractions and rights; profile and cases; manifest builder; digest plan; committed digests
 src/components  primitives, case workspace, ruling viewer, replay, queue, intake, shell
