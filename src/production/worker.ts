@@ -9,6 +9,7 @@ let active = 0;
 
 export type ProductionWork = { action: 'EXECUTE'; command: unknown }
   | { action: 'INSPECT'; kind: string; reference: unknown }
+  | { action: 'COMPARE_CANDIDATE_BUILDS'; request: unknown }
   | { action: 'CATALOG' };
 
 /** Fixed Node entry point. A caller supplies an operation, never executable options or paths. */

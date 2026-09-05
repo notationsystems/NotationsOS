@@ -81,3 +81,50 @@ test('actual HTTP IFC capture to pinned supported/blocked GAT reports and histor
     expect(JSON.stringify(result)).not.toMatch(/C:\\\\|storageKey|Traceback|source\.ifc/);
   }
 });
+
+test('actual HTTP comparison of exact Carrier builds is deterministic and read-only', async ({ request }) => {
+  const corpus = output(await execute(request, 'http-compare-corpus', { kind: 'REGISTER_CORPUS',
+    definition: { ...CARAVAN_DEMO_DEFINITION, id: 'http-compare-definition' } }), 'CORPUS');
+  const configured = { ...caravanDemoSource(corpus), id: 'http-compare-source' };
+  const source = output(await execute(request, 'http-compare-register-source', { kind: 'REGISTER_SOURCE', source: configured }), 'SOURCE');
+  const acquisition = output(await execute(request, 'http-compare-capture', { kind: 'ACQUIRE', source,
+    purpose: CARAVAN_DEMO_PURPOSE, contentBase64: caravanDemoContent() }), 'ACQUISITION');
+  const builds: ProductionRef[] = [];
+  for (const suffix of ['before', 'after']) {
+    // Re-normalize the SAME preserved bytes. Changed references are not changed fields.
+    const member = output(await execute(request, `http-compare-normalize-${suffix}`, { kind: 'NORMALIZE',
+      source, acquisition, purpose: CARAVAN_DEMO_PURPOSE }), 'NORMALIZATION');
+    builds.push(output(await execute(request, `http-compare-build-${suffix}`, { kind: 'BUILD_CANDIDATES',
+      corpus, members: [member], purpose: CARAVAN_DEMO_PURPOSE }), 'CANDIDATE_BUILD'));
+  }
+  const ref = (build: ProductionRef) => ({ buildId: build.id, expectedDigest: build.digest });
+  const data = { schema: 'payload.local-candidate-build-comparison-request.v1', before: ref(builds[0]), after: ref(builds[1]) };
+  const catalog = await (await request.get('/api/production')).json();
+  const preserved = await inspect(request, 'ACQUISITION', acquisition);
+  const first = await request.post('/api/production/compare', { data });
+  expect(first.status(), await first.text()).toBe(200);
+  expect(first.headers()['cache-control']).toBe('no-store');
+  const result = await first.json();
+  expect(result).toMatchObject({ schema: 'payload.production-candidate-comparison.v1', mode: 'LOCAL_DEVELOPMENT',
+    inspection: 'HISTORICAL', canonicalAdmission: false, comparisonPersisted: false, currentRightsGrant: false,
+    sourceIdentifiersIncluded: true, rawBytesIncluded: false, candidateFieldsIncluded: false });
+  expect(result.comparison.summary).toMatchObject({ beforeCount: 1, afterCount: 1, referenceChanged: 1, added: 0, removed: 0, unchanged: 0 });
+  expect(result.comparison.entries[0]).toMatchObject({ kind: 'REFERENCE_CHANGED', identity: { state: 'UNRESOLVED' } });
+  expect(result.comparison.nonclaims).toMatchObject({ fieldChangeInferred: false, correctionInferred: false,
+    retractionInferred: false, releaseActivated: false });
+  const repeated = await request.post('/api/production/compare', { data });
+  expect(repeated.status(), await repeated.text()).toBe(200);
+  expect(await repeated.json()).toEqual(result);
+  const self = await request.post('/api/production/compare', { data: { ...data, after: data.before } });
+  expect(self.status(), await self.text()).toBe(200);
+  expect((await self.json()).comparison.summary).toMatchObject({ unchanged: 1, referenceChanged: 0 });
+  const wrongDigest = await request.post('/api/production/compare', { data: { ...data,
+    before: { ...data.before, expectedDigest: `sha256:${'0'.repeat(64)}` } } });
+  expect(wrongDigest.status()).toBe(409);
+  expect((await wrongDigest.json()).error.code).toBe('BUILD_DIGEST_MISMATCH');
+  const unauthorized = await request.post('/api/production/compare', { data,
+    headers: { origin: 'https://example.invalid', 'sec-fetch-site': 'cross-site' } });
+  expect(unauthorized.status()).toBe(403);
+  expect(await (await request.get('/api/production')).json()).toEqual(catalog);
+  expect(await inspect(request, 'ACQUISITION', acquisition)).toEqual(preserved);
+});

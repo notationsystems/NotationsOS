@@ -3,6 +3,7 @@ import { exactFields } from '../src/data-os/local-record';
 import { ProductionError } from '../src/production/errors';
 import { PRODUCTION_OBJECT_KINDS, parseProductionRef, type ProductionObjectKind } from '../src/production/contracts';
 import { LocalProductionStore } from '../src/production/store';
+import { compareProductionCandidateBuilds } from '../src/production/comparison';
 
 const limit = 2 * 1024 * 1024;
 async function main() {
@@ -17,7 +18,8 @@ async function main() {
   let input: Record<string, unknown>;
   try { input = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks))); }
   catch { throw new ProductionError('INVALID_REQUEST', 'Send one valid UTF-8 worker request.'); }
-  const store = new LocalProductionStore(process.env.PAYLOAD_PRODUCTION_DIR ?? join(process.cwd(), '.payload', 'evidence'));
+  const root = process.env.PAYLOAD_PRODUCTION_DIR ?? join(process.cwd(), '.payload', 'evidence');
+  const store = new LocalProductionStore(root);
   let value: unknown;
   try {
     if (input.schema !== 'payload.production-worker.v1') throw new Error();
@@ -28,6 +30,9 @@ async function main() {
       exactFields(input, ['schema', 'action', 'kind', 'reference']);
       if (!PRODUCTION_OBJECT_KINDS.includes(input.kind as ProductionObjectKind)) throw new Error();
       value = store.inspect(input.kind as ProductionObjectKind, parseProductionRef(input.reference));
+    } else if (input.action === 'COMPARE_CANDIDATE_BUILDS') {
+      exactFields(input, ['schema', 'action', 'request']);
+      value = compareProductionCandidateBuilds(input.request, root);
     } else if (input.action === 'CATALOG') {
       exactFields(input, ['schema', 'action']);
       value = store.catalog();

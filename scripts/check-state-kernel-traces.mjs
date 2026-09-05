@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 
 // Runtime state and compiler scratch files must never become deployment assets.
 for (const route of ['state-kernel/route', 'state-kernel/preview/route', 'state-kernel/save/route',
-  'production/route', 'production/inspect/route', 'gat/audits/route', 'gat/audits/[requestId]/route']) {
+  'production/route', 'production/inspect/route', 'production/compare/route', 'gat/audits/route', 'gat/audits/[requestId]/route']) {
   const file = join(process.cwd(), '.next/server/app/api', `${route}.js.nft.json`);
   const trace = JSON.parse(readFileSync(file, 'utf8'));
   if (!Array.isArray(trace.files)) throw new Error(`Missing local backend build trace: ${route}.`);

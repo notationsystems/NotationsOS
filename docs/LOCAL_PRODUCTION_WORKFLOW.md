@@ -106,6 +106,8 @@ If normalization/build publication succeeds before a later failure, the run rema
 
 [Failed-run integrity](FAILED_RUN_INTEGRITY.md) additionally validates exact request-bound output references and operation-specific completed-stage prefixes, even when a saved receipt has been rehashed. It preserves genuine partial-write/early-lookup failures and performs no automatic repair or reexecution.
 
+After build inspection, `POST /api/production/compare` compares two exact historical candidate builds through the same bounded local worker. See [the frontend comparison contract](LOCAL_CANDIDATE_COMPARISON.md#local-frontend-comparison). This is a read-only reference comparison, not a production command, field-level change claim, saved run, or released change feed.
+
 Identical completed requests return `EXISTING`, `historicalRetry: true`, original receipt/times after dependency reinspection, without fresh execution or permission grant. Corrected inputs or intentional re-execution require a new ID and current-time policy check. Policy remains an immutable operator declaration; there is no external permission-revocation service.
 
 Incomplete intents are not silently rerun/backdated. The catalog exposes `INCOMPLETE_OR_RUNNING`; identical POST returns recovery information. After timeout or uncertain storage, retry the same identity to discover retained state, inspect outputs, then use a new ID only for an intentional new attempt. Never automatically delete history or stale locks. Corrupt dependencies block inspection rather than being repaired.
