@@ -15,6 +15,25 @@ export interface NotationState {
   canUndo: boolean;
   canRedo: boolean;
 }
+/** Demonstration bounds; commands include the complete saved and previewed history. */
+export const MAX_NOTATION_COMMANDS = 256;
+export const MAX_NOTATION_SAVED_VERSIONS = 64;
+export interface NotationCapacity {
+  maxCommands: number;
+  usedCommands: number;
+  remainingCommands: number;
+  maxSavedVersions: number;
+  usedSavedVersions: number;
+  remainingSavedVersions: number;
+}
+export const notationCapacity = (revision: number, savedVersion: number): NotationCapacity => ({
+  maxCommands: MAX_NOTATION_COMMANDS,
+  usedCommands: revision,
+  remainingCommands: Math.max(0, MAX_NOTATION_COMMANDS - revision),
+  maxSavedVersions: MAX_NOTATION_SAVED_VERSIONS,
+  usedSavedVersions: savedVersion,
+  remainingSavedVersions: Math.max(0, MAX_NOTATION_SAVED_VERSIONS - savedVersion),
+});
 export interface StateKernelSnapshot {
   schema: 'payload.local-notation-workspace.v1';
   mode: 'LOCAL_DEVELOPMENT';
@@ -22,6 +41,7 @@ export interface StateKernelSnapshot {
   savedVersion: number;
   savedDigest: string | null;
   state: NotationState;
+  capacity: NotationCapacity;
   persistence: 'LOCAL_VERSIONED_FILES' | 'DISABLED';
   canonicalAdmission: false;
 }

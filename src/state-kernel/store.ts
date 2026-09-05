@@ -4,10 +4,10 @@ import { encodeLocalRecord, exactFields, localJson, localRecordDigest } from '..
 import { publishImmutableFile, readImmutableFile } from '../data-os/local-files';
 import { StateKernelError } from './errors';
 import { evaluateKernel, MAX_KERNEL_INPUT_BYTES } from './runtime';
-import { emptyNotationState, type KernelCommand, type NotationState, type StateKernelRequest, type StateKernelSnapshot } from './types';
+import { emptyNotationState, MAX_NOTATION_COMMANDS, MAX_NOTATION_SAVED_VERSIONS, notationCapacity, type KernelCommand, type NotationState, type StateKernelRequest, type StateKernelSnapshot } from './types';
 
 const MAX_SNAPSHOT_BYTES = 8 * 1024 * 1024;
-const MAX_VERSIONS = 64;
+const MAX_VERSIONS = MAX_NOTATION_SAVED_VERSIONS;
 interface SavedVersion {
   schema: 'payload.notation-saved-version.v1';
   version: number;
@@ -26,14 +26,14 @@ export function parseStateKernelRequest(input: unknown): StateKernelRequest {
     const value = JSON.parse(encodeLocalRecord(input, MAX_KERNEL_INPUT_BYTES).toString('utf8'));
     exactFields(value, ['schema', 'baseVersion', 'commands']);
     if (value.schema !== 'payload.notation-command-batch.v1' || typeof value.baseVersion !== 'number' || !Number.isSafeInteger(value.baseVersion) || value.baseVersion < 0 ||
-        value.baseVersion > MAX_VERSIONS || !Array.isArray(value.commands) || value.commands.length < 1 || value.commands.length > 256) throw new Error();
+        value.baseVersion > MAX_VERSIONS || !Array.isArray(value.commands) || value.commands.length < 1 || value.commands.length > MAX_NOTATION_COMMANDS) throw new Error();
     return value as unknown as StateKernelRequest;
   } catch { throw new StateKernelError('INVALID_REQUEST', 'Send a bounded command batch with a saved base version, not a state replacement.'); }
 }
 
 function snapshot(loaded: Loaded, state = loaded.state): StateKernelSnapshot {
   return { schema: 'payload.local-notation-workspace.v1', mode: 'LOCAL_DEVELOPMENT', enabled: true,
-    savedVersion: loaded.version, savedDigest: loaded.digest, state: structuredClone(state),
+    savedVersion: loaded.version, savedDigest: loaded.digest, state: structuredClone(state), capacity: notationCapacity(state.revision, loaded.version),
     persistence: 'LOCAL_VERSIONED_FILES', canonicalAdmission: false };
 }
 
@@ -81,11 +81,16 @@ export function createNotationRepository(root: string) {
   function checkBase(loaded: Loaded, request: StateKernelRequest) {
     if (request.baseVersion !== loaded.version) throw new StateKernelError('VERSION_CONFLICT', 'Another save changed this workspace. Keep your draft, then reload deliberately before retrying.', 409);
   }
+  function checkSaveCapacity(loaded: Loaded) {
+    if (loaded.version >= MAX_VERSIONS) throw new StateKernelError('CAPACITY',
+      'This local workspace has reached 64 saved versions. Preserve its directory; checkpoint/archive is not implemented. New previews and saves are disabled.', 409);
+  }
   return {
     async read() { return snapshot(await load()); },
     async preview(input: unknown) {
       const request = parseStateKernelRequest(input);
       const loaded = await load(); checkBase(loaded, request);
+      checkSaveCapacity(loaded);
       return snapshot(loaded, await evaluateKernel([...loaded.commands, ...request.commands]));
     },
     async save(input: unknown) {
@@ -94,8 +99,8 @@ export function createNotationRepository(root: string) {
       const first = await load();
       if (first.lastRequest && localJson(first.lastRequest) === localJson(request)) return snapshot(first);
       checkBase(first, request);
+      checkSaveCapacity(first);
       await evaluateKernel([...first.commands, ...request.commands]);
-      if (first.version >= MAX_VERSIONS) throw new StateKernelError('CAPACITY', 'This local workspace has reached 64 saved versions.', 409);
       mkdirSync(root, { recursive: true });
       const lockPath = join(root, 'writer.lock');
       let lock: number;
@@ -108,6 +113,7 @@ export function createNotationRepository(root: string) {
         const loaded = await load();
         if (loaded.lastRequest && localJson(loaded.lastRequest) === localJson(request)) return snapshot(loaded);
         checkBase(loaded, request);
+        checkSaveCapacity(loaded);
         const state = await evaluateKernel([...loaded.commands, ...request.commands]);
         const payload = { schema: 'payload.notation-saved-version.v1' as const, version: loaded.version + 1,
           previousDigest: loaded.digest, request, state };
@@ -126,5 +132,5 @@ export const stateKernelEnabled = () => process.env.PAYLOAD_STATE_KERNEL_LOCAL =
 export const notationRepository = () => createNotationRepository(process.env.PAYLOAD_NOTATION_STATE_DIR ?? join(process.cwd(), '.payload', 'notation-state'));
 export function disabledKernelSnapshot(): StateKernelSnapshot {
   return { schema: 'payload.local-notation-workspace.v1', mode: 'LOCAL_DEVELOPMENT', enabled: false,
-    savedVersion: 0, savedDigest: null, state: emptyNotationState(), persistence: 'DISABLED', canonicalAdmission: false };
+    savedVersion: 0, savedDigest: null, state: emptyNotationState(), capacity: notationCapacity(0, 0), persistence: 'DISABLED', canonicalAdmission: false };
 }

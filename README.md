@@ -12,6 +12,8 @@ The [synthesized architecture](docs/SYNTHESIZED_ARCHITECTURE.md) organizes the s
 
 A small [Rust notation state kernel](docs/LOCAL_NOTATION_STATE_KERNEL.md) now backs `/notations`: create a stable-ID notation, update it, undo/redo, save a local version and reload it through the frontend. Explicit notation relationships use the same command contract. Rust validates and replays the full history; TypeScript mediates the loopback API and create-only versioned storage. This is authored local workspace state, not canonical corpus state or the Bench's immutable entity registry. Bevy remains optional and uninstalled.
 
+Notation drafts are retained across in-app navigation within the same browser document. The workspace displays its finite command/save capacity and blocks previews that cannot be saved at the version ceiling. Checkpoint/archive and evidence-linked inquiry remain unimplemented; see the [replay benchmark](docs/STATE_KERNEL_BENCHMARK.md) and [dependency baseline audit](docs/CROSS_REPOSITORY_BASELINE.md).
+
 ## Run
 
 ```

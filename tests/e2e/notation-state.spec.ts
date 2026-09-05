@@ -1,10 +1,14 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-test('notations: real local state survives create, edit, Rust undo and save/page reload', async ({ page }, testInfo) => {
+test('notations: real local state preserves navigation drafts and survives Rust undo and save/page reload', async ({ page }, testInfo) => {
   test.skip(process.env.STATE_KERNEL_E2E !== '1', 'Requires the enabled, isolated local state-kernel server; no browser API mocking.');
   const errors: string[] = [];
+  let stateReads = 0;
   page.on('pageerror', (error) => errors.push(error.message));
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/state-kernel' && request.method() === 'GET') stateReads++;
+  });
   await page.goto('/notations');
   await expect(page.getByRole('heading', { level: 1, name: 'Notations', exact: true })).toBeVisible();
   await expect(page.getByText('Saved local state loaded.', { exact: true })).toBeVisible();
@@ -20,6 +24,30 @@ test('notations: real local state survives create, edit, Rust undo and save/page
   await expect(page.getByTestId('saved-version')).toHaveText(String(initialVersion));
   await page.getByLabel('Notation title', { exact: true }).fill(`${title} revised`);
   await page.getByLabel('Notation body', { exact: true }).fill('Revised authored local context.');
+  await page.getByLabel('New notation title', { exact: true }).fill('Unapplied navigation draft');
+  await page.getByLabel('New notation body', { exact: true }).fill('Keep this typed text across routes.');
+  await page.getByLabel('Relation label', { exact: true }).fill('Unapplied relation');
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Releases', exact: true }).click();
+  await expect(page).toHaveURL(/\/releases$/);
+  await expect(page.getByRole('region', { name: 'What a release is', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => {
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  })).toBe(true);
+  await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Notations', exact: true }).click();
+  await expect(page).toHaveURL(/\/notations$/);
+  await expect(page.getByTestId('selected-notation-id')).toHaveText(notationId!);
+  await expect(page.getByTestId('pending-count')).toHaveText('1');
+  await expect(page.getByTestId('saved-version')).toHaveText(String(initialVersion));
+  await expect(page.getByLabel('Notation title', { exact: true })).toHaveValue(`${title} revised`);
+  await expect(page.getByLabel('Notation body', { exact: true })).toHaveValue('Revised authored local context.');
+  await expect(page.getByLabel('New notation title', { exact: true })).toHaveValue('Unapplied navigation draft');
+  await expect(page.getByLabel('New notation body', { exact: true })).toHaveValue('Keep this typed text across routes.');
+  await expect(page.getByLabel('Relation label', { exact: true })).toHaveValue('Unapplied relation');
+  expect(stateReads).toBe(1);
+  await page.getByRole('button', { name: 'Clear new notation', exact: true }).click();
+  await page.getByRole('button', { name: 'Clear relation form', exact: true }).click();
   await page.getByRole('button', { name: 'Preview changes', exact: true }).click();
   await expect(page.getByTestId('pending-count')).toHaveText('2');
   await expect(page.getByTestId('selected-notation-id')).toHaveText(notationId!);
@@ -43,5 +71,6 @@ test('notations: real local state survives create, edit, Rust undo and save/page
   const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze();
   expect(accessibility.violations.filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')).toEqual([]);
   expect(errors).toEqual([]);
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
   await page.screenshot({ path: testInfo.outputPath('notation-state.png'), fullPage: true });
 });

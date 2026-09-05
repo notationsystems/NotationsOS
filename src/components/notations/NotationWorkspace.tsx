@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import type { KernelCommand, Notation, StateKernelFailure, StateKernelRequest, StateKernelSnapshot } from '@/state-kernel/types';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { MAX_NOTATION_COMMANDS, MAX_NOTATION_SAVED_VERSIONS, notationCapacity, type KernelCommand, type Notation, type StateKernelFailure, type StateKernelRequest, type StateKernelSnapshot } from '@/state-kernel/types';
 
 type Edit = Pick<Notation, 'title' | 'body'>;
 const fieldClass = 'surface-inset px-2 py-1.5 text-[13px] w-full';
@@ -17,17 +17,29 @@ async function readSnapshot(path: string, body?: StateKernelRequest, signal?: Ab
     const failure = 'error' in value ? value.error : undefined;
     throw new Error(failure ? `${failure.code}: ${failure.message}` : `Request failed (${response.status}).`);
   }
-  if (!('schema' in value) || value.schema !== 'payload.local-notation-workspace.v1'
-    || value.state?.schema !== 'notations.notation-state.v1') throw new Error('The state service returned an invalid workspace snapshot.');
+  if (!value || typeof value !== 'object' || !('schema' in value) || value.schema !== 'payload.local-notation-workspace.v1'
+    || value.state?.schema !== 'notations.notation-state.v1'
+    || !Number.isSafeInteger(value.savedVersion) || value.savedVersion < 0 || value.savedVersion > MAX_NOTATION_SAVED_VERSIONS
+    || !Number.isSafeInteger(value.state.revision) || value.state.revision < 0 || value.state.revision > MAX_NOTATION_COMMANDS
+    || !Array.isArray(value.state.notations) || !Array.isArray(value.state.relations)
+    || typeof value.enabled !== 'boolean' || typeof value.state.canUndo !== 'boolean' || typeof value.state.canRedo !== 'boolean') {
+    throw new Error('The state service returned an invalid workspace snapshot.');
+  }
+  const expectedCapacity = notationCapacity(value.state.revision, value.savedVersion);
+  if (!value.capacity || Object.entries(expectedCapacity).some(([key, expected]) => value.capacity[key as keyof typeof expectedCapacity] !== expected)) {
+    throw new Error('The state service returned invalid or inconsistent capacity metadata.');
+  }
   return value;
 }
 
-/** A browser draft of Rust-validated commands, never a second state authority or localStorage store. */
-export function NotationWorkspace() {
+/** Owned by the root client provider: route changes must not discard or rebase an active draft. */
+function useNotationController() {
   const [snapshot, setSnapshot] = useState<StateKernelSnapshot | null>(null);
   const [pending, setPending] = useState<KernelCommand[]>([]);
-  const [busy, setBusy] = useState(true);
-  const inFlight = useRef(true);
+  const [previewInFlight, setPreviewInFlight] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const inFlight = useRef(false);
+  const initiallyLoaded = useRef(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('Loading saved local state…');
   const [selectedId, setSelectedId] = useState('');
@@ -48,31 +60,34 @@ export function NotationWorkspace() {
     }));
   const unsaved = pending.length > 0 || typedDrafts;
   const locked = busy || !snapshot?.enabled || confirmReload;
+  const commandCapacityReached = Boolean(snapshot && snapshot.capacity.remainingCommands <= 0);
+  const versionCapacityReached = Boolean(snapshot && snapshot.capacity.remainingSavedVersions <= 0);
+  const previewLocked = locked || commandCapacityReached || versionCapacityReached;
 
-  useEffect(() => {
-    const controller = new AbortController();
-    readSnapshot('/api/state-kernel', undefined, controller.signal).then((next) => {
-      if (controller.signal.aborted) return;
+  // Only the first visit activates a load. An unmounted route must not abort an in-flight
+  // request or replace retained state with a newer saved version when it is visited again.
+  const loadInitial = useCallback(async () => {
+    if (initiallyLoaded.current || inFlight.current) return;
+    initiallyLoaded.current = true;
+    inFlight.current = true;
+    setBusy(true);
+    try {
+      const next = await readSnapshot('/api/state-kernel');
       setSnapshot(next);
       setSelectedId(next.state.notations[0]?.id ?? '');
       setNotice(next.enabled ? 'Saved local state loaded.' : 'Local notation state is disabled.');
-    }).catch((failure: unknown) => {
-      if (!controller.signal.aborted) {
-        setError(failure instanceof Error ? failure.message : 'Unable to load local state.');
-        setNotice('');
-      }
-    }).finally(() => {
-      if (!controller.signal.aborted) { inFlight.current = false; setBusy(false); }
-    });
-    return () => controller.abort();
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : 'Unable to load local state.');
+      setNotice('');
+    } finally { inFlight.current = false; setBusy(false); }
   }, []);
 
   useEffect(() => {
-    if (!unsaved) return;
+    if (!unsaved && !previewInFlight) return;
     const guard = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
     window.addEventListener('beforeunload', guard);
     return () => window.removeEventListener('beforeunload', guard);
-  }, [unsaved]);
+  }, [unsaved, previewInFlight]);
 
   function begin() {
     if (inFlight.current) return false;
@@ -87,7 +102,8 @@ export function NotationWorkspace() {
   }
 
   async function preview(command: KernelCommand, onAccepted?: () => void) {
-    if (!snapshot?.enabled || !begin()) return;
+    if (!snapshot || previewLocked || !begin()) return;
+    setPreviewInFlight(true);
     const commands = [...pending, command];
     try {
       const next = await readSnapshot('/api/state-kernel/preview', batch(commands));
@@ -96,11 +112,11 @@ export function NotationWorkspace() {
       onAccepted?.();
       setNotice('Draft preview accepted by the state kernel. Not saved yet.');
     } catch (failure) { fail(failure); }
-    finally { finish(); }
+    finally { setPreviewInFlight(false); finish(); }
   }
 
   async function save() {
-    if (!snapshot?.enabled || !pending.length || typedDrafts || !begin()) return;
+    if (locked || versionCapacityReached || !pending.length || typedDrafts || !begin()) return;
     try {
       const next = await readSnapshot('/api/state-kernel/save', batch(pending));
       setSnapshot(next); setPending([]);
@@ -124,7 +140,7 @@ export function NotationWorkspace() {
 
   function create(event: FormEvent) {
     event.preventDefault();
-    if (locked || !createTitle.trim()) return;
+    if (previewLocked || !createTitle.trim()) return;
     const id = crypto.randomUUID();
     void preview({ commandId: crypto.randomUUID(), kind: 'CREATE_NOTATION', notation: { id, title: createTitle, body: createBody } }, () => {
       setSelectedId(id); setCreateTitle(''); setCreateBody('');
@@ -132,7 +148,7 @@ export function NotationWorkspace() {
   }
   function update(event: FormEvent) {
     event.preventDefault();
-    if (locked || !selected || !edit || !editChanged || !edit.title.trim()) return;
+    if (previewLocked || !selected || !edit || !editChanged || !edit.title.trim()) return;
     const id = selected.id;
     void preview({ commandId: crypto.randomUUID(), kind: 'UPDATE_NOTATION', notationId: id, title: edit.title, body: edit.body }, () => {
       setEdits((current) => { const next = { ...current }; delete next[id]; return next; });
@@ -140,11 +156,44 @@ export function NotationWorkspace() {
   }
   function createRelation(event: FormEvent) {
     event.preventDefault();
-    if (locked || !relationFrom || !relationTo || !relationLabel.trim()) return;
+    if (previewLocked || !relationFrom || !relationTo || !relationLabel.trim()) return;
     void preview({ commandId: crypto.randomUUID(), kind: 'CREATE_RELATION', relation: {
       id: crypto.randomUUID(), from: relationFrom, to: relationTo, label: relationLabel,
     } }, () => { setRelationFrom(''); setRelationTo(''); setRelationLabel(''); });
   }
+
+  return {
+    snapshot, pending, busy, error, notice, selectedId, setSelectedId, edits, setEdits,
+    createTitle, setCreateTitle, createBody, setCreateBody, relationFrom, setRelationFrom,
+    relationTo, setRelationTo, relationLabel, setRelationLabel, confirmReload, setConfirmReload,
+    selected, edit, editChanged, typedDrafts, unsaved, locked, previewLocked,
+    commandCapacityReached, versionCapacityReached, loadInitial, preview, save, reload, create, update, createRelation,
+  };
+}
+
+const NotationDraftContext = createContext<ReturnType<typeof useNotationController> | null>(null);
+
+/** Memory belongs to this browser document, not a server module or browser persistence store. */
+export function NotationDraftProvider({ children }: { children: ReactNode }) {
+  const controller = useNotationController();
+  return <NotationDraftContext.Provider value={controller}>{children}</NotationDraftContext.Provider>;
+}
+
+export function NotationWorkspace() {
+  const controller = useContext(NotationDraftContext);
+  if (!controller) throw new Error('NotationWorkspace requires the root NotationDraftProvider.');
+  return <NotationWorkspaceView controller={controller} />;
+}
+
+function NotationWorkspaceView({ controller }: { controller: ReturnType<typeof useNotationController> }) {
+  const {
+    snapshot, pending, busy, error, notice, selectedId, setSelectedId, setEdits,
+    createTitle, setCreateTitle, createBody, setCreateBody, relationFrom, setRelationFrom,
+    relationTo, setRelationTo, relationLabel, setRelationLabel, confirmReload, setConfirmReload,
+    selected, edit, editChanged, typedDrafts, unsaved, locked, previewLocked,
+    commandCapacityReached, versionCapacityReached, loadInitial, preview, save, reload, create, update, createRelation,
+  } = controller;
+  useEffect(() => { void loadInitial(); }, [loadInitial]);
 
   return (
     <div className="p-3 sm:p-4 max-w-[1180px] mx-auto w-full flex flex-col gap-4">
@@ -158,7 +207,7 @@ export function NotationWorkspace() {
       </header>
       <aside className="surface-inset p-3 text-[13px]" aria-label="Local development boundary">
         <p>Local authored state only. Not evidence, identity resolution, inference, or canonical corpus state.</p>
-        <p className="mt-1" style={muted}>Previews and form text are browser drafts until saved. This screen does not admit data, release a corpus, or launch agents.</p>
+        <p className="mt-1" style={muted}>Previews and form text are browser drafts until saved. They remain in this tab during in-app navigation, but are not durable across a browser reload or tab closure. This screen does not admit data, release a corpus, or launch agents.</p>
         {snapshot && !snapshot.enabled && <p className="mt-2">Enable the loopback development service with <code className="mono">npm run dev:state-kernel</code>, then reload saved state.</p>}
       </aside>
       <section className="surface p-3 flex flex-col gap-3" aria-label="State controls">
@@ -167,16 +216,25 @@ export function NotationWorkspace() {
           <div><dt className="label-sm">Draft revision</dt><dd data-testid="draft-revision" className="mono">{snapshot?.state.revision ?? '—'}</dd></div>
           <div><dt className="label-sm">Pending commands</dt><dd data-testid="pending-count" className="mono">{pending.length}</dd></div>
           <div><dt className="label-sm">Storage</dt><dd>{snapshot?.persistence === 'LOCAL_VERSIONED_FILES' ? 'Local versioned files' : 'Disabled'}</dd></div>
+          <div><dt className="label-sm">Lifetime command capacity</dt><dd data-testid="command-capacity">{snapshot ? `${snapshot.capacity.usedCommands} / ${snapshot.capacity.maxCommands} used · ${snapshot.capacity.remainingCommands} remaining` : '—'}</dd></div>
+          <div><dt className="label-sm">Saved version capacity</dt><dd data-testid="version-capacity">{snapshot ? `${snapshot.capacity.usedSavedVersions} / ${snapshot.capacity.maxSavedVersions} used · ${snapshot.capacity.remainingSavedVersions} remaining` : '—'}</dd></div>
         </dl>
         <div className="flex flex-wrap gap-2">
-          <button type="button" className="btn btn-sm" disabled={locked || typedDrafts || !snapshot?.state.canUndo} onClick={() => void preview({ commandId: crypto.randomUUID(), kind: 'UNDO' })}>Undo</button>
-          <button type="button" className="btn btn-sm" disabled={locked || typedDrafts || !snapshot?.state.canRedo} onClick={() => void preview({ commandId: crypto.randomUUID(), kind: 'REDO' })}>Redo</button>
-          <button type="button" className="btn btn-primary btn-sm" disabled={locked || typedDrafts || !pending.length} onClick={() => void save()}>Save local version</button>
+          <button type="button" className="btn btn-sm" disabled={previewLocked || typedDrafts || !snapshot?.state.canUndo} onClick={() => void preview({ commandId: crypto.randomUUID(), kind: 'UNDO' })}>Undo</button>
+          <button type="button" className="btn btn-sm" disabled={previewLocked || typedDrafts || !snapshot?.state.canRedo} onClick={() => void preview({ commandId: crypto.randomUUID(), kind: 'REDO' })}>Redo</button>
+          <button type="button" className="btn btn-primary btn-sm" disabled={locked || versionCapacityReached || typedDrafts || !pending.length} onClick={() => void save()}>Save local version</button>
           <button type="button" className="btn btn-sm" disabled={busy || confirmReload} onClick={() => unsaved ? setConfirmReload(true) : void reload()}>Reload saved state</button>
         </div>
         {typedDrafts && <p className="text-[12px]" style={muted}>Unapplied form text is retained. Preview or clear it before Save, Undo, or Redo.</p>}
         {snapshot?.savedDigest && <details className="text-[12px]"><summary className="cursor-pointer">Saved state digest</summary><p className="mono break-all mt-1">{snapshot.savedDigest}</p></details>}
       </section>
+      {snapshot?.enabled && <aside className="surface-inset p-3 text-[13px]" aria-label="Bounded history capacity">
+        {(commandCapacityReached || versionCapacityReached) && <p className="font-semibold">{versionCapacityReached ? 'Saved-version capacity reached. Further previews and saves are disabled.' : 'Lifetime command capacity reached. Further previews, including undo and redo, are disabled.'}</p>}
+        {commandCapacityReached && !versionCapacityReached && pending.length > 0 && <p className="mt-1">This pending batch can still be saved while a saved-version slot remains.</p>}
+        {!commandCapacityReached && !versionCapacityReached && <p>This demonstration has bounded history. Every accepted command, including undo and redo, uses lifetime capacity; a save uses one version slot.</p>}
+        {!commandCapacityReached && !versionCapacityReached && (snapshot.capacity.remainingCommands <= 16 || snapshot.capacity.remainingSavedVersions <= 4) && <p className="font-semibold mt-1">Approaching the local history limit. Review the remaining command and saved-version capacity before continuing.</p>}
+        <p className="mt-1" style={muted}>Before capacity runs out, save pending work where possible and preserve the existing state directory. An operator can configure a separate workspace. Do not reset or prune history to reclaim capacity; checkpoint/archive support and history migration are not implemented.</p>
+      </aside>}
       {error && <div role="alert" className="surface-inset p-3 text-[13px]" style={{ color: 'var(--status-refused)' }}><p>{error}</p><p className="mt-1">Your browser drafts have been retained. A version conflict requires reloading saved state before starting a new draft.</p></div>}
       <div role="status" aria-live="polite" className="text-[13px]" style={muted}>{busy ? 'State request in progress…' : notice}</div>
       {confirmReload && <section role="alertdialog" aria-labelledby="reload-title" aria-describedby="reload-description" className="surface p-3">
@@ -202,10 +260,10 @@ export function NotationWorkspace() {
           {selected && edit ? <form aria-label="Edit notation" onSubmit={update} className="mt-3">
             <p className="label-sm">Stable notation ID</p><p data-testid="selected-notation-id" className="mono text-[12px] break-all mb-3">{selected.id}</p>
             <fieldset disabled={locked} className="flex flex-col gap-3">
-              <label htmlFor="notation-edit-title" className="text-[13px]">Notation title<input id="notation-edit-title" className={fieldClass} required value={edit.title} onChange={(event) => setEdits((current) => ({ ...current, [selected.id]: { ...edit, title: event.target.value } }))} /></label>
-              <div><label htmlFor="notation-edit-body" className="text-[13px]">Notation body</label><textarea id="notation-edit-body" className={fieldClass} rows={7} value={edit.body} onChange={(event) => setEdits((current) => ({ ...current, [selected.id]: { ...edit, body: event.target.value } }))} /></div>
+              <label htmlFor="notation-edit-title" className="text-[13px]">Notation title<input id="notation-edit-title" className={fieldClass} required disabled={previewLocked} value={edit.title} onChange={(event) => setEdits((current) => ({ ...current, [selected.id]: { ...edit, title: event.target.value } }))} /></label>
+              <div><label htmlFor="notation-edit-body" className="text-[13px]">Notation body</label><textarea id="notation-edit-body" className={fieldClass} rows={7} disabled={previewLocked} value={edit.body} onChange={(event) => setEdits((current) => ({ ...current, [selected.id]: { ...edit, body: event.target.value } }))} /></div>
               <div className="flex flex-wrap gap-2">
-                <button type="submit" className="btn btn-primary btn-sm" disabled={!editChanged || !edit.title.trim()}>Preview changes</button>
+                <button type="submit" className="btn btn-primary btn-sm" disabled={previewLocked || !editChanged || !edit.title.trim()}>Preview changes</button>
                 <button type="button" className="btn btn-sm" disabled={!editChanged} onClick={() => setEdits((current) => { const next = { ...current }; delete next[selected.id]; return next; })}>Clear form edits</button>
               </div>
             </fieldset>
@@ -215,9 +273,9 @@ export function NotationWorkspace() {
       <section className="surface p-3" aria-labelledby="create-notation-heading">
         <h2 id="create-notation-heading" className="font-semibold">Create notation</h2>
         <form aria-label="Create notation" onSubmit={create} className="mt-3"><fieldset disabled={locked} className="flex flex-col gap-3">
-          <label htmlFor="notation-create-title" className="text-[13px]">New notation title<input id="notation-create-title" className={fieldClass} required value={createTitle} onChange={(event) => setCreateTitle(event.target.value)} /></label>
-          <div><label htmlFor="notation-create-body" className="text-[13px]">New notation body</label><textarea id="notation-create-body" className={fieldClass} rows={3} value={createBody} onChange={(event) => setCreateBody(event.target.value)} /></div>
-          <div className="flex flex-wrap gap-2"><button type="submit" className="btn btn-primary btn-sm" disabled={!createTitle.trim()}>Preview new notation</button><button type="button" className="btn btn-sm" disabled={!createTitle && !createBody} onClick={() => { setCreateTitle(''); setCreateBody(''); }}>Clear new notation</button></div>
+          <label htmlFor="notation-create-title" className="text-[13px]">New notation title<input id="notation-create-title" className={fieldClass} required disabled={previewLocked} value={createTitle} onChange={(event) => setCreateTitle(event.target.value)} /></label>
+          <div><label htmlFor="notation-create-body" className="text-[13px]">New notation body</label><textarea id="notation-create-body" className={fieldClass} rows={3} disabled={previewLocked} value={createBody} onChange={(event) => setCreateBody(event.target.value)} /></div>
+          <div className="flex flex-wrap gap-2"><button type="submit" className="btn btn-primary btn-sm" disabled={previewLocked || !createTitle.trim()}>Preview new notation</button><button type="button" className="btn btn-sm" disabled={!createTitle && !createBody} onClick={() => { setCreateTitle(''); setCreateBody(''); }}>Clear new notation</button></div>
         </fieldset></form>
       </section>
       <section className="surface p-3" aria-labelledby="notation-relations-heading">
@@ -228,10 +286,10 @@ export function NotationWorkspace() {
           <p className="mono text-[10px] break-all mt-1" style={muted}>{relation.id}</p>
         </li>)}</ul> : <p className="text-[13px] mt-2" style={muted}>No authored relations in this state.</p>}
         <form aria-label="Create relation" onSubmit={createRelation} className="mt-3"><fieldset disabled={locked || !snapshot?.state.notations.length} className="grid gap-3 sm:grid-cols-3">
-          <label htmlFor="notation-relation-from" className="text-[13px]">From notation<select id="notation-relation-from" className={fieldClass} required value={relationFrom} onChange={(event) => setRelationFrom(event.target.value)}><option value="">Select source</option>{snapshot?.state.notations.map((notation) => <option key={notation.id} value={notation.id}>{notation.title}</option>)}</select></label>
-          <label htmlFor="notation-relation-to" className="text-[13px]">To notation<select id="notation-relation-to" className={fieldClass} required value={relationTo} onChange={(event) => setRelationTo(event.target.value)}><option value="">Select target</option>{snapshot?.state.notations.map((notation) => <option key={notation.id} value={notation.id}>{notation.title}</option>)}</select></label>
-          <label htmlFor="notation-relation-label" className="text-[13px]">Relation label<input id="notation-relation-label" className={fieldClass} required value={relationLabel} onChange={(event) => setRelationLabel(event.target.value)} /></label>
-          <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="submit" className="btn btn-primary btn-sm" disabled={!relationFrom || !relationTo || !relationLabel.trim()}>Preview relation</button><button type="button" className="btn btn-sm" disabled={!relationFrom && !relationTo && !relationLabel} onClick={() => { setRelationFrom(''); setRelationTo(''); setRelationLabel(''); }}>Clear relation form</button></div>
+          <div><label htmlFor="notation-relation-from" className="text-[13px]">From notation</label><select id="notation-relation-from" className={fieldClass} required disabled={previewLocked} value={relationFrom} onChange={(event) => setRelationFrom(event.target.value)}><option value="">Select source</option>{snapshot?.state.notations.map((notation) => <option key={notation.id} value={notation.id}>{notation.title}</option>)}</select></div>
+          <div><label htmlFor="notation-relation-to" className="text-[13px]">To notation</label><select id="notation-relation-to" className={fieldClass} required disabled={previewLocked} value={relationTo} onChange={(event) => setRelationTo(event.target.value)}><option value="">Select target</option>{snapshot?.state.notations.map((notation) => <option key={notation.id} value={notation.id}>{notation.title}</option>)}</select></div>
+          <label htmlFor="notation-relation-label" className="text-[13px]">Relation label<input id="notation-relation-label" className={fieldClass} required disabled={previewLocked} value={relationLabel} onChange={(event) => setRelationLabel(event.target.value)} /></label>
+          <div className="flex flex-wrap gap-2 sm:col-span-3"><button type="submit" className="btn btn-primary btn-sm" disabled={previewLocked || !relationFrom || !relationTo || !relationLabel.trim()}>Preview relation</button><button type="button" className="btn btn-sm" disabled={!relationFrom && !relationTo && !relationLabel} onClick={() => { setRelationFrom(''); setRelationTo(''); setRelationLabel(''); }}>Clear relation form</button></div>
         </fieldset></form>
       </section>
     </div>
