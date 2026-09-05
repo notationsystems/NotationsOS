@@ -8,6 +8,8 @@ The corpus and ruling workbench are fixture only. The `/api/v1` endpoints serve 
 
 A separate local evidence intake command evaluates an operator-declared source policy for exact `INTERNAL INGEST`, stores content-addressed bytes and an acquisition receipt, and reopens them for integrity checks. A subsequent local normalization command separately evaluates `INTERNAL DERIVE` and parses one fixed Caravan Carrier JSON contract into an unresolved, unadmitted candidate or a recorded quarantine. A local candidate builder now assembles an explicit, bounded set of those candidates under a definition and knowledge cutoff, with a separate build-time DERIVE check and recomputable membership root. These commands create no canonical domain state or corpus admission, activate no release and do not change the fixture API.
 
+The opt-in [local production API](docs/LOCAL_PRODUCTION_WORKFLOW.md) connects corpus/source registration → byte capture → evidence inspection → fixed Carrier normalization → candidate-build inspection, with stage receipts and exact retries. The separate [pinned GAT IFC inspector](docs/GAT_INSPECTOR.md) checks preserved IFC evidence and current derivation permission, runs a bounded specialist audit, and retains its original report plus a safe frontend projection. Both are local backend interfaces, not public acquisition controls, managed customer compute or corpus admission.
+
 The [synthesized architecture](docs/SYNTHESIZED_ARCHITECTURE.md) organizes the system into Acquisition, Corpus, State, Compute/Decision and Projection fabrics without changing Payload OS or its domain products. Read-only `GET /api/projections/sources/[releaseId]` supplies an exact fixture source descriptor, including a full snapshot digest; `POST /api/projections/preview` consumes it with explicit record selection, both times and viewer. It returns rights-filtered evidence records or a record-to-subject incidence graph with stable identities; spatial requests declare kepler.gl, CesiumJS or Three.js routing but return missing geometry explicitly. No renderer dependency, instance or new visual workbench is installed. Local unadmitted evidence and builds are not served by this fixture path.
 
 A small [Rust notation state kernel](docs/LOCAL_NOTATION_STATE_KERNEL.md) now backs `/notations`: create a stable-ID notation, update it, undo/redo, save a local version and reload it through the frontend. Explicit notation relationships use the same command contract. Rust validates and replays the full history; TypeScript mediates the loopback API and create-only versioned storage. This is authored local workspace state, not canonical corpus state or the Bench's immutable entity registry. Bevy remains optional and uninstalled.
@@ -21,6 +23,7 @@ npm install
 npm run dev            # http://localhost:3000 → /releases; coordination is read-only
 npm run dev:coordination # http://127.0.0.1:3000; local stable and board writes enabled
 npm run dev:state-kernel # http://127.0.0.1:3000/notations; requires Rust, local notation state enabled
+npm run dev:production # local acquisition/inspection APIs; GAT requires separate pinned bootstrap
 npm run agent:contract-review -- --once # in a second terminal; register and run a local review pass
 npm run build && npm start
 ```
