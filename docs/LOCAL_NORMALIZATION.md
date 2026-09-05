@@ -11,7 +11,7 @@ Saved acquisition + exact source-bound adapter profile
 → inspect by recomputing the historical decision and parser output
 ```
 
-There is no canonical admission, identity merging, corpus build, release activation or customer delivery in this path. The existing corpus/feed API still serves committed demonstration releases.
+Normalization alone performs no build, canonical admission, identity merging, release activation or customer delivery. A separate [local candidate builder](LOCAL_CANDIDATE_BUILDS.md) now assembles explicitly selected successful normalizations into an unadmitted, time-bounded manifest. The existing corpus/feed API still serves committed demonstration releases.
 
 ## Run the demonstration
 
@@ -114,6 +114,6 @@ The following paths are in the read-only sibling `Notations Kernel`, studied wit
 | `src/source-connector-workflow.js` and its test | Media/schema drift can have a verified quarantine decision without becoming normalization-eligible; wrong source binding fails separately. Bench accepts a supplied schema fingerprint. This local parser checks actual JSON bytes against a code-owned schema, without implementing transport or moving storage zones. |
 | `src/evidence-normalization-workflow.js` and its test | Preserve exact acquisition/evidence/receipt/method references, missingness and both time roles. Bench wraps supplied normalized fields and does not attest extraction execution. This local increment executes a bounded parser but still claims neither field accuracy nor source truth. |
 | `src/source-policy-workflow.js`; `src/authorized-acquisition-workflow.js` | Bind operation, purpose, audience and time to the exact source registration. The separate `INTERNAL DERIVE` guard is a local extension beyond Bench normalization's acquisition-authorization check. |
-| `src/corpus-workflow.js`; `src/corpus-admission-workflow.js` and their tests | Corpus compilation and admission are distinct later gates. A candidate is not a build, and a build alone does not establish exact normalization coverage or admission. Neither gate is implemented by this command. |
+| `src/corpus-workflow.js`; `src/corpus-admission-workflow.js` and their tests | Compilation and admission are separate operations: a normalized candidate is not a build, and a build alone does not establish admission. Neither is performed by normalization. The separate local candidate builder now checks explicit member dependencies and creates a manifest, without implementing Bench admission. |
 
-The normalized-candidate path is now implemented locally; identity resolution, canonical domain state, corpus build/admission and release remain subsequent work. No synthetic stage-completion records are added to fixtures, and the board does not automatically run normalization. The six stated absences remain: live source connectors, production storage and identity, deployed customer delivery, managed execution of customer workloads, independent verification, and a completed pilot.
+Normalization and separate explicit candidate builds are now implemented locally. Identity resolution, canonical domain state, corpus admission and release remain subsequent work. No synthetic stage-completion records are added to fixtures, and the board does not automatically run normalization or candidate builds. The six stated absences remain: live source connectors, production storage and identity, deployed customer delivery, managed execution of customer workloads, independent verification, and a completed pilot.
