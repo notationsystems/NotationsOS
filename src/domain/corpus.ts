@@ -148,6 +148,18 @@ export interface UncertaintyBounds {
 
 export type RecordStatus = 'CURRENT' | 'SUPERSEDED' | 'RETRACTED';
 
+/** The predicate of a record that declares where its subject was. */
+export const LOCATION_POSITION_PREDICATE = 'location.position';
+
+export interface GeodeticPoint {
+  kind: 'POINT';
+  datum: 'WGS84';
+  longitude: number;
+  latitude: number;
+  /** Horizontal uncertainty as the source stated it, in metres; absent when the source stated none. */
+  horizontalUncertaintyM?: number;
+}
+
 export interface CorpusRecord {
   recordId: string;
   canonicalId: CanonicalURI;
@@ -180,6 +192,13 @@ export interface CorpusRecord {
     producerId?: string;
     transformId?: CanonicalURI;
   };
+  /**
+   * A geodetic position the source declared for the subject over the record's
+   * validity interval, present only on `location.position` records. WGS84.
+   * A position is a claim like any other: it has evidence, both clocks and
+   * rights, and it says where the source says the subject was, not where it is.
+   */
+  geometry?: GeodeticPoint;
   visibility: VisibilityClass;
   supersedesRecordId?: string;
   /** Set when a later record replaced this one (correction). */

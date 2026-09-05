@@ -45,8 +45,8 @@ These engine names describe assigned architectural roles. Routing does not load 
 |---|---|---|---|---|
 | `EVIDENCE` | `NONE` | `RECORDS` | `records` | `READY`: selected safe record payloads |
 | `STRUCTURE` | `GRAPH_LAYOUT` | `GRAPH` | `Three.js` | `READY`: selected records plus a record-to-subject graph data structure, without rendered layout |
-| `MAP` | `GEODETIC` | `POINT` or `DENSITY` | `kepler.gl` | `UNAVAILABLE`: no fixture geometry |
-| `GLOBE` | `GEODETIC` | `GLOBAL_3D` | `CesiumJS` | `UNAVAILABLE`: no fixture geometry |
+| `MAP` | `GEODETIC` | `POINT` or `DENSITY` | `kepler.gl` | `READY` with `geometry.positions` when a selected record's subject has a declared position; otherwise `UNAVAILABLE` |
+| `GLOBE` | `GEODETIC` | `GLOBAL_3D` | `CesiumJS` | `READY` with `geometry.positions` when a selected record's subject has a declared position; otherwise `UNAVAILABLE`. Drawn by the [Earth Twin](EARTH_TWIN.md) |
 | `STRUCTURE` | `INTRINSIC_PHYSICAL`, `FEATURE_SPACE` or `ARBITRARY_MODEL_SPACE` | `MESH` or `FIELD` | `Three.js` | `UNAVAILABLE`: no fixture geometry |
 
 All other combinations are rejected. In particular, the current graph mode is expressed as `STRUCTURE / GRAPH_LAYOUT / GRAPH`, not as a separately implemented GRAPH screen.
@@ -82,7 +82,7 @@ const projection = await response.json();
 console.log(response.status, projection);
 ```
 
-This selects an existing synthetic record, not a local Carrier candidate. To request its structural incidence graph, replace `view` with `{ mode: 'STRUCTURE', coordinateSemantics: 'GRAPH_LAYOUT', representation: 'GRAPH' }` and send another preview. Reusing the same source and selection preserves record and subject identities. A map request using `{ mode: 'MAP', coordinateSemantics: 'GEODETIC', representation: 'POINT' }` instead returns `UNAVAILABLE` with `GEOMETRY_NOT_AVAILABLE`, rather than fabricating a position.
+This selects an existing synthetic record, not a local Carrier candidate. To request its structural incidence graph, replace `view` with `{ mode: 'STRUCTURE', coordinateSemantics: 'GRAPH_LAYOUT', representation: 'GRAPH' }` and send another preview. Reusing the same source and selection preserves record and subject identities. A map request using `{ mode: 'MAP', coordinateSemantics: 'GEODETIC', representation: 'POINT' }` instead returns `READY` with `geometry.positions` only where the record's own subject declares an admissible `location.position` record ([Declared geometry](#declared-geometry)), and `UNAVAILABLE` with `GEOMETRY_NOT_AVAILABLE` otherwise, rather than fabricating a position.
 
 ## Rights, time and identity
 
@@ -100,7 +100,11 @@ Graph nodes retain the records' canonical ids and subjects' canonical ids, with 
 
 A successful HTTP response has schema `payload.projection.v1`, `fixture_only: true`, the normalized `spec`, selected `engine` and `authority: "REPLACEABLE_PROJECTION"`. It includes safe `records`, `graph` only when GRAPH is requested, and either `status: "READY"` with `error: null` or `status: "UNAVAILABLE"` with `error: "GEOMETRY_NOT_AVAILABLE"`.
 
-`UNAVAILABLE` geometry responses still contain the permitted selected records and source bindings; they do not contain usable geometry. `READY` means the record/graph data structure was compiled, not that a renderer ran.
+## Declared geometry
+
+A position is a record like any other. A `location.position` record declares, for its subject and over its validity interval, a WGS84 point (`geometry: { kind: 'POINT', datum: 'WGS84', longitude, latitude, horizontalUncertaintyM? }`) with its own evidence class, provenance, rights, visibility and both clocks; the release digest commits to it. For a geodetic view the compiler resolves, for each selected record, every `location.position` record of the same subject that passes the same gate as the record itself (committed in the release, deliverable, visible to the viewer, knowable at `knownAt`, valid at `validAt`) and returns them as `geometry.positions`, each carrying `positionRecordId`, `canonicalId`, the point, the stated value and basis, validity, `knownAt`, `evidenceClass`, `source` and `statusAtKnownAt`. Two sources that disagree are both returned. A selected record whose subject declares nothing admissible is listed in `geometry.unplaced`; a position the viewer may not see is simply absent, never disclosed. `status` is `READY` when at least one position resolved and `UNAVAILABLE` with `GEOMETRY_NOT_AVAILABLE` otherwise. Nothing is inferred: a sample is not placed at its lot, and no position is interpolated, geocoded or estimated; the `positionInferred: false` non-claim records that. The demonstration corpus declares two positions, both synthetic declarations at real port coordinates that assert nothing about any real cargo: lot 5B-221 at its loading terminal from the port custody record (disinterested), and lot 7C-104 at the claimant's origination yard from the yard log (self-reported).
+
+`UNAVAILABLE` geometry responses still contain the permitted selected records and source bindings; they do not contain usable geometry. `READY` means the record, graph or position data structure was compiled, not that a renderer ran.
 
 Provenance includes compiler id `payload.fixture-projection`, version `1.0.0`, a representation-specific `transformIdentity`, `specDigest` and `sourceSelectionDigest`. The last binds the complete safe returned record payloads, including historical status. The result `digest` covers the entire projection, including view, engine, status, graph and nonclaims. These new projection digests use the `sha256:` prefix, unlike the existing release commitments supplied in the request.
 

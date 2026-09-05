@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { ProjectionSpec } from '@/projection/spec';
-import { ADOPTED, CLOCK_MEANING, EARTH_ENGINE, EARTH_TWIN_ORIGIN, GEV_SIGNAL_SOURCES, GLOBAL_VIEW, LAYER_STATE_MEANING, NOT_ADOPTED, TERMS_CLASS_LABEL, TWIN_LAYERS, TWIN_NONCLAIMS, formatView, globeSpec, integrationBlockers, parseView, projectionOutcome, type LayerState, type ProjectionOutcome, type TwinView } from '@/domain/earth';
+import { ADOPTED, CLOCK_MEANING, EARTH_ENGINE, EARTH_TWIN_ORIGIN, GEV_SIGNAL_SOURCES, GLOBAL_VIEW, LAYER_STATE_MEANING, NOT_ADOPTED, PLACEMENT_TONE, PLACEMENT_VIEW, TERMS_CLASS_LABEL, TWIN_LAYERS, TWIN_NONCLAIMS, formatView, globeSpec, integrationBlockers, parseView, placementLabel, projectionOutcome, type GeodeticPosition, type LayerState, type ProjectionOutcome, type TwinView } from '@/domain/earth';
 import { fmtUtc } from '@/lib/format';
 
 type CesiumModule = typeof import('cesium');
@@ -30,6 +30,10 @@ export async function loadEngineFromOrigin(): Promise<CesiumModule> {
 }
 
 type Status = { state: 'LOADING' } | { state: 'READY'; renderer: string } | { state: 'UNAVAILABLE'; reason: string; remedy: string };
+/** What is drawn for one record: the positions the compiler resolved for it, with the record's own title and validity start. */
+interface Placement { title: string; validFrom: string; positions: GeodeticPosition[] }
+interface PlaceSummary { placed: number; positions: number; unplaced: string[]; refused: Array<{ recordId: string; code: string }> }
+const ENTITY_PREFIX = 'place:';
 
 const STATE_COLOR: Record<LayerState, string> = { BUNDLED: 'var(--check-passed)', COMPUTED: 'var(--info)', FIXTURE: 'var(--status-conditional)', UNAVAILABLE: 'var(--status-refused)', NOT_INTEGRATED: 'var(--text-muted)' };
 const muted = { color: 'var(--text-secondary)' };
@@ -82,6 +86,14 @@ export function EarthTwin({ release, source, records, assetsReady, loadEngine = 
   const [answer, setAnswer] = useState<{ key: string; outcome: ProjectionOutcome } | null>(null);
   const [sun, setSun] = useState<{ longitude: number; latitude: number; precise: boolean } | null>(null);
   const [copied, setCopied] = useState('');
+  const [placements, setPlacements] = useState<Record<string, Placement>>({});
+  const [placing, setPlacing] = useState<{ done: number; total: number } | null>(null);
+  const [placeSummary, setPlaceSummary] = useState<PlaceSummary | null>(null);
+  const flyOnResolve = useRef(false);
+  /** The records each drawn point stands for, by entity id, so a click on the globe selects one of them. */
+  const drawn = useRef(new Map<string, string[]>());
+  const selected = useRef(recordId);
+  useEffect(() => { selected.current = recordId; }, [recordId]);
   const record = records.find((r) => r.recordId === recordId);
   const clock = useMemo(() => ({ knownAt: release.knownAt, validAt: record?.validFrom ?? release.knownAt }), [release.knownAt, record?.validFrom]);
   const askKey = record ? `${record.recordId}@${clock.validAt}` : '';
@@ -130,6 +142,15 @@ export function EarthTwin({ release, source, records, assetsReady, loadEngine = 
         });
         // A link pasted into this page's address bar is a view too: a valid hash flies the camera there; an invalid one is ignored.
         window.addEventListener('hashchange', onHashChange);
+        // A point on the globe is a record: clicking it selects the record it was drawn for.
+        viewer.screenSpaceEventHandler.setInputAction((movement: { position: import('cesium').Cartesian2 }) => {
+          const current = engine.current;
+          if (!current) return;
+          const picked = current.viewer.scene.pick(movement.position) as { id?: { id?: unknown } } | undefined;
+          const id = picked?.id?.id;
+          const ids = typeof id === 'string' ? drawn.current.get(id) : undefined;
+          if (ids?.length && !ids.includes(selected.current)) { flyOnResolve.current = false; setRecordId(ids[0]); }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
         const gl = viewer.canvas.getContext('webgl2') ?? viewer.canvas.getContext('webgl');
         const info = gl?.getExtension('WEBGL_debug_renderer_info');
         const renderer = gl && info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : 'WebGL';
@@ -156,23 +177,87 @@ export function EarthTwin({ release, source, records, assetsReady, loadEngine = 
     return () => { stale = true; };
   }, [clock.validAt, status.state]);
 
-  // The corpus is asked for one record on the globe under the release's own commitments.
-  useEffect(() => {
-    if (!record) return;
-    const controller = new AbortController();
-    const key = `${record.recordId}@${clock.validAt}`;
-    fetch('/api/projections/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(globeSpec(source, record.recordId, clock)), signal: controller.signal, cache: 'no-store' })
-      .then(async (response) => { const body = await response.json().catch(() => ({})); if (!controller.signal.aborted) setAnswer({ key, outcome: projectionOutcome(response.status, body) }); })
-      .catch(() => { if (!controller.signal.aborted) setAnswer({ key, outcome: { state: 'REFUSED', code: 'PROJECTION_UNAVAILABLE', detail: 'The projection service could not be reached on this origin.' } }); });
-    return () => controller.abort();
-  }, [record, source, clock]);
-
   const flyTo = useCallback((target: TwinView) => {
     const current = engine.current;
     if (!current) return;
     const reduced = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     current.viewer.camera.flyTo({ destination: current.Cesium.Cartesian3.fromDegrees(target.longitude, target.latitude, target.height), orientation: { heading: current.Cesium.Math.toRadians(target.heading), pitch: current.Cesium.Math.toRadians(target.pitch), roll: 0 }, duration: reduced ? 0 : 1.2 });
   }, []);
+
+  // The corpus is asked for one record on the globe under the release's own commitments.
+  useEffect(() => {
+    if (!record) return;
+    const controller = new AbortController();
+    const key = `${record.recordId}@${clock.validAt}`;
+    fetch('/api/projections/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(globeSpec(source, record.recordId, clock)), signal: controller.signal, cache: 'no-store' })
+      .then(async (response) => {
+        const body = await response.json().catch(() => ({}));
+        if (controller.signal.aborted) return;
+        const outcome = projectionOutcome(response.status, body);
+        setAnswer({ key, outcome });
+        if (outcome.state === 'READY') {
+          setPlacements((current) => ({ ...current, [record.recordId]: { title: record.title, validFrom: record.validFrom, positions: outcome.positions } }));
+          if (flyOnResolve.current && outcome.positions[0]) { flyOnResolve.current = false; flyTo({ longitude: outcome.positions[0].point.longitude, latitude: outcome.positions[0].point.latitude, ...PLACEMENT_VIEW }); }
+        } else {
+          setPlacements((current) => { if (!(record.recordId in current)) return current; const next = { ...current }; delete next[record.recordId]; return next; });
+        }
+      })
+      .catch(() => { if (!controller.signal.aborted) setAnswer({ key, outcome: { state: 'REFUSED', code: 'PROJECTION_UNAVAILABLE', detail: 'The projection service could not be reached on this origin.' } }); });
+    return () => controller.abort();
+  }, [record, source, clock, flyTo]);
+
+
+  // Everything placed is drawn: one point per declared position, coloured by the declaring source's interest, its stated uncertainty as a ring, the records placed there as the label.
+  useEffect(() => {
+    const current = engine.current;
+    if (!current || status.state !== 'READY') return;
+    const { Cesium, viewer } = current;
+    const groups = new Map<string, { position: GeodeticPosition; records: Array<{ recordId: string; title: string }> }>();
+    for (const [recordId, placement] of Object.entries(placements)) {
+      for (const position of placement.positions) {
+        const group = groups.get(position.positionRecordId) ?? { position, records: [] };
+        group.records.push({ recordId, title: placement.title });
+        groups.set(position.positionRecordId, group);
+      }
+    }
+    viewer.entities.removeAll();
+    drawn.current = new Map();
+    for (const [positionRecordId, { position, records: placed }] of groups) {
+      const id = `${ENTITY_PREFIX}${positionRecordId}`;
+      drawn.current.set(id, placed.map((entry) => entry.recordId).sort());
+      const tone = Cesium.Color.fromCssColorString(PLACEMENT_TONE[position.evidenceClass.interest].hex);
+      const where = Cesium.Cartesian3.fromDegrees(position.point.longitude, position.point.latitude);
+      viewer.entities.add({
+        id, position: where,
+        point: { pixelSize: 9, color: tone, outlineColor: Cesium.Color.BLACK.withAlpha(0.85), outlineWidth: 2, disableDepthTestDistance: Number.POSITIVE_INFINITY },
+        label: { text: placementLabel(position, drawn.current.get(id)!.map((recordId) => placed.find((entry) => entry.recordId === recordId)!)), font: '12px system-ui, sans-serif', fillColor: Cesium.Color.WHITE, outlineColor: Cesium.Color.BLACK, outlineWidth: 3, style: Cesium.LabelStyle.FILL_AND_OUTLINE, verticalOrigin: Cesium.VerticalOrigin.BOTTOM, pixelOffset: new Cesium.Cartesian2(0, -12), showBackground: true, backgroundColor: Cesium.Color.fromCssColorString('#04040a').withAlpha(0.72), disableDepthTestDistance: Number.POSITIVE_INFINITY },
+        ...(position.point.horizontalUncertaintyM ? { ellipse: { semiMajorAxis: position.point.horizontalUncertaintyM, semiMinorAxis: position.point.horizontalUncertaintyM, material: tone.withAlpha(0.18), outline: true, outlineColor: tone.withAlpha(0.8) } } : {}),
+      });
+    }
+    viewer.scene.requestRender();
+  }, [placements, status.state]);
+
+  /** Ask the compiler for every record of the release, each at its own validity start, and draw all that can be placed. Nothing is placed by anything but its own subject's declaration. */
+  async function placeAll() {
+    if (placing) return;
+    setPlacing({ done: 0, total: records.length });
+    const next: Record<string, Placement> = {};
+    const summary: PlaceSummary = { placed: 0, positions: 0, unplaced: [], refused: [] };
+    for (const [index, item] of records.entries()) {
+      try {
+        const response = await fetch('/api/projections/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(globeSpec(source, item.recordId, { knownAt: release.knownAt, validAt: item.validFrom })), cache: 'no-store' });
+        const body = await response.json().catch(() => ({}));
+        const outcome = projectionOutcome(response.status, body);
+        if (outcome.state === 'READY') { next[item.recordId] = { title: item.title, validFrom: item.validFrom, positions: outcome.positions }; summary.placed += 1; summary.positions += outcome.positions.length; }
+        else if (outcome.state === 'UNAVAILABLE') summary.unplaced.push(item.recordId);
+        else summary.refused.push({ recordId: item.recordId, code: outcome.code });
+      } catch { summary.refused.push({ recordId: item.recordId, code: 'PROJECTION_UNAVAILABLE' }); }
+      setPlacing({ done: index + 1, total: records.length });
+    }
+    setPlacements(next);
+    setPlaceSummary(summary);
+    setPlacing(null);
+  }
 
   async function copyLink() {
     const url = `${window.location.origin}/earth#${formatView(view)}`;
@@ -190,6 +275,7 @@ export function EarthTwin({ release, source, records, assetsReady, loadEngine = 
           <span className="label-sm">Earth Twin</span>
           <span className="pill text-[10px] px-1.5" data-testid="twin-status" data-state={status.state} style={{ color: status.state === 'READY' ? 'var(--check-passed)' : status.state === 'LOADING' ? 'var(--status-pending)' : 'var(--status-refused)', borderColor: 'currentColor' }}>{status.state}</span>
           <span className="mono text-[11px]" style={faint}>{fmtUtc(clock.validAt, { seconds: true })} world time</span>
+          <span className="mono text-[11px]" style={faint} data-testid="earth-placed" data-count={Object.keys(placements).length}>{Object.keys(placements).length} placed</span>
         </div>
         {status.state === 'UNAVAILABLE' && (
           <div className="earth-unavailable" role="alert" data-testid="earth-unavailable">
@@ -250,7 +336,7 @@ export function EarthTwin({ release, source, records, assetsReady, loadEngine = 
             {records.length ? (
               <div className="flex flex-col gap-1">
                 <label htmlFor="earth-record" className="text-[12px]">Record</label>
-                <select id="earth-record" className="surface-inset px-2 py-1.5 text-[12.5px] w-full" value={recordId} onChange={(event) => setRecordId(event.target.value)}>
+                <select id="earth-record" className="surface-inset px-2 py-1.5 text-[12.5px] w-full" value={recordId} onChange={(event) => { flyOnResolve.current = true; setRecordId(event.target.value); }}>
                   {records.map((r) => <option key={r.recordId} value={r.recordId}>{r.recordId} · {r.title}</option>)}
                 </select>
                 {record && <div className="text-[11.5px]" style={faint}>{record.subjectId} · {record.predicate} · valid from {fmtUtc(record.validFrom)}{record.validTo ? ` to ${fmtUtc(record.validTo)}` : ', open'}</div>}
@@ -259,10 +345,44 @@ export function EarthTwin({ release, source, records, assetsReady, loadEngine = 
             <div className="surface-inset p-2 text-[12px] flex flex-col gap-1" data-testid="earth-projection" data-outcome={outcome.state} data-code={'code' in outcome ? outcome.code : undefined}>
               {outcome.state === 'ASKING' && <span style={faint}>Asking the projection compiler…</span>}
               {outcome.state === 'NONE' && <span style={faint}>Nothing selected.</span>}
-              {outcome.state === 'READY' && <><span style={{ color: 'var(--check-passed)' }}>READY</span><span style={muted}>{outcome.detail}</span></>}
+              {outcome.state === 'READY' && <><span style={{ color: 'var(--check-passed)' }}>READY</span><span style={muted}>{outcome.detail}</span>
+                <ul className="m-0 p-0 list-none flex flex-col gap-1" aria-label="Declared positions">
+                  {outcome.positions.map((position) => (
+                    <li key={position.positionRecordId} className="surface p-2 flex flex-col gap-0.5" data-position-record={position.positionRecordId} data-interest={position.evidenceClass.interest}>
+                      <div className="flex flex-wrap items-baseline gap-x-2"><span className="id">{position.positionRecordId}</span><span className="label-sm" style={{ color: PLACEMENT_TONE[position.evidenceClass.interest].hex }}>{PLACEMENT_TONE[position.evidenceClass.interest].label}</span><span style={faint}>{position.statusAtKnownAt}</span></div>
+                      <div className="mono">{position.value} <span style={faint}>· ±{position.point.horizontalUncertaintyM ?? '?'} m · {position.point.datum}</span></div>
+                      <div style={faint}>{position.basis}</div>
+                      <div style={faint}>source <span className="mono break-all">{position.source.sourceName ?? position.source.sourceId}</span> · {position.evidenceClass.claimStrength} / {position.evidenceClass.productionClass} / {position.evidenceClass.interest}</div>
+                      <div style={faint}>valid <span className="ts">{fmtUtc(position.validity.validFrom)}</span> → {position.validity.validTo ? <span className="ts">{fmtUtc(position.validity.validTo)}</span> : 'open'} · known <span className="ts">{fmtUtc(position.knownAt)}</span></div>
+                      <div><button type="button" className="btn btn-sm" disabled={status.state !== 'READY'} onClick={() => flyTo({ longitude: position.point.longitude, latitude: position.point.latitude, ...PLACEMENT_VIEW })}>Fly to it</button></div>
+                    </li>
+                  ))}
+                </ul>
+                <span style={faint}>Drawn where the source says the subject was over that interval, not where it is. The point’s colour is the declaring source’s interest; the ring is the stated uncertainty.</span></>}
               {outcome.state === 'UNAVAILABLE' && <><span className="mono" style={{ color: 'var(--status-refused)' }}>{outcome.code}</span><span style={muted}>{outcome.detail}</span><span style={faint}>{corpusLayer.draws}</span></>}
               {outcome.state === 'REFUSED' && <><span className="mono" style={{ color: 'var(--status-refused)' }}>{outcome.code}</span><span style={muted}>{outcome.detail}</span></>}
             </div>
+          </Part>
+
+          <Part title="Placed on the globe" testId="earth-placements">
+            <p className="m-0 text-[12px]" style={muted}>Every record of the release, each asked for at its own validity start, drawn wherever its subject’s own position record declares. The label carries each record’s value and the declaring source’s interest; the twin’s world time stays the selected record’s.</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" className="btn btn-sm btn-primary" disabled={status.state !== 'READY' || Boolean(placing) || !records.length} onClick={() => void placeAll()} data-testid="place-all">Place every record</button>
+              {placing && <span className="text-[12px]" style={faint} role="status">Asking the compiler… {placing.done} / {placing.total}</span>}
+              {Object.keys(placements).length > 0 && !placing && <button type="button" className="btn btn-sm" onClick={() => { setPlacements({}); setPlaceSummary(null); }}>Clear</button>}
+            </div>
+            {placeSummary && (
+              <div className="surface-inset p-2 text-[12px] flex flex-col gap-1" data-testid="place-summary" data-placed={placeSummary.placed} data-unplaced={placeSummary.unplaced.length} data-refused={placeSummary.refused.length}>
+                <div><span style={{ color: 'var(--check-passed)' }}>{placeSummary.placed} placed</span> at {placeSummary.positions} {placeSummary.positions === 1 ? 'position' : 'positions'} · <span style={{ color: 'var(--status-conditional)' }}>{placeSummary.unplaced.length} unplaced</span> · <span style={{ color: 'var(--status-refused)' }}>{placeSummary.refused.length} refused</span></div>
+                {placeSummary.unplaced.length > 0 && <div style={faint}>Unplaced, no declared position for the subject: <span className="mono break-all">{placeSummary.unplaced.join(', ')}</span></div>}
+                {placeSummary.refused.length > 0 && <div style={faint}>Refused by the compiler: {placeSummary.refused.map((r) => <span key={r.recordId} className="mono mr-2">{r.recordId} {r.code}</span>)}</div>}
+              </div>
+            )}
+            {Object.keys(placements).length > 0 && (
+              <ul className="m-0 p-0 list-none flex flex-col gap-0.5 text-[12px]" aria-label="Placed records">
+                {Object.entries(placements).map(([id, placement]) => <li key={id} className="flex flex-wrap items-baseline gap-x-2" data-placed-record={id}><button type="button" className="btn btn-sm btn-quiet" aria-pressed={id === recordId} onClick={() => { flyOnResolve.current = true; setRecordId(id); if (id === recordId && placement.positions[0]) flyTo({ longitude: placement.positions[0].point.longitude, latitude: placement.positions[0].point.latitude, ...PLACEMENT_VIEW }); }}>{id}</button><span style={muted}>{placement.title}</span><span style={faint}>{placement.positions.map((p) => p.subject.subjectId).join(', ')} · {fmtUtc(placement.validFrom)}</span></li>)}
+              </ul>
+            )}
           </Part>
 
           <Part title={`World signals · ${GEV_SIGNAL_SOURCES.length} named, 0 integrated`} testId="earth-signals">

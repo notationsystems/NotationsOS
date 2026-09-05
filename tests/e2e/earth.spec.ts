@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test('earth twin: a keyless globe served from this origin, every layer with its source and state, the corpus asked for honestly, a view that is a link, and no request leaves the origin', async ({ page, baseURL }) => {
+  // Real CesiumJS on software WebGL, several camera flights and one request per record of the release: this test is slow by nature.
+  test.slow();
   const origin = new URL(baseURL!).origin;
   const external: string[] = [];
   const errors: string[] = [];
@@ -29,7 +31,7 @@ test('earth twin: a keyless globe served from this origin, every layer with its 
   await expect(projection).toHaveAttribute('data-code', 'GEOMETRY_NOT_AVAILABLE');
   await expect(projection).toContainText('invents none');
   const before = await page.getByTestId('earth-valid-at').textContent();
-  const select = page.getByLabel('Record');
+  const select = page.getByLabel('Record', { exact: true });
   const options = await select.locator('option').allTextContents();
   expect(options.length).toBeGreaterThan(1);
   await select.selectOption({ index: options.length - 1 });
@@ -64,6 +66,40 @@ test('earth twin: a keyless globe served from this origin, every layer with its 
   await page.goto('/earth#v=999,0,1,0,0');
   await expect(status).toHaveAttribute('data-state', 'READY', { timeout: 45_000 });
   await expect(page.getByTestId('earth-link')).toHaveText(global);
+
+  // A record is drawn only where its own subject's position record declares. The draft-survey record's lot has a berth position from the port custody system: choosing it lists that declaration, with its source's interest and stated uncertainty, and flies the camera there.
+  await expect(projection).toHaveAttribute('data-outcome', 'UNAVAILABLE');
+  await expect(page.getByTestId('earth-placed')).toHaveAttribute('data-count', '0');
+  await page.getByLabel('Record', { exact: true }).selectOption('REC-0203');
+  await expect(projection).toHaveAttribute('data-outcome', 'READY', { timeout: 15_000 });
+  await expect(projection).toContainText('1 declared position');
+  const berth = projection.locator('[data-position-record="REC-0207"]');
+  await expect(berth).toHaveAttribute('data-interest', 'disinterested');
+  await expect(berth).toContainText('disinterested source');
+  await expect(berth).toContainText('±250 m · WGS84');
+  await expect(berth).toContainText('Port custody operator system');
+  await expect(page.getByTestId('earth-placed')).toHaveAttribute('data-count', '1');
+  await expect(page.getByTestId('earth-camera')).toContainText('51.9497°, 4.0250° · 1,000 km', { timeout: 20_000 });
+  await expect.poll(async () => new URL(page.url()).hash, { timeout: 20_000 }).toMatch(/^#v=4\.0250,51\.9497,1000000,/);
+
+  // Every record of the release, each at its own validity start: two lots declare a position, so their records are placed; samples, identity links and retracted inventory are not, nothing is inferred across the sample-of-lot link, and the records this viewer may not select stay refused by the compiler rather than drawn.
+  await page.getByTestId('place-all').click();
+  const summary = page.getByTestId('place-summary');
+  await expect(summary).toHaveAttribute('data-placed', '9', { timeout: 60_000 });
+  await expect(summary).toHaveAttribute('data-unplaced', '9');
+  await expect(summary).toHaveAttribute('data-refused', '3');
+  await expect(summary).toContainText('9 placed at 9 positions');
+  await expect(summary).toContainText('REC-0101, REC-0102, REC-0111, REC-0112, REC-0201, REC-0202, REC-0301, REC-0411, REC-0412');
+  await expect(summary).toContainText('REC-0305 SELECTION_NOT_AVAILABLE');
+  await expect(page.getByTestId('earth-placed')).toHaveAttribute('data-count', '9');
+  await expect(page.locator('[data-placed-record]')).toHaveCount(9);
+  await expect(page.locator('[data-placed-record="REC-0306"]')).toContainText('LOT-7C-104');
+  await page.locator('[data-placed-record="REC-0302"]').getByRole('button').click();
+  await expect(projection).toHaveAttribute('data-outcome', 'READY', { timeout: 15_000 });
+  await expect(projection.locator('[data-position-record="REC-0306"]')).toHaveAttribute('data-interest', 'self_reported');
+  await expect(projection).toContainText('self-reported');
+  await expect(page.getByTestId('earth-camera')).toContainText('-23.9535°, -46.3130° · 1,000 km', { timeout: 20_000 });
+  await expect(page.getByTestId('earth-placed')).toHaveAttribute('data-count', '9');
 
   const dimensions = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: window.innerWidth }));
   expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport + 1);

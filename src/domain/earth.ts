@@ -10,6 +10,10 @@
  */
 import { ENGINE_ROLE } from './projection';
 import type { ProjectionSpec } from '@/projection/spec';
+import type { GeodeticPosition, ProjectionGeometry } from '@/projection/compile';
+import type { Interest } from './types';
+
+export type { GeodeticPosition } from '@/projection/compile';
 
 /** What the twin is built from, pinned exactly. */
 export const EARTH_TWIN_ORIGIN = {
@@ -66,7 +70,7 @@ export interface TwinLayer {
 export const TWIN_LAYERS: readonly TwinLayer[] = [
   { id: 'surface', label: 'Earth surface', state: 'BUNDLED', source: 'Natural Earth II imagery bundled with CesiumJS 1.124.0, on the WGS84 ellipsoid with no terrain', terms: 'Natural Earth: public domain. CesiumJS: Apache-2.0.', draws: 'The globe, at the resolution the bundled tiles carry (coarse; no streets, no buildings).' },
   { id: 'sun', label: 'Day and night', state: 'COMPUTED', source: 'The sun’s position at the twin’s world-time instant, computed by CesiumJS', terms: 'Computation, not data.', draws: 'Lighting and the terminator; the sub-solar point as a view preset.' },
-  { id: 'corpus', label: 'Corpus records', state: 'FIXTURE', source: 'The projection compiler over one exact release, view GLOBE / GEODETIC / GLOBAL_3D', terms: 'Rights, visibility and both times enforced by the compiler; the twin inherits its refusals.', draws: 'Nothing yet: the release declares no geodetic position for any record, the compiler invents none, and the twin draws none. The refusal is shown with the selected record.' },
+  { id: 'corpus', label: 'Corpus records', state: 'FIXTURE', source: 'The projection compiler over one exact release, view GLOBE / GEODETIC / GLOBAL_3D', terms: 'Rights, visibility and both times enforced by the compiler; the twin inherits its refusals.', draws: 'A selected record at every position its subject’s own location.position record declares, under the same gate, coloured by the declaring source’s interest, with the stated horizontal uncertainty as a ring. A record whose subject declares none is listed as unplaced with the compiler’s refusal; nothing is inferred from another subject.' },
   { id: 'signals', label: 'World signals', state: 'NOT_INTEGRATED', source: `The public signal sources God's Eye View reads (DATA_SOURCES.md at ${EARTH_TWIN_ORIGIN.commit.slice(0, 7)})`, terms: 'Per source, as recorded; several exclude commercial operation.', draws: 'Nothing: no connector exists and no rights decision has been requested. The registry is inspectable.' },
   { id: 'notations', label: 'Authored marks', state: 'UNAVAILABLE', source: 'The notation state kernel', terms: 'Authored local state; not evidence.', draws: 'Nothing: the kernel’s closed command set carries no geodetic position for a notation or a relation.' },
 ];
@@ -184,9 +188,29 @@ export function globeSpec(source: ProjectionSpec['source'], recordId: string, cl
 }
 
 export type ProjectionOutcome =
-  | { state: 'READY'; detail: string }
+  | { state: 'READY'; detail: string; positions: GeodeticPosition[]; unplaced: string[] }
   | { state: 'UNAVAILABLE'; code: string; detail: string }
   | { state: 'REFUSED'; code: string; detail: string };
+
+/** How a placed record is drawn: the declaring source's interest, which the evidence class carries, is the one thing the colour says. */
+export const PLACEMENT_TONE: Record<Interest, { label: string; hex: string }> = {
+  disinterested: { label: 'disinterested source', hex: '#4ade80' },
+  unknown: { label: 'source interest unknown', hex: '#60a5fa' },
+  self_reported: { label: 'self-reported', hex: '#fbbf24' },
+  negotiating_position: { label: 'negotiating position', hex: '#f87171' },
+};
+
+/** The camera over a placed position: straight down from a regional height, so the point is at the centre of the view, the view's link is the point itself, and the bundled surface still shows where on Earth it is. The uncertainty ring becomes legible as one comes closer. */
+export const PLACEMENT_VIEW = { height: 1_000_000, heading: 0, pitch: -90 } as const;
+
+/** One label per declared position: the subject, the declaration and its source's interest, then the records placed there. A record's identity is a record, so several records at one position share one point and one label. */
+export function placementLabel(position: GeodeticPosition, records: ReadonlyArray<{ recordId: string; title: string }>): string {
+  const head = `${position.subject.subjectId} · ${position.value} · ${position.evidenceClass.interest.replace('_', ' ')}`;
+  if (records.length === 1) return `${head}\n${records[0].recordId} · ${records[0].title}`;
+  const ids = records.map((record) => record.recordId);
+  const shown = ids.slice(0, 3).join(', ');
+  return `${head}\n${ids.length} records · ${shown}${ids.length > 3 ? ` +${ids.length - 3}` : ''}`;
+}
 
 const REFUSAL_MEANING: Record<string, string> = {
   SELECTION_NOT_AVAILABLE: 'The compiler would not select this record for this viewer at these instants: absent, hidden, ambiguous, not yet knowable, or outside its validity. It says which no more than that, so nothing withheld is disclosed.',
@@ -198,8 +222,11 @@ const REFUSAL_MEANING: Record<string, string> = {
 };
 
 /** What the compiler's answer means for the twin. `READY` for GLOBE would mean geometry exists; today it never does. */
-export function projectionOutcome(status: number, body: { status?: string; error?: string | null }): ProjectionOutcome {
-  if (status === 200 && body.status === 'READY') return { state: 'READY', detail: 'The compiler returned a geodetic realization for this record.' };
+export function projectionOutcome(status: number, body: { status?: string; error?: string | null; geometry?: ProjectionGeometry | null }): ProjectionOutcome {
+  if (status === 200 && body.status === 'READY') {
+    const positions = body.geometry?.positions ?? [];
+    return { state: 'READY', detail: `${positions.length} declared ${positions.length === 1 ? 'position' : 'positions'} for this record’s subject, under the release’s own gate; drawn where the source says the subject was.`, positions, unplaced: body.geometry?.unplaced ?? [] };
+  }
   if (status === 200 && body.status === 'UNAVAILABLE') return { state: 'UNAVAILABLE', code: body.error ?? 'GEOMETRY_NOT_AVAILABLE', detail: 'The record is selectable, but the release declares no geodetic position for it. The compiler invents none and the twin draws none.' };
   const code = body.error ?? 'PROJECTION_UNAVAILABLE';
   return { state: 'REFUSED', code, detail: REFUSAL_MEANING[code] ?? 'The projection service refused the request.' };
@@ -207,7 +234,7 @@ export function projectionOutcome(status: number, body: { status?: string; error
 
 export const TWIN_NONCLAIMS = [
   'No source is contacted: every request the twin makes stays on this origin.',
-  'No position is invented: a record without declared geometry is not drawn.',
+  'No position is invented: a record is drawn only where its own subject’s position record declares, and a record without one is not drawn.',
   'No signal is live: the registry names sources and their terms; it collects nothing.',
   'The globe is not evidence: bundled imagery and a computed sun are context, not observations.',
 ] as const;

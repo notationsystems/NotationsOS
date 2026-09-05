@@ -1,5 +1,6 @@
-import type { Corpus, CorpusRelease } from '../domain/corpus';
-import { deliverable, releaseRecords } from '../domain/corpus';
+import type { Corpus, CorpusRecord, CorpusRelease, RecordStatus } from '../domain/corpus';
+import { LOCATION_POSITION_PREDICATE, deliverable, releaseRecords } from '../domain/corpus';
+import type { EvidenceClass } from '../domain/types';
 import { FIXTURE_CORPORA } from '../fixtures';
 import { canonicalJson } from '../fixtures/digest';
 import { parseProjectionSpec, ProjectionError, routeProjection, type ProjectionSpec } from './spec';
@@ -12,26 +13,89 @@ export interface RecordSubjectGraph {
   edges: Array<{ recordId: string; source: string; target: string; kind: 'RECORD_ABOUT_SUBJECT' }>;
 }
 
-function rows(corpus: Corpus, release: CorpusRelease, spec: ProjectionSpec): ProjectionRecord[] {
+interface Boundary { knownAt: number; validAt: number; releasedAt: number; viewer: ProjectionSpec['viewer'] }
+
+function boundaryOf(release: CorpusRelease, spec: ProjectionSpec): Boundary {
   const knownAt = time(spec.selection.knownAt);
-  const validAt = time(spec.selection.validAt);
   const releasedAt = time(release.knownAt);
   if (knownAt > releasedAt) throw new ProjectionError('KNOWLEDGE_AFTER_RELEASE', 'The selected knowledge instant is later than this release cutoff.');
+  return { knownAt, validAt: time(spec.selection.validAt), releasedAt, viewer: spec.viewer };
+}
+
+/** The one gate every projected record passes: committed, deliverable, visible to the viewer, knowable at the instant, valid at the instant. */
+function admissible(corpus: Corpus, release: CorpusRelease, committed: Set<string>, record: CorpusRecord, b: Boundary): boolean {
+  return committed.has(record.recordId) && deliverable(corpus, release, record) &&
+    [...(b.viewer === 'COUNTERPARTY_SHARED' ? ['COUNTERPARTY_SHARED'] : []), 'PUBLIC_RULING'].includes(record.visibility) &&
+    time(record.knownAt) <= Math.min(b.knownAt, b.releasedAt) && time(record.validFrom) <= b.validAt &&
+    (record.validTo === undefined || b.validAt < time(record.validTo));
+}
+
+function rows(corpus: Corpus, release: CorpusRelease, spec: ProjectionSpec, b: Boundary): ProjectionRecord[] {
   const selected: ProjectionRecord[] = [];
   const committed = new Set(releaseRecords(corpus, release).map((record) => record.recordId));
   for (const recordId of spec.selection.recordIds) {
     const matches = corpus.records.filter((item) => item.recordId === recordId);
     const record = matches[0];
-    if (matches.length !== 1 || !record || !committed.has(recordId) || !deliverable(corpus, release, record) ||
-        ![...(spec.viewer === 'COUNTERPARTY_SHARED' ? ['COUNTERPARTY_SHARED'] : []), 'PUBLIC_RULING'].includes(record.visibility) ||
-        time(record.knownAt) > Math.min(knownAt, releasedAt) || time(record.validFrom) > validAt ||
-        (record.validTo !== undefined && validAt >= time(record.validTo))) {
+    if (matches.length !== 1 || !record || !admissible(corpus, release, committed, record, b)) {
       // Same refusal for hidden, absent, ambiguous, too-new and out-of-validity records.
       throw new ProjectionError('SELECTION_NOT_AVAILABLE', 'The complete selection is not available at this release, viewer and time boundary.');
     }
-    selected.push(projectionRecord(corpus, release, record, knownAt));
+    selected.push(projectionRecord(corpus, release, record, b.knownAt));
   }
   return selected;
+}
+
+/** A declared position of a selected record's subject, resolved under the same gate as the record itself. */
+export interface GeodeticPosition {
+  /** The selected record this position was resolved for. */
+  recordId: string;
+  positionRecordId: string;
+  canonicalId: string;
+  subject: { subjectId: string; canonicalId: string; subjectType: string };
+  point: { datum: 'WGS84'; longitude: number; latitude: number; horizontalUncertaintyM: number | null };
+  value: string | number;
+  basis: string | null;
+  validity: { validFrom: string; validTo: string | null };
+  knownAt: string;
+  evidenceClass: EvidenceClass;
+  source: { sourceId: string; sourceName: string | null };
+  statusAtKnownAt: RecordStatus;
+}
+
+export interface ProjectionGeometry { datum: 'WGS84'; positions: GeodeticPosition[]; unplaced: string[] }
+
+/**
+ * Geometry is never invented: a selected record is placed only where a
+ * `location.position` record for its own subject, itself committed,
+ * deliverable, visible, knowable and valid at the same boundary, declares.
+ * Every such position is returned with its own evidence class and source, so
+ * two sources that disagree are both shown. A record without one is listed
+ * as unplaced; a position the viewer may not see is simply absent.
+ */
+function geometryFor(corpus: Corpus, release: CorpusRelease, selected: ProjectionRecord[], b: Boundary): ProjectionGeometry {
+  const committed = releaseRecords(corpus, release);
+  const committedIds = new Set(committed.map((record) => record.recordId));
+  const positions: GeodeticPosition[] = [];
+  const unplaced: string[] = [];
+  for (const row of selected) {
+    const declared = committed
+      .filter((record) => record.predicate === LOCATION_POSITION_PREDICATE && record.geometry?.kind === 'POINT' && record.geometry.datum === 'WGS84' &&
+        record.subjectId === row.subject.subjectId && admissible(corpus, release, committedIds, record, b))
+      .sort((a, c) => a.recordId < c.recordId ? -1 : a.recordId > c.recordId ? 1 : 0);
+    if (!declared.length) { unplaced.push(row.recordId); continue; }
+    for (const record of declared) {
+      const projected = projectionRecord(corpus, release, record, b.knownAt);
+      positions.push({
+        recordId: row.recordId, positionRecordId: record.recordId, canonicalId: record.canonicalId,
+        subject: { subjectId: record.subjectId, canonicalId: record.subjectCanonicalId, subjectType: record.subjectType },
+        point: { datum: 'WGS84', longitude: record.geometry!.longitude, latitude: record.geometry!.latitude, horizontalUncertaintyM: record.geometry!.horizontalUncertaintyM ?? null },
+        value: record.value, basis: record.basis ?? null, validity: { validFrom: record.validFrom, validTo: record.validTo ?? null }, knownAt: record.knownAt,
+        evidenceClass: record.evidenceClass, source: { sourceId: record.provenance.sourceId, sourceName: projected.rights?.sourceName ?? release.sources.find((s) => s.sourceId === record.provenance.sourceId)?.sourceName ?? null },
+        statusAtKnownAt: projected.statusAtKnownAt,
+      });
+    }
+  }
+  return { datum: 'WGS84', positions, unplaced };
 }
 
 function graphFor(records: ProjectionRecord[]): RecordSubjectGraph {
@@ -64,14 +128,18 @@ export function compileProjection(input: unknown, corpora: readonly Corpus[] = F
     throw new ProjectionError('SOURCE_VERSION_MISMATCH', 'The full source snapshot does not match the supplied version.');
   }
   let records: ProjectionRecord[];
-  try { records = rows(corpus, release, spec); }
-  catch (error) {
+  let geometry: ProjectionGeometry | null = null;
+  try {
+    const boundary = boundaryOf(release, spec);
+    records = rows(corpus, release, spec, boundary);
+    if (spec.view.coordinateSemantics === 'GEODETIC') geometry = geometryFor(corpus, release, records, boundary);
+  } catch (error) {
     if (error instanceof ProjectionError) throw error;
     throw new ProjectionError('SOURCE_INTEGRITY_FAILED', 'The selected source records could not be projected.');
   }
   // Validate referent identity in every view, not just when a graph is requested.
   const graph = graphFor(records);
-  const ready = spec.view.representation === 'RECORDS' || spec.view.representation === 'GRAPH';
+  const ready = spec.view.representation === 'RECORDS' || spec.view.representation === 'GRAPH' || Boolean(geometry && geometry.positions.length > 0);
   const result = {
     schema: 'payload.projection.v1' as const, fixture_only: true as const, spec, engine: routeProjection(spec.view),
     authority: 'REPLACEABLE_PROJECTION' as const,
@@ -79,10 +147,11 @@ export function compileProjection(input: unknown, corpora: readonly Corpus[] = F
     error: ready ? null : 'GEOMETRY_NOT_AVAILABLE' as const,
     records,
     graph: spec.view.representation === 'GRAPH' ? graph : null,
-    provenance: { compilerId: 'payload.fixture-projection', compilerVersion: '1.0.0',
+    geometry,
+    provenance: { compilerId: 'payload.fixture-projection', compilerVersion: '1.1.0',
       transformIdentity: `payload.projection/${spec.view.representation}/v1`, specDigest: addressed(spec),
       sourceSelectionDigest: addressed(records) },
-    nonclaims: { sourceMutated: false, canonicalAdmission: false, relationInferred: false, sourceTruthClaimed: false,
+    nonclaims: { sourceMutated: false, canonicalAdmission: false, relationInferred: false, positionInferred: false, sourceTruthClaimed: false,
       independentlyVerified: false, rendererExecuted: false },
   };
   // No references to mutable input, fixture arrays, rights, uncertainty or view state escape.

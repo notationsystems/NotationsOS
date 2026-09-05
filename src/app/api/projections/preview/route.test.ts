@@ -238,7 +238,21 @@ it.each([
   expect(body).toMatchObject({ fixture_only: true, engine, status: 'UNAVAILABLE', error: 'GEOMETRY_NOT_AVAILABLE', graph: null,
     nonclaims: { rendererExecuted: false, sourceMutated: false, relationInferred: false, sourceTruthClaimed: false } });
   expect(body.records.map((record: { recordId: string }) => record.recordId)).toEqual(['REC-0101']);
-  expect(JSON.stringify(body)).not.toMatch(/"(?:longitude|latitude|coordinates|positions|vertices|mesh|geometry)"\s*:/);
+  // A sample declares no position: a geodetic route says so explicitly and carries no coordinate; every other route carries no geometry at all.
+  expect(body.geometry).toEqual(view.coordinateSemantics === 'GEODETIC' ? { datum: 'WGS84', positions: [], unplaced: ['REC-0101'] } : null);
+  expect(JSON.stringify(body)).not.toMatch(/"(?:longitude|latitude|coordinates|vertices|mesh)"\s*:/);
+});
+
+test('places a selected record where its own subject declares a position, through the endpoint, with the declaring source and evidence class', async () => {
+  const input = spec();
+  input.selection = { ...input.selection, recordIds: ['REC-0204'], validAt: '2026-08-17T15:20:00Z' };
+  input.view = { mode: 'GLOBE', coordinateSemantics: 'GEODETIC', representation: 'GLOBAL_3D' };
+  const response = await POST(request(input));
+  expect(response.status).toBe(200);
+  expectBoundary(response);
+  const body = await response.json();
+  expect(body).toMatchObject({ status: 'READY', error: null, engine: 'CesiumJS', nonclaims: { positionInferred: false, rendererExecuted: false } });
+  expect(body.geometry).toMatchObject({ datum: 'WGS84', unplaced: [], positions: [{ recordId: 'REC-0204', positionRecordId: 'REC-0207', point: { longitude: 4.025, latitude: 51.9497, horizontalUncertaintyM: 250 }, evidenceClass: { interest: 'disinterested' } }] });
 });
 
 it.each(['text/plain', 'application/octet-stream', ''])('refuses unsupported content type %s', async (contentType) => {

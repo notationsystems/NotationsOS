@@ -251,10 +251,55 @@ describe('pure fixture projection compilation', () => {
     const result = compileProjection({ ...spec(), view });
     expect(result).toMatchObject({ engine, status: 'UNAVAILABLE', error: 'GEOMETRY_NOT_AVAILABLE', graph: null, nonclaims: NONCLAIMS });
     expect(result.records).toEqual(evidence.records);
-    expect(result).not.toHaveProperty('geometry');
+    // Geodetic routes say which selected records could not be placed; every other route carries no geometry at all.
+    expect(result.geometry).toEqual(view.coordinateSemantics === 'GEODETIC' ? { datum: 'WGS84', positions: [], unplaced: evidence.records.map((entry) => entry.recordId) } : null);
     expect(result).not.toHaveProperty('coordinates');
     expect(result).not.toHaveProperty('mesh');
     expect(result.provenance.sourceSelectionDigest).toBe(evidence.provenance.sourceSelectionDigest);
+  });
+
+  it('places a record only where its own subject declares a position under the same gate, returns every declaring source, and lists the rest as unplaced', () => {
+    const globe = { mode: 'GLOBE', coordinateSemantics: 'GEODETIC', representation: 'GLOBAL_3D' } as const;
+    // The berth position is valid 15 to 18 August: the weighbridge record is placed there only when asked as of that time.
+    const atBerth = { ...spec().selection, recordIds: ['REC-0204'], validAt: '2026-08-17T15:20:00Z' };
+    const placed = compileProjection({ ...spec(['REC-0204']), selection: atBerth, view: globe });
+    expect(placed.status).toBe('READY');
+    expect(placed.error).toBeNull();
+    expect(placed.nonclaims).toMatchObject({ positionInferred: false, relationInferred: false });
+    expect(placed.geometry).toEqual({ datum: 'WGS84', unplaced: [], positions: [expect.objectContaining({
+      recordId: 'REC-0204', positionRecordId: 'REC-0207', subject: expect.objectContaining({ subjectId: 'LOT-5B-221', subjectType: 'Lot' }),
+      point: { datum: 'WGS84', longitude: 4.025, latitude: 51.9497, horizontalUncertaintyM: 250 },
+      validity: { validFrom: '2026-08-15T06:00:00Z', validTo: '2026-08-18T00:00:00Z' }, knownAt: '2026-08-18T09:30:00Z',
+      evidenceClass: { claimStrength: 'reported', productionClass: 'asserted', interest: 'disinterested' },
+      source: expect.objectContaining({ sourceId: expect.stringMatching(/port-custody-system$/) }), statusAtKnownAt: 'CURRENT',
+    })] });
+    expect(placed.digest).not.toBe(compileProjection({ ...spec(['REC-0204']), selection: atBerth }).digest);
+    // Asked as of the release's valid time, after the berth position ends, the same record stands unplaced.
+    expect(compileProjection({ ...spec(['REC-0204']), view: globe })).toMatchObject({ status: 'UNAVAILABLE', error: 'GEOMETRY_NOT_AVAILABLE', geometry: { positions: [], unplaced: ['REC-0204'] } });
+
+    // A sample is never placed at its lot: the identity link is a record, not a position.
+    const mixed = compileProjection({ ...spec(['REC-0101', 'REC-0204']), selection: { ...spec().selection, recordIds: ['REC-0101', 'REC-0204'], validAt: '2026-08-17T15:20:00Z' }, view: globe });
+    expect(mixed.status).toBe('READY');
+    expect(mixed.geometry?.positions.map((position) => position.recordId)).toEqual(['REC-0204']);
+    expect(mixed.geometry?.unplaced).toEqual(['REC-0101']);
+
+    // The position record is a record: selecting it places it by itself, and a claimant-supplied position says so.
+    const own = compileProjection({ ...spec(['REC-0306']), selection: { ...spec().selection, recordIds: ['REC-0306'], validAt: '2026-08-24T08:00:00Z' }, view: globe });
+    expect(own.geometry?.positions.map((position) => [position.positionRecordId, position.evidenceClass.interest])).toEqual([['REC-0306', 'self_reported']]);
+
+    // Valid time gates the position separately from the record: the lot's loading-completed record is valid after the berth position ends.
+    const afterBerth = compileProjection({ ...spec(['REC-0206']), selection: { ...spec().selection, recordIds: ['REC-0206'], validAt: '2026-08-18T00:00:00Z' }, view: globe });
+    expect(afterBerth).toMatchObject({ status: 'UNAVAILABLE', error: 'GEOMETRY_NOT_AVAILABLE', geometry: { positions: [], unplaced: ['REC-0206'] } });
+
+    // Knowledge time gates it too: the yard position became knowable on 2026-08-29; asked as of the 27th, the weighbridge record stands unplaced.
+    const beforeKnown = compileProjection({ ...spec(['REC-0302']), selection: { ...spec().selection, recordIds: ['REC-0302'], knownAt: '2026-08-27T00:00:00Z', validAt: '2026-08-25T16:35:00Z' }, view: globe });
+    expect(beforeKnown).toMatchObject({ status: 'UNAVAILABLE', geometry: { positions: [], unplaced: ['REC-0302'] } });
+    const afterKnown = compileProjection({ ...spec(['REC-0302']), selection: { ...spec().selection, recordIds: ['REC-0302'], validAt: '2026-08-25T16:35:00Z' }, view: globe });
+    expect(afterKnown.geometry?.positions.map((position) => position.positionRecordId)).toEqual(['REC-0306']);
+
+    // The map route resolves the same declarations; the evidence route carries none.
+    expect(compileProjection({ ...spec(['REC-0204']), selection: atBerth, view: { mode: 'MAP', coordinateSemantics: 'GEODETIC', representation: 'POINT' } }).geometry?.positions).toHaveLength(1);
+    expect(compileProjection(spec(['REC-0204'])).geometry).toBeNull();
   });
 
   it('keeps selected superseded and retracted inventory instead of silently substituting current answers', () => {
@@ -491,7 +536,7 @@ describe('pure fixture projection compilation', () => {
     const one = compileProjection(spec(['REC-0204', 'REC-0101']));
     const two = compileProjection(spec(['REC-0101', 'REC-0204']));
     expect(one).toEqual(two);
-    expect(one.provenance).toEqual({ compilerId: 'payload.fixture-projection', compilerVersion: '1.0.0',
+    expect(one.provenance).toEqual({ compilerId: 'payload.fixture-projection', compilerVersion: '1.1.0',
       transformIdentity: 'payload.projection/RECORDS/v1', specDigest: hash(one.spec), sourceSelectionDigest: expect.stringMatching(/^sha256:[a-f0-9]{64}$/) });
     const { digest, ...body } = one;
     expect(digest).toBe(hash(body));

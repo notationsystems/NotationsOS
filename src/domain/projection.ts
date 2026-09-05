@@ -28,7 +28,7 @@ export const ENGINE_ROLE: Record<ProjectionEngine, { question: string; role: str
 
 export interface ProjectionRoute extends ProjectionView {
   engine: ProjectionEngine;
-  /** What the fixture compiler returns today for this route. */
+  /** What the fixture compiler returns today for this route when the selection can be placed; geodetic routes still return UNAVAILABLE for a record without a declared position. */
   currentResult: 'READY' | 'UNAVAILABLE';
   note: string;
 }
@@ -37,9 +37,9 @@ export interface ProjectionRoute extends ProjectionView {
 export const PROJECTION_ROUTING: readonly ProjectionRoute[] = [
   { mode: 'EVIDENCE', coordinateSemantics: 'NONE', representation: 'RECORDS', engine: 'records', currentResult: 'READY', note: 'Selected safe record payloads with status at the knowledge instant.' },
   { mode: 'STRUCTURE', coordinateSemantics: 'GRAPH_LAYOUT', representation: 'GRAPH', engine: 'Three.js', currentResult: 'READY', note: 'Records plus a record-to-subject incidence graph; no layout, no inferred edge.' },
-  { mode: 'MAP', coordinateSemantics: 'GEODETIC', representation: 'POINT', engine: 'kepler.gl', currentResult: 'UNAVAILABLE', note: 'No fixture geometry; nothing is invented.' },
-  { mode: 'MAP', coordinateSemantics: 'GEODETIC', representation: 'DENSITY', engine: 'kepler.gl', currentResult: 'UNAVAILABLE', note: 'No fixture geometry; nothing is invented.' },
-  { mode: 'GLOBE', coordinateSemantics: 'GEODETIC', representation: 'GLOBAL_3D', engine: 'CesiumJS', currentResult: 'UNAVAILABLE', note: 'No fixture geometry; nothing is invented. The Earth Twin at /earth renders the globe and shows this refusal beside the selected record.' },
+  { mode: 'MAP', coordinateSemantics: 'GEODETIC', representation: 'POINT', engine: 'kepler.gl', currentResult: 'READY', note: 'Declared positions of the selected records’ subjects (location.position records under the same gate); GEOMETRY_NOT_AVAILABLE when none resolves. No kepler.gl instance renders it.' },
+  { mode: 'MAP', coordinateSemantics: 'GEODETIC', representation: 'DENSITY', engine: 'kepler.gl', currentResult: 'READY', note: 'The same declared positions; density is the engine’s to compute, and no engine is installed.' },
+  { mode: 'GLOBE', coordinateSemantics: 'GEODETIC', representation: 'GLOBAL_3D', engine: 'CesiumJS', currentResult: 'READY', note: 'Declared positions of the selected records’ subjects, each with its own evidence class and source; GEOMETRY_NOT_AVAILABLE when none resolves. The Earth Twin at /earth draws them and shows the refusal for records without one.' },
   { mode: 'STRUCTURE', coordinateSemantics: 'INTRINSIC_PHYSICAL', representation: 'MESH', engine: 'Three.js', currentResult: 'UNAVAILABLE', note: 'No fixture geometry.' },
   { mode: 'STRUCTURE', coordinateSemantics: 'INTRINSIC_PHYSICAL', representation: 'FIELD', engine: 'Three.js', currentResult: 'UNAVAILABLE', note: 'No fixture geometry.' },
   { mode: 'STRUCTURE', coordinateSemantics: 'FEATURE_SPACE', representation: 'MESH', engine: 'Three.js', currentResult: 'UNAVAILABLE', note: 'No fixture geometry.' },
@@ -49,7 +49,7 @@ export const PROJECTION_ROUTING: readonly ProjectionRoute[] = [
 ];
 
 /** What every compiled projection states it did not do. */
-export const PROJECTION_NONCLAIMS = ['sourceMutated', 'canonicalAdmission', 'relationInferred', 'sourceTruthClaimed', 'independentlyVerified', 'rendererExecuted'] as const;
+export const PROJECTION_NONCLAIMS = ['sourceMutated', 'canonicalAdmission', 'relationInferred', 'positionInferred', 'sourceTruthClaimed', 'independentlyVerified', 'rendererExecuted'] as const;
 
 export function routeFor(view: ProjectionView): ProjectionRoute | undefined {
   return PROJECTION_ROUTING.find((r) => r.mode === view.mode && r.coordinateSemantics === view.coordinateSemantics && r.representation === view.representation);

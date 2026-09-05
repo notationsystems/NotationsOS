@@ -41,10 +41,10 @@
   "manifest:RUL-7C104-r2": "c3af1381470a826552413851d1355a07d8acf9377ecf94f3d7d7044f53e02e2d",
   "manifest:RUL-9A017-r1": "3b9cbe1ee6e29d4c9dc9615abc720a90437d340630fa20c9158c6f7d5aa52018",
   "register:caravan.brokerage.specialty-cargo@0.3.0-demo": "65926d71e42c0e8b2581f3013457ac1f417287a4d02513aecfc10ce7e1e13f80",
-  "release:REL-CAR-2026.08.11": "8457276d144e39ac1825cec3024bf755fde88f4189c2bbe786e521abc93d3596",
-  "release:REL-CAR-2026.08.25": "3c311ddee52a9560b1bddeca3b37e63bb424c2bb91dececc96acc45cdc7cf85f",
-  "release:REL-CAR-2026.09.01": "f801f77764328d0fa0a565cef625c0c92bde182fa2a7fce243b7710eb3c11531",
-  "releaseManifest:REL-CAR-2026.08.11": "dd902b03a4ef0fd7bb0e43783ca7c4f1f83243643082f7eb2303e8e06d7b2cb5",
-  "releaseManifest:REL-CAR-2026.08.25": "d9e9b8cb47bb35b2189545d3421dd4d8e97a2d9a0f23ef34eca47bc9b5ae2a49",
-  "releaseManifest:REL-CAR-2026.09.01": "5896ed8da9e74242a0c7187e07ceb8595a8d883d7bb7292cfa7e016f9a90a4a0"
+  "release:REL-CAR-2026.08.11": "6cc929386af11a0ed64b8145865a96d2466bfc1fe0558d87fc4a91c9d3c97b81",
+  "release:REL-CAR-2026.08.25": "c7115d66fced16f71ad2e8e73dbfecdb01f0971753d153df155530085bd48687",
+  "release:REL-CAR-2026.09.01": "dda77ae2dc62549e9a0a54e338bf367ad8111ece8b6724eafb0c3f556e528cb1",
+  "releaseManifest:REL-CAR-2026.08.11": "58d37584ba3b11993bb071704bf82bde02b6d167cac1ca0b203674f84b7f4624",
+  "releaseManifest:REL-CAR-2026.08.25": "5281c24290de185653511777f3b383bcabf16c60076fc4a08032a9c41055978d",
+  "releaseManifest:REL-CAR-2026.09.01": "370e855ddcd531752f9f7c21ed42f36403f004eefd80e22bcbe0ea82c4a82adc"
 }

@@ -144,7 +144,7 @@ test('the information product states its question, fields, correction at two kno
   await page.goto('/products');
   await expect(page.getByRole('heading', { level: 1, name: 'Caravan lot state' })).toBeVisible();
   await expect(page.getByTestId('customer-question')).toContainText('as knowable at a stated time');
-  await expect(page.locator('[data-product-field]')).toHaveCount(6);
+  await expect(page.locator('[data-product-field]')).toHaveCount(7);
   await expect(page.locator('[data-product-field][data-within="false"]')).toHaveCount(0);
   await expect(page.getByTestId('prohibited-purposes')).toContainText('PROPRIETARY_STRATEGY, TRADING');
   await expect(page.locator('[data-asof="early"]')).toContainText('40 t');

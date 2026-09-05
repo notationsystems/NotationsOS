@@ -60,6 +60,7 @@ export function recordPayload(r: CorpusRecord, rights?: RightsSchedule, decision
     knownAt: r.knownAt,
     observedAt: r.observedAt ?? null,
     evidenceClass: r.evidenceClass,
+    geometry: r.geometry ?? null,
     provenance: { ...r.provenance, contentHash: r.provenance.contentHash ?? null, contentDigest: r.provenance.contentDigest ?? null, storageKey: r.provenance.storageKey ?? null, receiptId: r.provenance.receiptId ?? null, artifactId: r.provenance.artifactId ?? null, producerId: r.provenance.producerId ?? null, transformId: r.provenance.transformId ?? null },
     visibility: r.visibility,
     supersedesRecordId: r.supersedesRecordId ?? null,

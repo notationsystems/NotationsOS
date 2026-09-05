@@ -125,6 +125,10 @@ export const CARAVAN_RECORDS: CorpusRecord[] = [
   rec({ recordId: 'REC-0304', firstReleaseId: REL_3, subjectId: 'LOT-7C-104', subjectType: 'Lot', predicate: 'custody.loading_completed', title: 'Loading completed', value: '2026-08-28T14:00:00Z', basis: 'Claimant custody log', validFrom: '2026-08-28T14:00:00Z', knownAt: '2026-08-29T08:50:00Z', evidenceClass: { claimStrength: 'reported', productionClass: 'asserted', interest: 'self_reported' }, provenance: prov('meridian-yard-log', 'EV-CUSTODY-MER-0931', 'P-CLAIMANT-MERIDIAN'), visibility: 'COUNTERPARTY_SHARED' }),
   rec({ recordId: 'REC-0305', firstReleaseId: REL_2, subjectId: 'LOT-7C-104', subjectType: 'Lot', predicate: 'contract.moisture_max', title: 'Contract moisture maximum', value: 8.0, unit: '%', basis: 'Sale contract HB-3310', validFrom: '2026-08-24T12:00:00Z', knownAt: '2026-08-26T10:30:00Z', evidenceClass: { claimStrength: 'reported', productionClass: 'asserted', interest: 'negotiating_position' }, provenance: prov('harbourline-deals', 'EV-CONTRACT-HB-3310', 'P-SPONSOR-HARBOURLINE'), visibility: 'PRIVATE_PREFLIGHT' }),
 
+  /* ── Declared positions (releases 2 and 3): where each lot was, as its custody record states it. Synthetic declarations at real port coordinates; they assert nothing about any real cargo. ── */
+  rec({ recordId: 'REC-0207', firstReleaseId: REL_2, subjectId: 'LOT-5B-221', subjectType: 'Lot', predicate: 'location.position', title: 'Position, loading terminal', value: '51.9497 N, 4.0250 E', basis: 'Port custody record: berth of the loading terminal, WGS84', uncertainty: { semantics: 'Horizontal uncertainty 250 m, as the custody system states it' }, geometry: { kind: 'POINT', datum: 'WGS84', longitude: 4.025, latitude: 51.9497, horizontalUncertaintyM: 250 }, validFrom: '2026-08-15T06:00:00Z', validTo: '2026-08-18T00:00:00Z', knownAt: '2026-08-18T09:30:00Z', evidenceClass: { claimStrength: 'reported', productionClass: 'asserted', interest: 'disinterested' }, provenance: prov('port-custody-system', 'EV-CUSTODY-PCO-5102', 'P-PRODUCER-PCO'), visibility: 'COUNTERPARTY_SHARED' }),
+  rec({ recordId: 'REC-0306', firstReleaseId: REL_3, subjectId: 'LOT-7C-104', subjectType: 'Lot', predicate: 'location.position', title: 'Position, origination yard (claimant-supplied)', value: '23.9535 S, 46.3130 W', basis: 'Claimant custody log: yard position, WGS84', uncertainty: { semantics: 'Horizontal uncertainty 500 m, as the claimant states it' }, geometry: { kind: 'POINT', datum: 'WGS84', longitude: -46.313, latitude: -23.9535, horizontalUncertaintyM: 500 }, validFrom: '2026-08-24T08:00:00Z', validTo: '2026-08-28T18:00:00Z', knownAt: '2026-08-29T08:50:00Z', evidenceClass: { claimStrength: 'reported', productionClass: 'asserted', interest: 'self_reported' }, provenance: prov('meridian-yard-log', 'EV-CUSTODY-MER-0931', 'P-CLAIMANT-MERIDIAN'), visibility: 'COUNTERPARTY_SHARED' }),
+
   /* ── Lots 8D-902 and 6C-305 (release 3) ── */
   rec({ recordId: 'REC-0401', firstReleaseId: REL_3, subjectId: 'SAMPLE-S-4436', subjectType: 'Sample', predicate: 'condition.moisture', title: 'Moisture, as received', value: 5.8, unit: '%', basis: 'As received', uncertainty: { low: 5.6, high: 6.0, semantics: 'Laboratory reported ±0.2 %' }, validFrom: '2026-08-31T09:00:00Z', knownAt: '2026-09-01T09:40:00Z', evidenceClass: REPORTED_MEASURED, provenance: prov('northgate-lims', 'EV-CERT-NIS-4436', 'P-PRODUCER-NORTHGATE'), visibility: 'PRIVATE_PREFLIGHT' }),
   rec({ recordId: 'REC-0402', firstReleaseId: REL_3, subjectId: 'SAMPLE-S-4436', subjectType: 'Sample', predicate: 'identity.sample_of_lot', title: 'Sample drawn from lot', value: 'LOT-8D-902', validFrom: '2026-08-31T09:00:00Z', knownAt: '2026-09-01T09:40:00Z', evidenceClass: { claimStrength: 'reported', productionClass: 'asserted', interest: 'disinterested' }, provenance: prov('northgate-lims', 'EV-CERT-NIS-4436', 'P-PRODUCER-NORTHGATE'), visibility: 'PRIVATE_PREFLIGHT' }),
@@ -182,7 +186,7 @@ function stagesFor(at: string, opts: { releasedAt: string; verification: string;
     { stage: 'extraction', status: 'COMPLETED', note: 'Bounded fields extracted from each artifact: declared identifiers, values, units, bases, sampling and weighing times. Raw bytes stay in the evidence store.', at },
     { stage: 'normalization', status: 'COMPLETED', note: 'Units and bases normalized; transform quantity.gross.normalize 0.3.0 recorded as lineage where applied.', at },
     { stage: 'identity', status: 'COMPLETED', note: 'Samples and lots kept distinct; a sample reaches a lot only through an identity-link record supplied by evidence. Similarity never merges.', at },
-    { stage: 'ontology', status: 'COMPLETED', note: 'Predicates aligned to the demonstration vocabulary (quantity.gross, condition.moisture, custody.*, identity.sample_of_lot).', at },
+    { stage: 'ontology', status: 'COMPLETED', note: 'Predicates aligned to the demonstration vocabulary (quantity.gross, condition.moisture, custody.*, identity.sample_of_lot, location.position).', at },
     { stage: 'computation', status: 'NOT_APPLICABLE', note: 'No derived quantities in this corpus beyond unit normalization.' },
     { stage: 'storage', status: 'NOT_RUN', note: 'No production storage: this repository holds committed fixtures. A live build writes canonical state to the release store here.' },
     { stage: 'indexing', status: 'COMPLETED', note: 'Subject, predicate and time index built for as-of queries.', at },
@@ -212,7 +216,7 @@ export const CARAVAN_RELEASES: CorpusRelease[] = [
     supersedesReleaseId: REL_1,
     supersededByReleaseId: REL_3,
     status: 'SUPERSEDED',
-    coverage: 'Lots 2E-118, 3F-440, 5B-221, 7C-104. Includes the RET-0001 correction of the 5B-221 draft-survey quantity.',
+    coverage: 'Lots 2E-118, 3F-440, 5B-221, 7C-104. Includes the RET-0001 correction of the 5B-221 draft-survey quantity and the declared position of lot 5B-221 at its loading terminal.',
     note: 'Superseded by the 2026-09-01 release.',
   }),
   release({
@@ -222,7 +226,7 @@ export const CARAVAN_RELEASES: CorpusRelease[] = [
     certification: { status: 'CERTIFIED', certifiedAt: '2026-09-01T12:10:00Z', basis: 'Release digest recomputed by this system over the canonical record set and the manifest committed. Demonstration corpus: not audited, not independently verified.', verification: 'internal_recompute', manifestCommitment: digestOf('releaseManifest:REL-CAR-2026.09.01') },
     supersedesReleaseId: REL_2,
     status: 'CURRENT',
-    coverage: 'All seven demonstration lots. Includes the RET-0002 withdrawal of certificate NIS-4390.',
+    coverage: 'All seven demonstration lots. Includes the RET-0002 withdrawal of certificate NIS-4390 and the claimant-supplied position of lot 7C-104 at its origination yard.',
     note: 'Current release. Fixture clock 2026-09-01 12:00 UTC.',
   }),
 ];

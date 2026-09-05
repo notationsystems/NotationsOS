@@ -15,7 +15,7 @@ describe('the Earth Twin as data', () => {
     expect(NOT_ADOPTED.join(' ')).toMatch(/no source is acquired here/);
   });
 
-  it('gives every layer a source, terms, what it draws and a state from the closed vocabulary; only bundled and computed layers draw anything', () => {
+  it('gives every layer a source, terms, what it draws and a state from the closed vocabulary; only bundled, computed and declared-corpus layers draw anything', () => {
     expect(TWIN_LAYERS.map((l) => l.id)).toEqual(['surface', 'sun', 'corpus', 'signals', 'notations']);
     for (const layer of TWIN_LAYERS) {
       expect(layer.source).toMatch(/\S/);
@@ -23,8 +23,8 @@ describe('the Earth Twin as data', () => {
       expect(layer.draws).toMatch(/\S/);
       expect(Object.keys(LAYER_STATE_MEANING)).toContain(layer.state);
     }
-    expect(TWIN_LAYERS.filter((l) => !l.draws.startsWith('Nothing')).map((l) => l.id)).toEqual(['surface', 'sun']);
-    expect(TWIN_LAYERS.find((l) => l.id === 'corpus')?.draws).toMatch(/invents none/);
+    expect(TWIN_LAYERS.filter((l) => !l.draws.startsWith('Nothing')).map((l) => l.id)).toEqual(['surface', 'sun', 'corpus']);
+    expect(TWIN_LAYERS.find((l) => l.id === 'corpus')?.draws).toMatch(/declares/);
   });
 
   it('carries the twenty-one live sources of the pinned DATA_SOURCES.md as a registry, none integrated, each with terms and blockers', () => {

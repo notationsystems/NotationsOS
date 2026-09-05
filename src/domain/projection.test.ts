@@ -23,12 +23,15 @@ describe('projection routing table', () => {
     const descriptor = describeProjectionSource('REL-CAR-2026.09.01');
     const feed = (await recordsPayload('REL-CAR-2026.09.01', 'COUNTERPARTY_SHARED'))!;
     const record = feed.records[0];
-    const spec = (view: object) => ({ schema: 'payload.projection-spec.v1', source: descriptor.source, selection: { recordIds: [record.recordId], knownAt: descriptor.knownAt, validAt: record.validity.validFrom }, view, viewer: 'COUNTERPARTY_SHARED' });
+    // A geodetic route is READY only for a record whose subject declares a position; lot 5B-221's weighbridge record is one.
+    const placeable = feed.records.find((entry) => entry.recordId === 'REC-0204')!;
+    const spec = (view: object, chosen = record) => ({ schema: 'payload.projection-spec.v1', source: descriptor.source, selection: { recordIds: [chosen.recordId], knownAt: descriptor.knownAt, validAt: chosen.validity.validFrom }, view, viewer: 'COUNTERPARTY_SHARED' });
     for (const route of PROJECTION_ROUTING) {
-      const result = compileProjection(spec({ mode: route.mode, coordinateSemantics: route.coordinateSemantics, representation: route.representation }));
+      const chosen = route.coordinateSemantics === 'GEODETIC' ? placeable : record;
+      const result = compileProjection(spec({ mode: route.mode, coordinateSemantics: route.coordinateSemantics, representation: route.representation }, chosen));
       expect(result.engine, route.note).toBe(route.engine);
-      expect(result.status).toBe(route.currentResult);
-      expect(result.records[0].canonicalId).toBe(record.canonicalId);
+      expect(result.status, route.note).toBe(route.currentResult);
+      expect(result.records[0].canonicalId).toBe(chosen.canonicalId);
       expect(Object.keys(result.nonclaims).sort()).toEqual([...PROJECTION_NONCLAIMS].sort());
       for (const key of PROJECTION_NONCLAIMS) expect(result.nonclaims[key]).toBe(false);
     }

@@ -36,7 +36,7 @@ The rail is shown as a process, read only from what it recorded:
 
 ## Slice three: the Earth Twin (`/earth`)
 
-Documented in [Earth Twin](EARTH_TWIN.md). The projection fabric's geodetic instrument on the same shell and inspector pattern: the globe is the surface, sticky beside a scrolling inspector from 1024 px and above it on narrow screens; the inspector says what the instrument is, what each layer is and where it comes from, what time it shows, what the corpus answered, which world signals are named and why none is on the globe, and what the current view's link is. It is keyless and offline by construction, and the browser test proves no request leaves the origin.
+Documented in [Earth Twin](EARTH_TWIN.md). The projection fabric's geodetic instrument on the same shell and inspector pattern: the globe is the surface, sticky beside a scrolling inspector from 1024 px and above it on narrow screens; the inspector says what the instrument is, what each layer is and where it comes from, what time it shows, what the corpus answered and where each declared position came from, which records are placed on the globe and which are not, which world signals are named and why none is on the globe, and what the current view's link is. Selection connects the views: choosing a record flies the camera to its declared position, and clicking a drawn point selects its record. It is keyless and offline by construction, and the browser test proves no request leaves the origin.
 
 ## What the design does not bend
 

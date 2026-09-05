@@ -41,6 +41,13 @@ test('desktop screenshots', async ({ page }) => {
   await page.getByTestId('earth-subsolar').filter({ hasText: 'computed' }).waitFor({ timeout: 15_000 });
   await page.waitForTimeout(1500);
   await page.screenshot({ path: `${OUT}/00j-earth-twin.png`, fullPage: false });
+  // The same twin with every placeable record drawn where its subject's own position record declares, looking at the loading-terminal berth.
+  await page.getByTestId('place-all').click();
+  await expect(page.getByTestId('place-summary')).toHaveAttribute('data-placed', /\d+/, { timeout: 60_000 });
+  await page.getByLabel('Record', { exact: true }).selectOption('REC-0204');
+  await expect(page.getByTestId('earth-camera')).toContainText('51.9497°, 4.0250°', { timeout: 20_000 });
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: `${OUT}/00k-earth-twin-placed.png`, fullPage: false });
   await page.goto('/cases');
   await page.getByRole('table', { name: 'Case queue' }).waitFor();
   await page.screenshot({ path: `${OUT}/01-case-queue.png`, fullPage: true });
