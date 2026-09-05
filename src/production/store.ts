@@ -273,6 +273,7 @@ export class LocalProductionStore {
       if (run.state === 'FAILED') {
         const last = run.stages[run.stages.length - 1];
         if (last.state !== 'FAILED' || last.code !== run.failure.code || run.stages.slice(0, -1).some((stage) => stage.state !== 'COMPLETED')) throw new Error();
+        this.validateFailedOutcome(run, intent);
         return;
       }
     }
@@ -325,6 +326,115 @@ export class LocalProductionStore {
       completed('CANDIDATE_ASSEMBLY', 'UNADMITTED_MEMBERSHIP_ASSEMBLED', [ref]); completed('BUILD_INSPECTION', 'HISTORICAL_INTEGRITY_RECOMPUTED', [ref]);
     } else throw new Error();
     if (localJson(expected) !== localJson(run.stages)) throw new Error();
+  }
+  private validateFailedOutcome(run: ProductionRun, intent: Intent) {
+    // A valid artifact digest is insufficient: every advertised output must
+    // belong to this request, and its completed prefix must be executable by
+    // this command. Transient I/O failures themselves are not replayable proof.
+    const request = intent.request;
+    const failure = run.failure!;
+    const terminal = run.stages[run.stages.length - 1].stage;
+    if (failure.code === 'INGEST_DISALLOWED' && (request.kind !== 'ACQUIRE' || terminal !== 'CAPTURE')) throw new Error();
+    if (failure.code === 'DERIVATION_DISALLOWED' &&
+        !((request.kind === 'NORMALIZE' && terminal === 'NORMALIZATION') ||
+          (request.kind === 'BUILD_CANDIDATES' && terminal === 'CANDIDATE_ASSEMBLY'))) throw new Error();
+    if (failure.code === 'MEMBER_NOT_ELIGIBLE' && (request.kind !== 'BUILD_CANDIDATES' || terminal !== 'CANDIDATE_ASSEMBLY')) throw new Error();
+    const equal = (left: unknown, right: unknown) => localJson(left) === localJson(right);
+    const completed = (stage: ProductionStageName, code: string, outputs: ProductionOutputRef[]): ProductionStage =>
+      ({ stage, state: 'COMPLETED', code, outputs });
+    const stages = (stage: ProductionStageName, prefix: ProductionStage[] = []) => {
+      if (!equal(run.stages, [...prefix, { stage, state: 'FAILED', code: failure.code, outputs: [] }])) throw new Error();
+    };
+    const own = (output: ProductionOutputRef) => {
+      if (!this.discoverRetained(intent).some((found) => equal(found, output))) throw new Error();
+    };
+    const sourceAcquisition = () => {
+      const source = this.source(request.source as ProductionRef);
+      const acquisition = this.acquisition(request.acquisition as ProductionRef);
+      if (source.adapter.id !== CARRIER_ADAPTER.id ||
+          !equal(source.policy, acquisition.request.manifest.sourceRegistration) ||
+          acquisition.capture.evidence.mediaType !== mediaType(source)) throw new Error();
+      this.purpose(this.corpus(source.corpus), request.purpose as string);
+      return { source, acquisition };
+    };
+    if (request.kind === 'REGISTER_CORPUS' || request.kind === 'REGISTER_SOURCE') {
+      stages('REGISTRATION');
+      // Publication can precede an unconfirmed lock-cleanup failure. No named
+      // output means no confirmed reference, not proof of config absence.
+      if (run.outputs.length !== 0) throw new Error();
+    } else if (request.kind === 'ACQUIRE') {
+      stages('CAPTURE');
+      if (run.outputs.length > 1) throw new Error();
+      const output = run.outputs[0];
+      if (output) {
+        if (failure.code !== 'STAGE_FAILED') throw new Error();
+        const content = request.content as { digest: string; byteLength: number };
+        if (output.kind === 'CONTENT') {
+          if (output.id !== content.digest || output.digest !== content.digest ||
+              this.intake.objects.get(content.digest)?.byteLength !== content.byteLength) throw new Error();
+        } else if (output.kind === 'ACQUISITION') {
+          own(output);
+          const source = this.source(request.source as ProductionRef);
+          const acquisition = this.acquisition(output);
+          if (acquisition.request.byteLength !== content.byteLength ||
+              acquisition.request.manifest.purpose !== request.purpose ||
+              acquisition.request.manifest.mediaType !== mediaType(source) ||
+              !equal(acquisition.request.manifest.sourceRegistration, source.policy)) throw new Error();
+        } else throw new Error();
+      }
+      if (failure.code === 'INGEST_DISALLOWED') {
+        const source = this.source(request.source as ProductionRef);
+        this.purpose(this.corpus(source.corpus), request.purpose as string);
+        const decision = evaluateSourceUse(source.policy, { requestId: `${run.id}:ingest`, registrationId: source.policy.registrationId,
+          operation: 'INGEST', audience: 'INTERNAL', purpose: request.purpose as string, requestedAt: intent.startedAt });
+        if (decision.state === 'ALLOWED') throw new Error();
+      }
+    } else if (request.kind === 'NORMALIZE') {
+      if (run.stages.length === 1) {
+        stages('EVIDENCE_INSPECTION');
+        if (run.outputs.length !== 0) throw new Error();
+      } else {
+        const acquisition = request.acquisition as ProductionRef;
+        const upstream = reference('ACQUISITION', acquisition.id, acquisition.digest);
+        stages('NORMALIZATION', [completed('EVIDENCE_INSPECTION', 'HISTORICAL_INTEGRITY_RECOMPUTED', [upstream])]);
+        if (run.outputs.length < 1 || run.outputs.length > 2 || !equal(run.outputs[0], upstream)) throw new Error();
+        if (run.outputs[1]) {
+          if (run.outputs[1].kind !== 'NORMALIZATION' || !['STAGE_FAILED', 'DEPENDENCY_INTEGRITY_FAILED'].includes(failure.code) ||
+              failure.additionalOutputRetention !== undefined) throw new Error();
+          sourceAcquisition(); own(run.outputs[1]);
+        }
+        if (failure.code === 'DERIVATION_DISALLOWED') {
+          const { source } = sourceAcquisition();
+          const decision = evaluateSourceUse(source.policy, { requestId: `${run.id}:derive`, registrationId: source.policy.registrationId,
+            operation: 'DERIVE', audience: 'INTERNAL', purpose: request.purpose as string, requestedAt: intent.startedAt });
+          if (decision.state === 'ALLOWED') throw new Error();
+        }
+      }
+    } else if (request.kind === 'BUILD_CANDIDATES') {
+      const members = request.members as ProductionRef[];
+      const last = run.outputs[run.outputs.length - 1];
+      const build = last?.kind === 'CANDIDATE_BUILD' ? last : undefined;
+      const retainedMembers = build ? run.outputs.slice(0, -1) : run.outputs;
+      if (retainedMembers.length > members.length || !equal(retainedMembers,
+        members.slice(0, retainedMembers.length).map((member) => reference('NORMALIZATION', member.id, member.digest)))) throw new Error();
+      if (build) {
+        if (retainedMembers.length !== members.length || failure.additionalOutputRetention !== undefined) throw new Error();
+        own(build);
+      }
+      if (run.stages.length === 1) {
+        stages('CANDIDATE_ASSEMBLY');
+        if (build && failure.code !== 'STAGE_FAILED') throw new Error();
+      } else {
+        // An unreadable published build is deliberately omitted from both
+        // reference lists. The stage is historical, not a verified artifact.
+        if (retainedMembers.length !== members.length || (!build && failure.additionalOutputRetention !== 'UNCONFIRMED')) throw new Error();
+        stages('BUILD_INSPECTION', [completed('CANDIDATE_ASSEMBLY', 'UNADMITTED_MEMBERSHIP_ASSEMBLED', build ? [build] : [])]);
+      }
+      if (failure.code === 'MEMBER_NOT_ELIGIBLE') {
+        const member = retainedMembers[retainedMembers.length - 1];
+        if (!member || this.normalizations.inspect(member.id)?.state !== 'QUARANTINED' || build) throw new Error();
+      }
+    } else throw new Error();
   }
   execute(input: unknown): ProductionResult {
     const command = parseProductionCommand(input); const request = prepared(command); const requestDigest = digest(request);
