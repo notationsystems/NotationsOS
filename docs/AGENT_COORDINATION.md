@@ -1,5 +1,7 @@
 # Agent and apparatus coordination
 
+Status update (2026-09-05): references below to six absences or no live connectors describe this document's earlier milestone. One bounded, operator-only FMCSA Company Census connector is now implemented for internal qualification; see [Local source connectors](LOCAL_SOURCE_CONNECTORS.md). It establishes neither recurring ingestion nor customer live feeds. All other authority, storage, identity, execution and verification boundaries below remain unchanged.
+
 Payload OS now has the first shared agent warehouse/stable and message board for assembling its apparatuses and agents. The stable records what each participant does and the contracts it consumes and produces. The board lets those participants share context, requests, handoffs, blockers, results and acknowledgements. Synastry is represented as the declared connections between those contracts, with incomplete inputs stated explicitly.
 
 These are shared Payload OS coordination facilities across Caravan, Tradewind and Landshark. The company's mandate and economic architecture remain defined in [Economic architecture](ECONOMIC_ARCHITECTURE.md). The corpus and API remain the data product; customer inference can run directly over that stream.

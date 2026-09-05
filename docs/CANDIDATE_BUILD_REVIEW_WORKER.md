@@ -1,5 +1,7 @@
 # Local candidate-build review worker
 
+Status update (2026-09-05): references below to six absences or no live connectors describe this document's earlier milestone. One bounded, operator-only FMCSA Company Census connector is now implemented for internal qualification; see [Local source connectors](LOCAL_SOURCE_CONNECTORS.md). It establishes neither recurring ingestion nor customer live feeds. All other authority, storage, identity, execution and verification boundaries below remain unchanged.
+
 Payload OS now connects the stable and message board to read-only inspection of an existing local Caravan candidate build. A manually started deterministic worker consumes one exact build reference, recomputes its stored dependencies and reports a bounded observation before acknowledging the request. It does not create a build, admit records, activate a release or execute a model.
 
 ```text

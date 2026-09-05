@@ -1,5 +1,7 @@
 # Local Caravan normalization
 
+Status update (2026-09-05): references below to six absences or no live connectors describe this document's earlier milestone. One bounded, operator-only FMCSA Company Census connector is now implemented for internal qualification; see [Local source connectors](LOCAL_SOURCE_CONNECTORS.md). It establishes neither recurring ingestion nor customer live feeds. All other authority, storage, identity, execution and verification boundaries below remain unchanged.
+
 Payload OS can now parse one bounded, locally acquired Carrier JSON record into a provenance-bearing candidate. This is an internal production step for Caravan, not a new customer product or a public API. It is separate from [local evidence intake](LOCAL_EVIDENCE_INTAKE.md): capture alone still produces no normalized record.
 
 ```text

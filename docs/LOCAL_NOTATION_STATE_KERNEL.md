@@ -1,5 +1,7 @@
 # Local notation state kernel
 
+Status update (2026-09-05): references below to six absences or no live connectors describe this document's earlier milestone. One bounded, operator-only FMCSA Company Census connector is now implemented for internal qualification; see [Local source connectors](LOCAL_SOURCE_CONNECTORS.md). It establishes neither recurring ingestion nor customer live feeds. All other authority, storage, identity, execution and verification boundaries below remain unchanged.
+
 The first state-kernel milestone is a small Rust command/history core consumed by the existing web frontend. It owns authored notation objects and explicit notation relationships in one local workspace. It does not own evidence, admit physical-economy corpus records, activate releases or merge canonical identities.
 
 ```text

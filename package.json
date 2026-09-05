@@ -17,6 +17,7 @@
     "agent:candidate-build-review": "esbuild scripts/candidate-build-review.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/candidate-build-review-agent.mjs --log-level=warning && node .stamp/candidate-build-review-agent.mjs",
     "evidence": "esbuild scripts/evidence.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/evidence.mjs --log-level=warning && node .stamp/evidence.mjs",
     "prebuild": "node scripts/earth-assets.mjs",
+    "source": "esbuild scripts/source.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/source.mjs --log-level=warning && node .stamp/source.mjs",
     "build": "next build && node scripts/check-state-kernel-traces.mjs",
     "start": "next start",
     "lint": "eslint",
