@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-test('earth twin: a keyless globe served from this origin, every layer with its source and state, the corpus asked for honestly, a view that is a link, and no request leaves the origin', async ({ page, baseURL }) => {
+test('earth twin: a keyless globe served from this origin, every layer with its source and state, the corpus asked for honestly, a view that is a link, and no request leaves the origin', async ({ page, baseURL }, testInfo) => {
   // Real CesiumJS on software WebGL, several camera flights and one request per record of the release: this test is slow by nature.
   test.slow();
   const origin = new URL(baseURL!).origin;
@@ -9,14 +9,23 @@ test('earth twin: a keyless globe served from this origin, every layer with its 
   const errors: string[] = [];
   page.on('request', (request) => { const url = new URL(request.url()); if (!['blob:', 'data:'].includes(url.protocol) && url.origin !== origin) external.push(request.url()); });
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/earth');
+  const navigation = await page.goto('/earth');
+  // Withheld metadata must never arrive in the document/RSC payload, not merely be hidden by the UI.
+  expect(await navigation!.text()).not.toMatch(/REC-0305|REC-0401|REC-0402/);
   await expect(page.getByRole('heading', { level: 2, name: 'Payload OS Earth Twin' })).toBeVisible();
   const status = page.getByTestId('twin-status');
   await expect(status).toHaveAttribute('data-state', 'READY', { timeout: 45_000 });
   await expect(page.getByTestId('earth-renderer')).toContainText('CesiumJS on');
   await expect(page.locator('.earth-canvas canvas')).toBeVisible();
+  const assetResponse = await page.request.get('/cesium/VERSION.json');
+  expect(assetResponse.ok()).toBe(true);
+  const assets = await assetResponse.json();
+  expect(assets.schema).toBe('payload.earth-assets.v1');
+  expect(assets.version).toBe('1.124.0');
+  expect(assets.digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+  expect(assets.files.some((file: { path: string }) => file.path === 'LICENSE.md')).toBe(true);
 
-  // Layers say what they are; only the bundled surface and the computed sun draw anything.
+  // Layers say what they are; only the bundled surface, the computed sun and the declared corpus layer draw anything.
   await expect(page.locator('[data-layer="surface"][data-state="BUNDLED"]')).toHaveCount(1);
   await expect(page.locator('[data-layer="sun"][data-state="COMPUTED"]')).toHaveCount(1);
   await expect(page.locator('[data-layer="corpus"][data-state="FIXTURE"]')).toHaveCount(1);
@@ -34,6 +43,7 @@ test('earth twin: a keyless globe served from this origin, every layer with its 
   const select = page.getByLabel('Record', { exact: true });
   const options = await select.locator('option').allTextContents();
   expect(options.length).toBeGreaterThan(1);
+  expect(options.join('\n')).not.toMatch(/REC-0305|REC-0401|REC-0402/);
   await select.selectOption({ index: options.length - 1 });
   await expect(projection).toHaveAttribute('data-outcome', /UNAVAILABLE|REFUSED/);
   const after = await page.getByTestId('earth-valid-at').textContent();
@@ -41,6 +51,7 @@ test('earth twin: a keyless globe served from this origin, every layer with its 
 
   // Time is computed, not observed.
   await expect(page.getByTestId('earth-subsolar')).toContainText('computed by CesiumJS', { timeout: 15_000 });
+  await page.screenshot({ path: testInfo.outputPath('earth-twin.png') });
 
   // A view is a link: a flight ends with the camera in the hash; the global preset is the global hash; a link restores its view.
   const global = '#v=0.0000,0.0000,26000000,0.0,-90.0';
@@ -82,15 +93,14 @@ test('earth twin: a keyless globe served from this origin, every layer with its 
   await expect(page.getByTestId('earth-camera')).toContainText('51.9497°, 4.0250° · 1,000 km', { timeout: 20_000 });
   await expect.poll(async () => new URL(page.url()).hash, { timeout: 20_000 }).toMatch(/^#v=4\.0250,51\.9497,1000000,/);
 
-  // Every record of the release, each at its own validity start: two lots declare a position, so their records are placed; samples, identity links and retracted inventory are not, nothing is inferred across the sample-of-lot link, and the records this viewer may not select stay refused by the compiler rather than drawn.
+  // Every record offered, each at its own validity start: two lots declare a position, so their records are placed; samples, identity links and retracted inventory are not, and nothing is inferred across the sample-of-lot link. The records this viewer may not select were never offered, so the compiler refuses none.
   await page.getByTestId('place-all').click();
   const summary = page.getByTestId('place-summary');
   await expect(summary).toHaveAttribute('data-placed', '9', { timeout: 60_000 });
   await expect(summary).toHaveAttribute('data-unplaced', '9');
-  await expect(summary).toHaveAttribute('data-refused', '3');
+  await expect(summary).toHaveAttribute('data-refused', '0');
   await expect(summary).toContainText('9 placed at 9 positions');
   await expect(summary).toContainText('REC-0101, REC-0102, REC-0111, REC-0112, REC-0201, REC-0202, REC-0301, REC-0411, REC-0412');
-  await expect(summary).toContainText('REC-0305 SELECTION_NOT_AVAILABLE');
   await expect(page.getByTestId('earth-placed')).toHaveAttribute('data-count', '9');
   await expect(page.locator('[data-placed-record]')).toHaveCount(9);
   await expect(page.locator('[data-placed-record="REC-0306"]')).toContainText('LOT-7C-104');

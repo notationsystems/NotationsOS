@@ -13,7 +13,7 @@ export interface EarthTwinProps {
   release: { releaseId: string; corpusId: string; knownAt: string };
   source: ProjectionSpec['source'];
   records: EarthRecord[];
-  /** Whether public/cesium carries the engine's module, workers and bundled imagery (scripts/earth-assets.mjs). */
+  /** Whether the local engine asset package passed verification (scripts/earth-assets.mjs). */
   assetsReady: boolean;
   /** How the engine is obtained; the default loads its prebuilt module from this origin. Tests inject a fake. */
   loadEngine?: () => Promise<CesiumModule>;
@@ -30,6 +30,9 @@ export async function loadEngineFromOrigin(): Promise<CesiumModule> {
 }
 
 type Status = { state: 'LOADING' } | { state: 'READY'; renderer: string } | { state: 'UNAVAILABLE'; reason: string; remedy: string };
+type EngineInstance = { id: symbol; Cesium: CesiumModule; viewer: Viewer };
+type SunPoint = { longitude: number; latitude: number; precise: boolean };
+const ASSETS_UNAVAILABLE: Status = { state: 'UNAVAILABLE', reason: 'The local engine asset package is missing or failed verification.', remedy: 'Run npm run earth:assets (it runs before dev and build), then reload. If preparation fails, preserve the existing bundle and follow docs/EARTH_TWIN.md.' };
 /** What is drawn for one record: the positions the compiler resolved for it, with the record's own title and validity start. */
 interface Placement { title: string; validFrom: string; positions: GeodeticPosition[] }
 interface PlaceSummary { placed: number; positions: number; unplaced: string[]; refused: Array<{ recordId: string; code: string }> }
@@ -78,13 +81,18 @@ function readView(Cesium: CesiumModule, viewer: Viewer): TwinView {
 export function EarthTwin({ release, source, records, assetsReady, loadEngine = loadEngineFromOrigin }: EarthTwinProps) {
   const container = useRef<HTMLDivElement>(null);
   const credits = useRef<HTMLDivElement>(null);
-  const engine = useRef<{ Cesium: CesiumModule; viewer: Viewer } | null>(null);
-  const [status, setStatus] = useState<Status>(assetsReady ? { state: 'LOADING' } : { state: 'UNAVAILABLE', reason: 'The engine’s workers and bundled imagery are not under /cesium on this origin.', remedy: 'Run npm run earth:assets (it runs before dev and build), then reload.' });
+  const engine = useRef<EngineInstance | null>(null);
+  const session = useMemo(() => ({ assetsReady, loadEngine }), [assetsReady, loadEngine]);
+  const [runtime, setRuntime] = useState<{ session: typeof session; status: Status; instance: symbol | null } | null>(null);
+  // A replacement is loading immediately, before its effect runs. A completed
+  // result from another asset/loader session can never make this session ready.
+  const status: Status = !assetsReady ? ASSETS_UNAVAILABLE : runtime?.session === session ? runtime.status : { state: 'LOADING' };
+  const activeInstance = status.state === 'READY' && runtime?.session === session ? runtime.instance : null;
   const [view, setView] = useState<TwinView>(GLOBAL_VIEW);
   const [linkable, setLinkable] = useState(true);
   const [recordId, setRecordId] = useState(records[0]?.recordId ?? '');
   const [answer, setAnswer] = useState<{ key: string; outcome: ProjectionOutcome } | null>(null);
-  const [sun, setSun] = useState<{ longitude: number; latitude: number; precise: boolean } | null>(null);
+  const [sunResult, setSunResult] = useState<{ instance: symbol; validAt: string; point: SunPoint | null } | null>(null);
   const [copied, setCopied] = useState('');
   const [placements, setPlacements] = useState<Record<string, Placement>>({});
   const [placing, setPlacing] = useState<{ done: number; total: number } | null>(null);
@@ -96,25 +104,44 @@ export function EarthTwin({ release, source, records, assetsReady, loadEngine = 
   useEffect(() => { selected.current = recordId; }, [recordId]);
   const record = records.find((r) => r.recordId === recordId);
   const clock = useMemo(() => ({ knownAt: release.knownAt, validAt: record?.validFrom ?? release.knownAt }), [release.knownAt, record?.validFrom]);
-  const askKey = record ? `${record.recordId}@${clock.validAt}` : '';
+  // The serialized request is both the wire body and its identity. Record ID
+  // and world time alone do not bind knowledge time or the release commitments.
+  const askKey = record ? JSON.stringify(globeSpec(source, record.recordId, clock)) : '';
   const outcome: ProjectionOutcome | { state: 'ASKING' } | { state: 'NONE' } = !record ? { state: 'NONE' } : answer?.key === askKey ? answer.outcome : { state: 'ASKING' };
+  const sun = sunResult?.instance === activeInstance && sunResult?.validAt === clock.validAt ? sunResult.point : null;
+  const worldTime = useRef(clock.validAt);
+  // Initialization can finish after a record changes. Publish READY only after
+  // assigning the most recent committed world time, not the loader's old one.
+  useEffect(() => { worldTime.current = clock.validAt; }, [clock.validAt]);
 
   // Mount the engine once the assets are known to be on this origin; tear it down with the page.
   useEffect(() => {
-    if (!assetsReady || !container.current) return;
+    if (!session.assetsReady || !container.current) return;
     let cancelled = false;
     let viewer: Viewer | undefined;
+    let instance: EngineInstance | null = null;
+    let removeMoveEnd: (() => void) | undefined;
+    const isCurrent = () => !cancelled && instance !== null && engine.current === instance;
     const onHashChange = () => {
-      const current = engine.current;
+      const current = instance;
       const target = parseView(window.location.hash);
-      if (!current || !target) return;
+      if (!isCurrent() || !current || !target) return;
       current.viewer.camera.flyTo({ destination: current.Cesium.Cartesian3.fromDegrees(target.longitude, target.latitude, target.height), orientation: { heading: current.Cesium.Math.toRadians(target.heading), pitch: current.Cesium.Math.toRadians(target.pitch), roll: 0 }, duration: 0 });
       setView(target);
+    };
+    const dispose = () => {
+      window.removeEventListener('hashchange', onHashChange);
+      removeMoveEnd?.();
+      removeMoveEnd = undefined;
+      if (engine.current === instance) engine.current = null;
+      const ownedViewer = viewer;
+      viewer = undefined;
+      ownedViewer?.destroy();
     };
     (async () => {
       try {
         (window as unknown as { CESIUM_BASE_URL: string }).CESIUM_BASE_URL = EARTH_ENGINE.assetsPath;
-        const Cesium = await loadEngine();
+        const Cesium = await session.loadEngine();
         if (cancelled || !container.current) return;
         Cesium.Ion.defaultAccessToken = '';
         const imagery = await Cesium.TileMapServiceImageryProvider.fromUrl(Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII'));
@@ -127,13 +154,15 @@ export function EarthTwin({ release, source, records, assetsReady, loadEngine = 
         });
         viewer.scene.globe.enableLighting = true;
         viewer.clock.shouldAnimate = false;
-        engine.current = { Cesium, viewer };
+        viewer.clock.currentTime = Cesium.JulianDate.fromIso8601(worldTime.current);
+        instance = { id: Symbol('earth-viewer'), Cesium, viewer };
+        engine.current = instance;
         const initial = parseView(window.location.hash) ?? GLOBAL_VIEW;
         viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(initial.longitude, initial.latitude, initial.height), orientation: { heading: Cesium.Math.toRadians(initial.heading), pitch: Cesium.Math.toRadians(initial.pitch), roll: 0 } });
         setView(initial);
-        viewer.camera.moveEnd.addEventListener(() => {
-          if (!engine.current) return;
-          const next = readView(Cesium, engine.current.viewer);
+        removeMoveEnd = viewer.camera.moveEnd.addEventListener(() => {
+          if (!isCurrent() || !instance) return;
+          const next = readView(Cesium, instance.viewer);
           setView(next);
           const hash = formatView(next);
           const ok = parseView(hash) !== null;
@@ -144,8 +173,8 @@ export function EarthTwin({ release, source, records, assetsReady, loadEngine = 
         window.addEventListener('hashchange', onHashChange);
         // A point on the globe is a record: clicking it selects the record it was drawn for.
         viewer.screenSpaceEventHandler.setInputAction((movement: { position: import('cesium').Cartesian2 }) => {
-          const current = engine.current;
-          if (!current) return;
+          if (!isCurrent() || !instance) return;
+          const current = instance;
           const picked = current.viewer.scene.pick(movement.position) as { id?: { id?: unknown } } | undefined;
           const id = picked?.id?.id;
           const ids = typeof id === 'string' ? drawn.current.get(id) : undefined;
@@ -154,28 +183,29 @@ export function EarthTwin({ release, source, records, assetsReady, loadEngine = 
         const gl = viewer.canvas.getContext('webgl2') ?? viewer.canvas.getContext('webgl');
         const info = gl?.getExtension('WEBGL_debug_renderer_info');
         const renderer = gl && info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : 'WebGL';
-        setStatus({ state: 'READY', renderer });
+        setRuntime({ session, status: { state: 'READY', renderer }, instance: instance.id });
       } catch (failure) {
-        setStatus({ state: 'UNAVAILABLE', reason: failure instanceof Error ? failure.message : 'The engine could not start.', remedy: 'WebGL must be available in this browser and the engine assets under /cesium. Nothing else is shown in the globe’s place.' });
+        dispose();
+        if (!cancelled) setRuntime({ session, instance: null, status: { state: 'UNAVAILABLE', reason: failure instanceof Error ? failure.message : 'The engine could not start.', remedy: 'WebGL must be available in this browser and the engine assets under /cesium. Nothing else is shown in the globe’s place.' } });
       }
     })();
-    return () => { cancelled = true; window.removeEventListener('hashchange', onHashChange); engine.current = null; viewer?.destroy(); };
-  }, [assetsReady, loadEngine]);
+    return () => { cancelled = true; dispose(); };
+  }, [session]);
 
   // The twin's world time drives the engine's clock and lighting, and the sub-solar point follows.
   useEffect(() => {
     const current = engine.current;
-    if (!current || status.state !== 'READY') return;
+    if (!current || current.id !== activeInstance) return;
     const { Cesium, viewer } = current;
     const time = Cesium.JulianDate.fromIso8601(clock.validAt);
     viewer.clock.currentTime = time;
     viewer.scene.requestRender();
-    setSun(subSolarPoint(Cesium, clock.validAt));
+    setSunResult({ instance: current.id, validAt: clock.validAt, point: subSolarPoint(Cesium, clock.validAt) });
     // The precise Earth-orientation data is served from this origin with the engine; once it has loaded, the point is recomputed exactly.
     let stale = false;
-    Cesium.Transforms.preloadIcrfFixed(new Cesium.TimeInterval({ start: time, stop: time })).then(() => { if (!stale) setSun(subSolarPoint(Cesium, clock.validAt)); }).catch(() => { /* The approximation stands and says so. */ });
+    Cesium.Transforms.preloadIcrfFixed(new Cesium.TimeInterval({ start: time, stop: time })).then(() => { if (!stale && engine.current === current) setSunResult({ instance: current.id, validAt: clock.validAt, point: subSolarPoint(Cesium, clock.validAt) }); }).catch(() => { /* The approximation stands and says so. */ });
     return () => { stale = true; };
-  }, [clock.validAt, status.state]);
+  }, [clock.validAt, activeInstance]);
 
   const flyTo = useCallback((target: TwinView) => {
     const current = engine.current;
@@ -184,33 +214,33 @@ export function EarthTwin({ release, source, records, assetsReady, loadEngine = 
     current.viewer.camera.flyTo({ destination: current.Cesium.Cartesian3.fromDegrees(target.longitude, target.latitude, target.height), orientation: { heading: current.Cesium.Math.toRadians(target.heading), pitch: current.Cesium.Math.toRadians(target.pitch), roll: 0 }, duration: reduced ? 0 : 1.2 });
   }, []);
 
-  // The corpus is asked for one record on the globe under the release's own commitments.
+  // The corpus is asked for one record on the globe under the release's own commitments. What it answers with is placed and drawn; nothing else is.
   useEffect(() => {
-    if (!record) return;
+    if (!askKey || !record) return;
     const controller = new AbortController();
-    const key = `${record.recordId}@${clock.validAt}`;
-    fetch('/api/projections/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(globeSpec(source, record.recordId, clock)), signal: controller.signal, cache: 'no-store' })
+    const key = askKey;
+    const asked = { recordId: record.recordId, title: record.title, validFrom: record.validFrom };
+    fetch('/api/projections/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: key, signal: controller.signal, cache: 'no-store' })
       .then(async (response) => {
         const body = await response.json().catch(() => ({}));
         if (controller.signal.aborted) return;
         const outcome = projectionOutcome(response.status, body);
         setAnswer({ key, outcome });
         if (outcome.state === 'READY') {
-          setPlacements((current) => ({ ...current, [record.recordId]: { title: record.title, validFrom: record.validFrom, positions: outcome.positions } }));
+          setPlacements((current) => ({ ...current, [asked.recordId]: { title: asked.title, validFrom: asked.validFrom, positions: outcome.positions } }));
           if (flyOnResolve.current && outcome.positions[0]) { flyOnResolve.current = false; flyTo({ longitude: outcome.positions[0].point.longitude, latitude: outcome.positions[0].point.latitude, ...PLACEMENT_VIEW }); }
         } else {
-          setPlacements((current) => { if (!(record.recordId in current)) return current; const next = { ...current }; delete next[record.recordId]; return next; });
+          setPlacements((current) => { if (!(asked.recordId in current)) return current; const next = { ...current }; delete next[asked.recordId]; return next; });
         }
       })
       .catch(() => { if (!controller.signal.aborted) setAnswer({ key, outcome: { state: 'REFUSED', code: 'PROJECTION_UNAVAILABLE', detail: 'The projection service could not be reached on this origin.' } }); });
     return () => controller.abort();
-  }, [record, source, clock, flyTo]);
-
+  }, [askKey, record, flyTo]);
 
   // Everything placed is drawn: one point per declared position, coloured by the declaring source's interest, its stated uncertainty as a ring, the records placed there as the label.
   useEffect(() => {
     const current = engine.current;
-    if (!current || status.state !== 'READY') return;
+    if (!current || current.id !== activeInstance) return;
     const { Cesium, viewer } = current;
     const groups = new Map<string, { position: GeodeticPosition; records: Array<{ recordId: string; title: string }> }>();
     for (const [recordId, placement] of Object.entries(placements)) {
@@ -235,7 +265,7 @@ export function EarthTwin({ release, source, records, assetsReady, loadEngine = 
       });
     }
     viewer.scene.requestRender();
-  }, [placements, status.state]);
+  }, [placements, activeInstance]);
 
   /** Ask the compiler for every record of the release, each at its own validity start, and draw all that can be placed. Nothing is placed by anything but its own subject's declaration. */
   async function placeAll() {
