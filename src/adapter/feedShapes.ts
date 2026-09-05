@@ -29,6 +29,7 @@ export function rightsPayload(rights: RightsSchedule | undefined) {
   return {
     sourceId: rights.sourceId,
     sourceName: rights.sourceName,
+    materialClass: rights.materialClass,
     licence: rights.licence,
     permittedUses: rights.permittedUses,
     nonUse: rights.nonUse,

@@ -14,13 +14,16 @@
     "check": "npm run typecheck && npm run lint && npm test",
     "e2e": "playwright test",
     "screenshots": "playwright test --project=screenshots",
-    "stamp:digests": "esbuild scripts/stamp-digests.entry.ts --bundle --platform=node --format=esm --alias:@=./src --outfile=.stamp/stamp.mjs --log-level=warning && node .stamp/stamp.mjs"
+    "stamp:digests": "esbuild scripts/stamp-digests.entry.ts --bundle --platform=node --format=esm --alias:@=./src --outfile=.stamp/stamp.mjs --log-level=warning && node .stamp/stamp.mjs",
+    "mcp": "esbuild src/mcp/server.ts --bundle --platform=node --format=esm --alias:@=./src --outfile=.stamp/mcp.mjs --log-level=warning --banner:js=\"import { createRequire } from \\\"module\\\"; const require = createRequire(import.meta.url);\" && node .stamp/mcp.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "lucide-react": "1.14.0",
     "next": "16.2.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

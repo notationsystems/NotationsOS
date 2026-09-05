@@ -44,7 +44,7 @@ export async function releasePayload(releaseId: string) {
       build: release.build,
       coverage: release.coverage,
       note: release.note,
-      sources: release.sources.map((s) => ({ sourceId: s.sourceId, sourceName: s.sourceName, licence: s.licence, permittedUses: s.permittedUses, nonUse: s.nonUse, redistribution: s.redistribution, attributionRequired: s.attributionRequired })),
+      sources: release.sources.map((s) => ({ sourceId: s.sourceId, sourceName: s.sourceName, materialClass: s.materialClass, licence: s.licence, permittedUses: s.permittedUses, nonUse: s.nonUse, redistribution: s.redistribution, attributionRequired: s.attributionRequired })),
       certification: release.certification,
       governance: corpus.governance,
       links: { manifest: `/api/v1/releases/${release.releaseId}/manifest`, records: `/api/v1/releases/${release.releaseId}/records`, retractions: `/api/v1/retractions?since=${encodeURIComponent(release.supersedesReleaseId ? (corpus.releases.find((r) => r.releaseId === release.supersedesReleaseId)?.knownAt ?? '') : '')}` },

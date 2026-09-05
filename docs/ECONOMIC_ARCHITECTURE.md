@@ -1,32 +1,50 @@
 # Economic architecture
 
-Authoritative positioning, as set by the founder. Every other document and every user-facing string in this repository is subordinate to it.
+Authoritative positioning, as set by the founder. Every other document and every user-facing string in this repository is subordinate to it. The statement below (2026-09-05) supersedes the earlier formulation, which is kept beneath it for the detail it adds.
 
 ## The firm
 
-Notation Systems builds provenance-bearing computational corpora: governed, time-bounded information inventory that can be inspected, computed against, corrected, and distributed with its evidence, method lineage, rights, uncertainty, and release history intact.
+Notation Systems is a systems and intelligence firm for the physical economy. It builds computational representations of physical systems from authorized geospatial, remote-sensing, operational, and scientific source material.
 
-The firm monetizes this shared computational substrate through two operating businesses:
+Its internal production system turns that material into provenance-bearing computational corpora through acquisition, extraction, normalization, identity, ontology, computation, storage, indexing, verification, release, correction, and recall.
 
-1. **Data systems and intelligence products.** Notation Systems licenses computational corpora, APIs, feeds, decision workbenches, reports, and vertical applications built on those corpora.
-2. **Provenance-preserving compute.** The firm operates managed storage, models, simulations, agents, and computational workloads over authorized corpus releases, allowing customers to execute confidential work without losing lineage, policy, or recallability.
+The corpora are the finished information inventory. APIs, feeds, reports, workbenches, and MCP tools distribute it. Customers apply their own inference, models, agents, and workflows to the data streams.
 
-Over time, a separately governed principal-capital activity may deploy the firm's own capital using lawfully acquired and policy-permitted proprietary intelligence. This activity is distinct from customer products: it has separate information-access controls, capital allocation, risk management, reporting, and conflict governance. Customer evidence remains tenant-isolated; customer workloads remain confidential; proprietary strategies cannot draw on restricted customer information.
+## Customer categories
 
-The underlying production system is shared: source acquisition, normalization, identity resolution, ontology alignment, canonical state, scientific computation, indexing, verification, release certification, and correction. The customer-facing API, feed, report, agent, or workbench is not the finished good itself; it is the distribution mechanism for a certified corpus release.
+- Brokers
+- Asset and portfolio managers
+- Insurance and financing firms
 
-In this model, Notation Systems captures value by selling governed information, operating the computation that makes it useful, and, where legally and ethically permitted, selectively acting on its own intelligence.
+## Economic architecture
 
-Notation Systems builds computational corpora, operates the infrastructure that makes them useful, and selectively deploys proprietary capital against the intelligence they produce.
+```
+Build governed computational corpora
+→ distribute them as data systems and products
+→ host compute over authorized corpus releases
+→ separately govern any proprietary trading/speculation activity
+```
+
+Customer evidence, customer workloads, and proprietary-capital activity remain separated.
+
+## Product architecture
+
+```
+Notation Systems
+└─ Payload OS — shared information-production system
+   ├─ Caravan — logistics, freight, cargo, supply-chain movement
+   ├─ Tradewind — markets, instruments, pricing, risk
+   └─ Landshark — parcels, zoning, entitlements, development state
+```
+
+Payload OS is the shared production layer, not a fourth customer API. Caravan, Tradewind, and Landshark are the bounded domain products.
 
 ## The concise formulation
-
-Notation Systems builds provenance-bearing computational corpora, exposes them as durable data streams and APIs, and operates the compute systems that make those corpora useful.
 
 | Layer | Who supplies it |
 |---|---|
 | Corpus + API / feed | The product |
-| Inference, model, agent | Customer computation, or hosted computation on customer authority |
+| Inference, model, agent | Customer computation, or hosted computation over authorized releases |
 | Ruling, admission profile, case workbench | Optional application layer over the corpus |
 
 Providing the API is enough. The API exposes the governed substrate: point-in-time state, lineage, uncertainty, rights, corrections, and stable identity. A customer runs their own inference against the stream without receiving an opaque conclusion from Notation Systems. A ruling is one possible application built over the corpus, useful where a customer wants a prescribed control; it is not a requirement for value creation.
@@ -39,24 +57,36 @@ Providing the API is enough. The API exposes the governed substrate: point-in-ti
 - Provenance that survives downstream use, audit, and resale.
 - A customer can automate a decision against the feed without blindly trusting a black box.
 
-The manufacturing analogy makes the moat legible: scraping is extraction; it is not the business. The durable asset is the continuously maintained corpus plus its identity mappings, release history, corrections, and computable interfaces.
-
-## Product family
-
-Payload OS is the shared production and assurance layer. It is not a fourth public API. Caravan, Tradewind and Landshark are the bounded domain products a buyer purchases; a buyer should always know which domain product and which corpus release they are buying.
-
 ## Rules for this repository
 
 - Lead with data systems and compute. Public-facing text does not lead with principal capital.
 - Do not call any output a warrant. Ruling, assurance or admission decision describes what the current system can sell.
-- The honest present tense: this repository holds a fixture-only ruling workbench, an optional application over the corpus. It has no live source connectors, production storage or identity, deployed customer delivery, or completed pilot.
+- The honest present tense: this repository holds a demonstration corpus with its feed, MCP tools and a fixture-only ruling workbench. It has no live source connectors, production storage or identity, deployed customer delivery, managed execution, reports, or completed pilot.
+
+## Earlier formulation (2026-09-04), retained for detail
+
+Notation Systems builds provenance-bearing computational corpora: governed, time-bounded information inventory that can be inspected, computed against, corrected, and distributed with its evidence, method lineage, rights, uncertainty, and release history intact.
+
+The firm monetizes this shared computational substrate through two operating businesses:
+
+1. **Data systems and intelligence products.** Notation Systems licenses computational corpora, APIs, feeds, decision workbenches, reports, and vertical applications built on those corpora.
+2. **Provenance-preserving compute.** The firm operates managed storage, models, simulations, agents, and computational workloads over authorized corpus releases, allowing customers to execute confidential work without losing lineage, policy, or recallability.
+
+Over time, a separately governed principal-capital activity may deploy the firm's own capital using lawfully acquired and policy-permitted proprietary intelligence. This activity is distinct from customer products: it has separate information-access controls, capital allocation, risk management, reporting, and conflict governance. Customer evidence remains tenant-isolated; customer workloads remain confidential; proprietary strategies cannot draw on restricted customer information.
+
+The underlying production system is shared. The customer-facing API, feed, report, agent, or workbench is not the finished good itself; it is the distribution mechanism for a certified corpus release. The manufacturing analogy makes the moat legible: scraping is extraction; it is not the business. The durable asset is the continuously maintained corpus plus its identity mappings, release history, corrections, and computable interfaces.
 
 ## How this repository reflects it
 
 | Statement | Where it is implemented | Presence |
 |---|---|---|
 | Governed, time-bounded information inventory with evidence, method lineage, rights, uncertainty and release history intact | `src/domain/corpus.ts`, `src/fixtures/caravan/release.ts`; `/releases` | Demonstration fixture |
-| The shared production system: acquisition, normalization, identity resolution, ontology alignment, canonical state, scientific computation, indexing, verification, release certification, correction | `BuildRecord.stages` on every release; `/releases/:id` production record; `/product` | Demonstration fixture (stage records state what ran and what did not) |
+| The production system: acquisition, extraction, normalization, identity, ontology, computation, storage, indexing, verification, release, correction, recall | `ProductionStage` in `src/domain/corpus.ts`; `BuildRecord.stages` on every release; `/releases/:id` production record; `/product` | Demonstration fixture: storage is stated as not run, computation as not applicable |
+| Authorized geospatial, remote-sensing, operational and scientific source material | `RightsSchedule.materialClass`; the material column of the rights matrix; `/product` | Operational and scientific in the demonstration corpus; geospatial and remote sensing not represented, and stated so |
+| APIs, feeds, reports, workbenches and MCP tools distribute the inventory | `/api/v1` feed, `/stream`, `src/mcp/tools.ts` + `src/mcp/server.ts` (`npm run mcp`), the Caravan workbench | Feed, stream, MCP tools and workbench as fixture; reports absent |
+| Three customer categories: brokers, asset and portfolio managers, insurance and financing firms | `CUSTOMER_CATEGORIES` in `src/domain/product.ts`; `/product` | Stated; the Caravan fixture is broker-shaped |
+| The four-step economic architecture and the separation of customer evidence, customer workloads and proprietary-capital activity | `ECONOMIC_ARCHITECTURE` and `THESIS.separation` in `src/domain/product.ts`; `/product`; `Corpus.governance` | Stated; separation recorded as governance and prohibited uses |
+| The product architecture tree | `src/domain/domains.ts`; `/product` | Caravan as fixture; Tradewind and Landshark as disabled slots |
 | Certified release manifests | `src/fixtures/releaseManifest.ts`, `Certification` on every release, commitment stamped and drift-tested; `GET /api/v1/releases/:id/manifest` | Demonstration fixture; verification is internal recompute, never independent |
 | Push retractions when a fact changes | `Retraction`, `/retractions`, `GET /api/v1/retractions?since=` | Demonstration fixture |
 | As-of answers | `queryAsOf`, `/stream`, `GET /api/v1/releases/:id/as-of` | Demonstration fixture |

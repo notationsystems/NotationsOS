@@ -40,7 +40,7 @@ export function TopNav() {
       style={{ height: 'var(--topbar-h)', background: 'var(--bg-void)', borderColor: 'var(--border-default)' }}
     >
       <span className="flex items-baseline gap-2 shrink-0">
-        <Link href="/releases" className="font-semibold tracking-tight" style={{ color: 'var(--text-heading)' }} aria-label="Payload OS home">Payload OS</Link>
+        <Link href="/releases" className="font-semibold tracking-tight" style={{ color: 'var(--text-heading)' }} aria-label="Payload OS home" title="Payload OS — shared information-production system">Payload OS</Link>
         <Link href="/product" className="label-sm hidden sm:inline" aria-label="Notation Systems product model">Notation Systems</Link>
       </span>
       <nav aria-label="Primary" className="flex-1 min-w-0 overflow-x-auto">

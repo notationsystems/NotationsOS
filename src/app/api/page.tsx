@@ -4,6 +4,7 @@ import { getCorpusSource } from '@/adapter/corpusSource';
 import { asOfPayload, recordsPayload, releaseManifestPayload, releasesPayload, retractionsPayload, rulingManifestPayload } from '@/adapter/feed';
 import { FixtureBanner } from '@/components/primitives/FixtureBanner';
 import { Section } from '@/components/primitives/Section';
+import { MCP_TOOLS } from '@/mcp/tools';
 import { CopyButton } from '@/components/primitives/CopyButton';
 
 export const metadata: Metadata = { title: 'API' };
@@ -63,7 +64,7 @@ export default async function ApiPage() {
       <div className="p-3 sm:p-5 max-w-[1000px] mx-auto w-full flex flex-col gap-5">
         <header className="flex flex-col gap-1">
           <h1 className="m-0 text-[18px] font-semibold" style={{ color: 'var(--text-heading)' }}>API</h1>
-          <p className="m-0 text-[13px]" style={{ color: 'var(--text-secondary)' }}>The product is the corpus and its feed: releases, records with uncertainty and validity bounds, as-of answers, and push retractions. A customer applies their own inference to it. The endpoints below serve the committed demonstration corpus; every response says <span className="id">fixture_only: true</span> and names the release it was served from. Shapes are the product&apos;s; the data is synthetic.</p>
+          <p className="m-0 text-[13px]" style={{ color: 'var(--text-secondary)' }}>The corpora are the finished information inventory. APIs, feeds, reports, workbenches and MCP tools distribute it; this page is the API and the MCP tools. A customer applies their own inference, models, agents and workflows to the stream. The endpoints below serve the committed demonstration corpus; every response says <span className="id">fixture_only: true</span> and names the release it was served from. Shapes are the product&apos;s; the data is synthetic.</p>
         </header>
 
         <Section title="Endpoints" id="api-endpoints">
@@ -101,6 +102,22 @@ export default async function ApiPage() {
             <li>Poll <span className="id">/api/v1/retractions?since=&lt;cutoff&gt;</span>. A correction names the replacement record; a withdrawal names what to stop relying on and which rulings it touched.</li>
             <li>When a new release appears, re-run the same queries against it and compare. The earlier release still answers as it did.</li>
           </ol>
+        </Section>
+
+        <Section title="MCP tools" id="api-mcp">
+          <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>The same feed, exposed as tools for a model client. One logic path: each tool wraps the payload the HTTP endpoint serves. A refusal is a successful return with a remedy; tool errors are for malformed arguments only. Run with <span className="id">npm run mcp</span> (stdio; opens no port).</p>
+          <table className="ledger-table text-[12.5px]" aria-label="MCP tools">
+            <thead><tr><th scope="col">Tool</th><th scope="col">Arguments</th><th scope="col">Returns</th></tr></thead>
+            <tbody>
+              {MCP_TOOLS.map((t) => (
+                <tr key={t.name}>
+                  <td className="id">{t.name}</td>
+                  <td className="id">{Object.keys(t.shape).join(', ')}</td>
+                  <td>{t.description}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </Section>
 
         <Section title="Adapter contracts" id="api-contract" aside={<CopyButton value={`${CORPUS_CONTRACT}\n\n${CASE_CONTRACT}`} />}>

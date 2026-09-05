@@ -1,5 +1,5 @@
 import type { RightsSchedule } from '@/domain/corpus';
-import { PERMITTED_USES, USE_LABEL, isUsePermitted } from '@/domain/corpus';
+import { MATERIAL_LABEL, PERMITTED_USES, USE_LABEL, isUsePermitted } from '@/domain/corpus';
 
 /**
  * The intelligence-rights schedule as a matrix: every source against every
@@ -14,6 +14,7 @@ export function RightsMatrix({ sources }: { sources: RightsSchedule[] }) {
         <thead>
           <tr>
             <th scope="col">Source</th>
+            <th scope="col">Material</th>
             {PERMITTED_USES.map((u) => <th key={u} scope="col" className="text-center">{USE_LABEL[u]}</th>)}
             <th scope="col">Redistribution</th>
             <th scope="col">Attribution</th>
@@ -23,6 +24,7 @@ export function RightsMatrix({ sources }: { sources: RightsSchedule[] }) {
           {sources.map((s) => (
             <tr key={s.sourceId} data-source-id={s.sourceId}>
               <th scope="row" className="font-normal"><span className="id">{s.sourceId}</span><div style={{ color: 'var(--text-secondary)' }}>{s.sourceName}</div><div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{s.licence}</div></th>
+              <td data-material={s.materialClass}>{MATERIAL_LABEL[s.materialClass]}</td>
               {PERMITTED_USES.map((u) => {
                 const ok = isUsePermitted(s, u);
                 return (

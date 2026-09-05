@@ -72,11 +72,21 @@ test('the feed serves fixture-only JSON with release, bounds, refusals and retra
   expect(bad.status()).toBe(400);
 });
 
+test('the product page states the firm, the twelve stages, the three customer categories and the four-step economic architecture', async ({ page }) => {
+  await page.goto('/product');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('systems and intelligence firm for the physical economy');
+  await expect(page.locator('[data-stage]')).toHaveCount(12);
+  await expect(page.locator('[data-customer]')).toHaveCount(3);
+  await expect(page.locator('[data-step]')).toHaveCount(4);
+  await expect(page.getByLabel('Product architecture tree')).toContainText('Landshark — parcels, zoning, entitlements, development state');
+});
+
 test('a release page states certification, the production record and the rights matrix with trading prohibited', async ({ page }) => {
   await page.goto('/releases/REL-CAR-2026.09.01');
   await expect(page.getByTestId('certification')).toContainText('Certified release');
   await expect(page.getByTestId('certification')).toContainText('internal recompute');
-  await expect(page.getByRole('table', { name: 'Production record' })).toContainText('Release certification');
+  await expect(page.getByRole('table', { name: 'Production record' })).toContainText('Recall');
+  await expect(page.getByRole('table', { name: 'Production record' })).toContainText('Not run');
   const matrix = page.getByRole('table', { name: 'Intelligence-rights schedule' });
   await expect(matrix.locator('[data-use="trading"][data-permitted="true"]')).toHaveCount(0);
   await expect(matrix.locator('[data-use="proprietary_strategy"][data-permitted="true"]')).toHaveCount(0);

@@ -13,7 +13,7 @@
  * reaches a LOT only through an identity-link record supplied by evidence.
  * Lot 7C-104 has no such link in any release; lot 5B-221 does.
  */
-import type { Corpus, CorpusRecord, CorpusRelease, Retraction, RightsSchedule } from '@/domain/corpus';
+import type { Corpus, CorpusRecord, CorpusRelease, Retraction, RightsSchedule, StageRecord } from '@/domain/corpus';
 import { digestOf } from '../digestLookup';
 
 const CORPUS_ID = 'caravan.specialty-cargo';
@@ -21,13 +21,13 @@ const AUTH = 'payload-os-demo';
 const uri = (kind: string, local: string) => `notation://${kind}/${AUTH}/${local}`;
 
 export const CARAVAN_SOURCES: RightsSchedule[] = [
-  { sourceId: 'northgate-lims', sourceName: 'Northgate Inspection Services LIMS', licence: 'Inspection-certificate licence (demonstration)', permittedUses: ['acquisition', 'normalization', 'customer_delivery', 'aggregation'], nonUse: ['No model training on certificate content', 'No proprietary use'], redistribution: 'licensed', attributionRequired: true, producerId: 'P-PRODUCER-NORTHGATE' },
-  { sourceId: 'port-weighbridge', sourceName: 'Port weighbridge operator', licence: 'Weight-ticket data licence (demonstration)', permittedUses: ['acquisition', 'normalization', 'customer_delivery', 'aggregation', 'internal_research'], nonUse: ['No proprietary use'], redistribution: 'licensed', attributionRequired: false, producerId: 'P-PRODUCER-WEIGHBRIDGE' },
-  { sourceId: 'terminal-weighbridge', sourceName: 'Terminal weighbridge', licence: 'Weight-ticket data licence (demonstration)', permittedUses: ['acquisition', 'normalization', 'customer_delivery', 'aggregation', 'internal_research'], nonUse: ['No proprietary use'], redistribution: 'licensed', attributionRequired: false, producerId: 'P-PRODUCER-TERMINAL' },
-  { sourceId: 'blue-anchor-docs', sourceName: 'Blue Anchor Lines documents', licence: 'Carrier document access, named parties (demonstration)', permittedUses: ['acquisition', 'normalization', 'customer_delivery'], nonUse: ['No aggregation across carriers', 'No model training', 'No proprietary use'], redistribution: 'licensed', attributionRequired: true, producerId: 'P-PRODUCER-BLUEANCHOR' },
-  { sourceId: 'port-custody-system', sourceName: 'Port custody operator system', licence: 'Custody-record access (demonstration)', permittedUses: ['acquisition', 'normalization', 'customer_delivery', 'aggregation'], nonUse: ['No proprietary use'], redistribution: 'licensed', attributionRequired: false, producerId: 'P-PRODUCER-PCO' },
-  { sourceId: 'meridian-yard-log', sourceName: 'Meridian Origination yard log (claimant-supplied)', licence: 'Claimant submission terms (demonstration)', permittedUses: ['acquisition', 'normalization', 'customer_delivery'], nonUse: ['No aggregation', 'No model training', 'No internal research', 'No proprietary use'], redistribution: 'licensed', attributionRequired: true, producerId: 'P-CLAIMANT-MERIDIAN' },
-  { sourceId: 'harbourline-deals', sourceName: 'Harbourline Brokerage deal terms', licence: 'Sponsor private material', permittedUses: ['acquisition', 'normalization', 'internal_research'], nonUse: ['No customer delivery', 'No aggregation', 'No model training', 'No redistribution', 'No proprietary use'], redistribution: 'internal_only', attributionRequired: false, producerId: 'P-SPONSOR-HARBOURLINE' },
+  { sourceId: 'northgate-lims', materialClass: 'scientific', sourceName: 'Northgate Inspection Services LIMS', licence: 'Inspection-certificate licence (demonstration)', permittedUses: ['acquisition', 'normalization', 'customer_delivery', 'aggregation'], nonUse: ['No model training on certificate content', 'No proprietary use'], redistribution: 'licensed', attributionRequired: true, producerId: 'P-PRODUCER-NORTHGATE' },
+  { sourceId: 'port-weighbridge', materialClass: 'operational', sourceName: 'Port weighbridge operator', licence: 'Weight-ticket data licence (demonstration)', permittedUses: ['acquisition', 'normalization', 'customer_delivery', 'aggregation', 'internal_research'], nonUse: ['No proprietary use'], redistribution: 'licensed', attributionRequired: false, producerId: 'P-PRODUCER-WEIGHBRIDGE' },
+  { sourceId: 'terminal-weighbridge', materialClass: 'operational', sourceName: 'Terminal weighbridge', licence: 'Weight-ticket data licence (demonstration)', permittedUses: ['acquisition', 'normalization', 'customer_delivery', 'aggregation', 'internal_research'], nonUse: ['No proprietary use'], redistribution: 'licensed', attributionRequired: false, producerId: 'P-PRODUCER-TERMINAL' },
+  { sourceId: 'blue-anchor-docs', materialClass: 'operational', sourceName: 'Blue Anchor Lines documents', licence: 'Carrier document access, named parties (demonstration)', permittedUses: ['acquisition', 'normalization', 'customer_delivery'], nonUse: ['No aggregation across carriers', 'No model training', 'No proprietary use'], redistribution: 'licensed', attributionRequired: true, producerId: 'P-PRODUCER-BLUEANCHOR' },
+  { sourceId: 'port-custody-system', materialClass: 'operational', sourceName: 'Port custody operator system', licence: 'Custody-record access (demonstration)', permittedUses: ['acquisition', 'normalization', 'customer_delivery', 'aggregation'], nonUse: ['No proprietary use'], redistribution: 'licensed', attributionRequired: false, producerId: 'P-PRODUCER-PCO' },
+  { sourceId: 'meridian-yard-log', materialClass: 'operational', sourceName: 'Meridian Origination yard log (claimant-supplied)', licence: 'Claimant submission terms (demonstration)', permittedUses: ['acquisition', 'normalization', 'customer_delivery'], nonUse: ['No aggregation', 'No model training', 'No internal research', 'No proprietary use'], redistribution: 'licensed', attributionRequired: true, producerId: 'P-CLAIMANT-MERIDIAN' },
+  { sourceId: 'harbourline-deals', materialClass: 'operational', sourceName: 'Harbourline Brokerage deal terms', licence: 'Sponsor private material', permittedUses: ['acquisition', 'normalization', 'internal_research'], nonUse: ['No customer delivery', 'No aggregation', 'No model training', 'No redistribution', 'No proprietary use'], redistribution: 'internal_only', attributionRequired: false, producerId: 'P-SPONSOR-HARBOURLINE' },
 ];
 
 const REL_1 = 'REL-CAR-2026.08.11';
@@ -115,22 +115,30 @@ const BUILT_AT_2026_08_25 = '2026-08-26T09:35:00Z';
 const INPUTS_2026_08_25 = [{ label: 'terminal-weighbridge tickets to 2026-08-25', sha256: digestOf('artifact:EV-WEIGHT-WB-2277') }, { label: 'port-weighbridge tickets to 2026-08-26', sha256: digestOf('artifact:EV-WEIGHT-WB-2291') }, { label: 'northgate-lims export 2026-08-26', sha256: digestOf('artifact:EV-CERT-NIS-4418') }, { label: 'port-custody-system to 2026-08-18', sha256: digestOf('artifact:EV-CUSTODY-PCO-5102') }];
 const BUILT_AT_2026_09_01 = '2026-09-01T12:05:00Z';
 const INPUTS_2026_09_01 = [{ label: 'blue-anchor-docs to 2026-08-28', sha256: digestOf('artifact:EV-BOL-BAL-77812') }, { label: 'meridian-yard-log to 2026-08-29', sha256: digestOf('artifact:EV-CUSTODY-MER-0931') }, { label: 'northgate-lims export 2026-09-01', sha256: digestOf('artifact:EV-CERT-NIS-4434') }];
+
+/** The twelve stages of the shared production system, as they ran for one build. Honest about what did not run. */
+function stagesFor(at: string, opts: { releasedAt: string; verification: string; correction?: string; recall?: string }): StageRecord[] {
+  return [
+    { stage: 'acquisition', status: 'COMPLETED', note: 'Artifacts read from the authorized sources named in the rights schedule (operational and scientific material only in this corpus); each content-addressed on ingest.', at },
+    { stage: 'extraction', status: 'COMPLETED', note: 'Bounded fields extracted from each artifact: declared identifiers, values, units, bases, sampling and weighing times. Raw bytes stay in the evidence store.', at },
+    { stage: 'normalization', status: 'COMPLETED', note: 'Units and bases normalized; transform quantity.gross.normalize 0.3.0 recorded as lineage where applied.', at },
+    { stage: 'identity', status: 'COMPLETED', note: 'Samples and lots kept distinct; a sample reaches a lot only through an identity-link record supplied by evidence. Similarity never merges.', at },
+    { stage: 'ontology', status: 'COMPLETED', note: 'Predicates aligned to the demonstration vocabulary (quantity.gross, condition.moisture, custody.*, identity.sample_of_lot).', at },
+    { stage: 'computation', status: 'NOT_APPLICABLE', note: 'No derived quantities in this corpus beyond unit normalization.' },
+    { stage: 'storage', status: 'NOT_RUN', note: 'No production storage: this repository holds committed fixtures. A live build writes canonical state to the release store here.' },
+    { stage: 'indexing', status: 'COMPLETED', note: 'Subject, predicate and time index built for as-of queries.', at },
+    { stage: 'verification', status: 'COMPLETED', note: opts.verification, at },
+    { stage: 'release', status: 'COMPLETED', note: 'Release manifest produced and committed; commitment recorded in the certification.', at: opts.releasedAt },
+    { stage: 'correction', status: opts.correction ? 'COMPLETED' : 'NOT_APPLICABLE', note: opts.correction ?? 'No correction issued against this release.', ...(opts.correction ? { at } : {}) },
+    { stage: 'recall', status: opts.recall ? 'COMPLETED' : 'NOT_APPLICABLE', note: opts.recall ?? 'No recall issued against this release.', ...(opts.recall ? { at } : {}) },
+  ];
+}
+
 export const CARAVAN_RELEASES: CorpusRelease[] = [
   release({
     releaseId: REL_1,
     knownAt: '2026-08-12T12:00:00Z',
-    build: { buildId: 'build-caravan-sc-2026.08.11', builtAt: BUILT_AT_2026_08_11, methodology: { methodologyId: 'payload-methodology', version: '0.1.0', status: 'research' }, inputDigests: INPUTS_2026_08_11, deterministic: true, stages: [
-      { stage: 'source_acquisition', status: 'COMPLETED', note: 'Artifacts read from the authorized sources named in the rights schedule; each content-addressed on ingest.', at: BUILT_AT_2026_08_11 },
-      { stage: 'normalization', status: 'COMPLETED', note: 'Units and bases normalized; transform quantity.gross.normalize 0.3.0 recorded as lineage where applied.', at: BUILT_AT_2026_08_11 },
-      { stage: 'identity_resolution', status: 'COMPLETED', note: 'Samples and lots kept distinct; a sample reaches a lot only through an identity-link record supplied by evidence. Similarity never merges.', at: BUILT_AT_2026_08_11 },
-      { stage: 'ontology_alignment', status: 'COMPLETED', note: 'Predicates aligned to the demonstration vocabulary (quantity.gross, condition.moisture, custody.*, identity.sample_of_lot).', at: BUILT_AT_2026_08_11 },
-      { stage: 'canonical_state', status: 'COMPLETED', note: 'Records materialized with both clocks, bounds, evidence class, rights and notation:// identity.', at: BUILT_AT_2026_08_11 },
-      { stage: 'scientific_computation', status: 'NOT_APPLICABLE', note: 'No derived quantities in this corpus beyond unit normalization.' },
-      { stage: 'indexing', status: 'COMPLETED', note: 'Subject and predicate index built for as-of queries.', at: BUILT_AT_2026_08_11 },
-      { stage: 'verification', status: 'COMPLETED', note: 'Every record recomputed from its artifact and compared; no divergence. Internal recompute only.', at: BUILT_AT_2026_08_11 },
-      { stage: 'release_certification', status: 'COMPLETED', note: 'Release manifest produced and committed; commitment recorded in the certification.', at: '2026-08-12T12:10:00Z' },
-      { stage: 'correction', status: 'NOT_APPLICABLE', note: 'No retraction issued against this release.' },
-    ] },
+    build: { buildId: 'build-caravan-sc-2026.08.11', builtAt: BUILT_AT_2026_08_11, methodology: { methodologyId: 'payload-methodology', version: '0.1.0', status: 'research' }, inputDigests: INPUTS_2026_08_11, deterministic: true, stages: stagesFor(BUILT_AT_2026_08_11, { releasedAt: '2026-08-12T12:10:00Z', verification: 'Every record recomputed from its artifact and compared; no divergence. Internal recompute only.' }) },
     certification: { status: 'CERTIFIED', certifiedAt: '2026-08-12T12:10:00Z', basis: 'Release digest recomputed by this system over the canonical record set and the manifest committed. Demonstration corpus: not audited, not independently verified.', verification: 'internal_recompute', manifestCommitment: digestOf('releaseManifest:REL-CAR-2026.08.11') },
     supersededByReleaseId: REL_2,
     status: 'SUPERSEDED',
@@ -140,18 +148,7 @@ export const CARAVAN_RELEASES: CorpusRelease[] = [
   release({
     releaseId: REL_2,
     knownAt: '2026-08-26T09:30:00Z',
-    build: { buildId: 'build-caravan-sc-2026.08.25', builtAt: BUILT_AT_2026_08_25, methodology: { methodologyId: 'payload-methodology', version: '0.1.0', status: 'research' }, inputDigests: INPUTS_2026_08_25, deterministic: true, stages: [
-      { stage: 'source_acquisition', status: 'COMPLETED', note: 'Artifacts read from the authorized sources named in the rights schedule; each content-addressed on ingest.', at: BUILT_AT_2026_08_25 },
-      { stage: 'normalization', status: 'COMPLETED', note: 'Units and bases normalized; transform quantity.gross.normalize 0.3.0 recorded as lineage where applied.', at: BUILT_AT_2026_08_25 },
-      { stage: 'identity_resolution', status: 'COMPLETED', note: 'Samples and lots kept distinct; a sample reaches a lot only through an identity-link record supplied by evidence. Similarity never merges.', at: BUILT_AT_2026_08_25 },
-      { stage: 'ontology_alignment', status: 'COMPLETED', note: 'Predicates aligned to the demonstration vocabulary (quantity.gross, condition.moisture, custody.*, identity.sample_of_lot).', at: BUILT_AT_2026_08_25 },
-      { stage: 'canonical_state', status: 'COMPLETED', note: 'Records materialized with both clocks, bounds, evidence class, rights and notation:// identity.', at: BUILT_AT_2026_08_25 },
-      { stage: 'scientific_computation', status: 'NOT_APPLICABLE', note: 'No derived quantities in this corpus beyond unit normalization.' },
-      { stage: 'indexing', status: 'COMPLETED', note: 'Subject and predicate index built for as-of queries.', at: BUILT_AT_2026_08_25 },
-      { stage: 'verification', status: 'COMPLETED', note: 'Every record recomputed from its artifact and compared; the draft-survey quantity was found superseded by a measured ticket and RET-0001 issued. Internal recompute only.', at: BUILT_AT_2026_08_25 },
-      { stage: 'release_certification', status: 'COMPLETED', note: 'Release manifest produced and committed; commitment recorded in the certification.', at: '2026-08-26T09:40:00Z' },
-      { stage: 'correction', status: 'COMPLETED', note: 'Retractions issued against this release applied; earlier releases untouched.', at: BUILT_AT_2026_08_25 },
-    ] },
+    build: { buildId: 'build-caravan-sc-2026.08.25', builtAt: BUILT_AT_2026_08_25, methodology: { methodologyId: 'payload-methodology', version: '0.1.0', status: 'research' }, inputDigests: INPUTS_2026_08_25, deterministic: true, stages: stagesFor(BUILT_AT_2026_08_25, { releasedAt: '2026-08-26T09:40:00Z', verification: 'Every record recomputed from its artifact and compared; the draft-survey quantity was found superseded by a measured ticket. Internal recompute only.', correction: 'RET-0001 issued: the lot 5B-221 gross quantity corrected from an estimated draft survey to a measured terminal ticket; the earlier release left as it stood.' }) },
     certification: { status: 'CERTIFIED', certifiedAt: '2026-08-26T09:40:00Z', basis: 'Release digest recomputed by this system over the canonical record set and the manifest committed. Demonstration corpus: not audited, not independently verified.', verification: 'internal_recompute', manifestCommitment: digestOf('releaseManifest:REL-CAR-2026.08.25') },
     supersedesReleaseId: REL_1,
     supersededByReleaseId: REL_3,
@@ -162,18 +159,7 @@ export const CARAVAN_RELEASES: CorpusRelease[] = [
   release({
     releaseId: REL_3,
     knownAt: '2026-09-01T12:00:00Z',
-    build: { buildId: 'build-caravan-sc-2026.09.01', builtAt: BUILT_AT_2026_09_01, methodology: { methodologyId: 'payload-methodology', version: '0.1.0', status: 'research' }, inputDigests: INPUTS_2026_09_01, deterministic: true, stages: [
-      { stage: 'source_acquisition', status: 'COMPLETED', note: 'Artifacts read from the authorized sources named in the rights schedule; each content-addressed on ingest.', at: BUILT_AT_2026_09_01 },
-      { stage: 'normalization', status: 'COMPLETED', note: 'Units and bases normalized; transform quantity.gross.normalize 0.3.0 recorded as lineage where applied.', at: BUILT_AT_2026_09_01 },
-      { stage: 'identity_resolution', status: 'COMPLETED', note: 'Samples and lots kept distinct; a sample reaches a lot only through an identity-link record supplied by evidence. Similarity never merges.', at: BUILT_AT_2026_09_01 },
-      { stage: 'ontology_alignment', status: 'COMPLETED', note: 'Predicates aligned to the demonstration vocabulary (quantity.gross, condition.moisture, custody.*, identity.sample_of_lot).', at: BUILT_AT_2026_09_01 },
-      { stage: 'canonical_state', status: 'COMPLETED', note: 'Records materialized with both clocks, bounds, evidence class, rights and notation:// identity.', at: BUILT_AT_2026_09_01 },
-      { stage: 'scientific_computation', status: 'NOT_APPLICABLE', note: 'No derived quantities in this corpus beyond unit normalization.' },
-      { stage: 'indexing', status: 'COMPLETED', note: 'Subject and predicate index built for as-of queries.', at: BUILT_AT_2026_09_01 },
-      { stage: 'verification', status: 'COMPLETED', note: 'Every record recomputed from its artifact and compared; certificate NIS-4390 found withdrawn by its producer and RET-0002 issued. Internal recompute only.', at: BUILT_AT_2026_09_01 },
-      { stage: 'release_certification', status: 'COMPLETED', note: 'Release manifest produced and committed; commitment recorded in the certification.', at: '2026-09-01T12:10:00Z' },
-      { stage: 'correction', status: 'COMPLETED', note: 'Retractions issued against this release applied; earlier releases untouched.', at: BUILT_AT_2026_09_01 },
-    ] },
+    build: { buildId: 'build-caravan-sc-2026.09.01', builtAt: BUILT_AT_2026_09_01, methodology: { methodologyId: 'payload-methodology', version: '0.1.0', status: 'research' }, inputDigests: INPUTS_2026_09_01, deterministic: true, stages: stagesFor(BUILT_AT_2026_09_01, { releasedAt: '2026-09-01T12:10:00Z', verification: 'Every record recomputed from its artifact and compared; certificate NIS-4390 found withdrawn by its producer. Internal recompute only.', recall: 'RET-0002 issued: certificate NIS-4390 and the sample-to-lot link it supported recalled; the ruling that relied on them (RUL-3F440-r1) named; earlier releases left as they stood.' }) },
     certification: { status: 'CERTIFIED', certifiedAt: '2026-09-01T12:10:00Z', basis: 'Release digest recomputed by this system over the canonical record set and the manifest committed. Demonstration corpus: not audited, not independently verified.', verification: 'internal_recompute', manifestCommitment: digestOf('releaseManifest:REL-CAR-2026.09.01') },
     supersedesReleaseId: REL_2,
     status: 'CURRENT',

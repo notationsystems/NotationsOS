@@ -56,10 +56,23 @@ export function isUsePermitted(rights: RightsSchedule, use: PermittedUse): boole
 
 export type Redistribution = 'internal_only' | 'licensed' | 'public';
 
+/** The classes of authorized source material the firm builds from. */
+export type MaterialClass = 'geospatial' | 'remote_sensing' | 'operational' | 'scientific';
+
+export const MATERIAL_CLASSES: readonly MaterialClass[] = ['geospatial', 'remote_sensing', 'operational', 'scientific'];
+
+export const MATERIAL_LABEL: Record<MaterialClass, string> = {
+  geospatial: 'Geospatial',
+  remote_sensing: 'Remote sensing',
+  operational: 'Operational',
+  scientific: 'Scientific',
+};
+
 /** The intelligence-rights schedule for one source. Absence of a use is a prohibition, never a default. */
 export interface RightsSchedule {
   sourceId: string;
   sourceName: string;
+  materialClass: MaterialClass;
   licence: string;
   permittedUses: PermittedUse[];
   /** Explicit non-use statements, verbatim. */
@@ -141,34 +154,38 @@ export interface Retraction {
 
 /* ── Releases ── */
 
-/** The shared production system, stage by stage. */
+/** The shared production system, stage by stage, as the firm names it. */
 export type ProductionStage =
-  | 'source_acquisition'
+  | 'acquisition'
+  | 'extraction'
   | 'normalization'
-  | 'identity_resolution'
-  | 'ontology_alignment'
-  | 'canonical_state'
-  | 'scientific_computation'
+  | 'identity'
+  | 'ontology'
+  | 'computation'
+  | 'storage'
   | 'indexing'
   | 'verification'
-  | 'release_certification'
-  | 'correction';
+  | 'release'
+  | 'correction'
+  | 'recall';
 
 export const PRODUCTION_STAGES: readonly ProductionStage[] = [
-  'source_acquisition', 'normalization', 'identity_resolution', 'ontology_alignment', 'canonical_state', 'scientific_computation', 'indexing', 'verification', 'release_certification', 'correction',
+  'acquisition', 'extraction', 'normalization', 'identity', 'ontology', 'computation', 'storage', 'indexing', 'verification', 'release', 'correction', 'recall',
 ];
 
 export const STAGE_LABEL: Record<ProductionStage, string> = {
-  source_acquisition: 'Source acquisition',
+  acquisition: 'Acquisition',
+  extraction: 'Extraction',
   normalization: 'Normalization',
-  identity_resolution: 'Identity resolution',
-  ontology_alignment: 'Ontology alignment',
-  canonical_state: 'Canonical state',
-  scientific_computation: 'Scientific computation',
+  identity: 'Identity',
+  ontology: 'Ontology',
+  computation: 'Computation',
+  storage: 'Storage',
   indexing: 'Indexing',
   verification: 'Verification',
-  release_certification: 'Release certification',
+  release: 'Release',
   correction: 'Correction',
+  recall: 'Recall',
 };
 
 export interface StageRecord {

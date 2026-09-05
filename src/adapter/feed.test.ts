@@ -84,8 +84,10 @@ describe('certification, rights and attribution', () => {
     }
     const m = await releaseManifestPayload(CURRENT);
     expect(m?.manifest.schema).toBe('payload-os.release-manifest.v0-demo');
-    expect(m?.manifest.build.stages.map((s) => s.stage)).toContain('release_certification');
-    expect(m?.manifest.build.stages.find((s) => s.stage === 'scientific_computation')?.status).toBe('NOT_APPLICABLE');
+    expect(m?.manifest.build.stages.map((s) => s.stage)).toEqual(['acquisition', 'extraction', 'normalization', 'identity', 'ontology', 'computation', 'storage', 'indexing', 'verification', 'release', 'correction', 'recall']);
+    expect(m?.manifest.build.stages.find((s) => s.stage === 'storage')?.status).toBe('NOT_RUN');
+    expect(m?.manifest.build.stages.find((s) => s.stage === 'recall')?.status).toBe('COMPLETED');
+    expect(m?.manifest.sources[0].materialClass).toBe('scientific');
     expect(m?.manifest.governance.informationBarrier).toMatch(/prohibited by construction/);
     expect(m?.manifestCommitment).toBe(list.releases[0].certification.manifestCommitment);
   });
