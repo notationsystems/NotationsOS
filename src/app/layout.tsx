@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: '%s · Payload OS',
   },
   description:
-    'Payload OS ruling workbench — an optional application layer over Notation Systems provenance-bearing computational corpora. A case, its declared use, its evidence, its checks, its ruling, its remediation, its release, its history.',
+    'Payload OS — a fixture-only corpus product surface and optional ruling workbench over Notation Systems provenance-bearing computational corpora. It does not execute customer inference or construct production canonical state.',
   robots: { index: false, follow: false },
   authors: [{ name: 'Notation Systems' }],
 };

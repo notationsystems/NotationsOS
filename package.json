@@ -2,7 +2,7 @@
   "name": "payload-os",
   "version": "0.1.0",
   "private": true,
-  "description": "Payload OS — the human-facing instrument over the Notation Systems claim, evidence, ruling, refusal, remediation, release and supersession system.",
+  "description": "Payload OS — the shared information-production system and distribution-workbench prototype for Notation Systems.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

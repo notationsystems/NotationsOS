@@ -1,4 +1,4 @@
-# Payload OS
+# Payload OS · Notation Systems
 
 Notation Systems is a systems and intelligence firm for the physical economy. It builds computational representations of physical systems from authorized geospatial, remote-sensing, operational, and scientific source material. Its production system turns that material into provenance-bearing computational corpora through acquisition, extraction, normalization, identity, ontology, computation, storage, indexing, verification, release, correction, and recall. The corpora are the finished information inventory; APIs, feeds, reports, workbenches, and MCP tools distribute it; customers apply their own inference, models, agents, and workflows to the data streams.
 
@@ -32,6 +32,7 @@ Playwright uses the environment's Chromium when `PW_CHROMIUM_PATH` is set (for e
 
 - `docs/ECONOMIC_ARCHITECTURE.md` — authoritative positioning: the information manufacturer, two operating businesses, a separately governed principal-capital activity, and how this repository reflects each.
 - `docs/PHASE0_RECON.md` — what the sibling repositories contain, verbatim vocabulary, conflicts, recorded ambiguities.
+- `docs/COMPANY_MANDATE.md` — the company mandate, customer categories, economic architecture, and Payload OS product structure.
 - `docs/UX_ARCHITECTURE.md` — object model, navigation, projections, component boundaries, the authority boundary.
 - `docs/INTERACTION_SPEC.md` — status transitions, refusal interaction, replay, supersession, visibility.
 - `docs/DEMO_CASE.md` — the fixtures, why they are synthetic, what they demonstrate, what is unvalidated.

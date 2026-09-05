@@ -9,6 +9,9 @@ import { parseResultManifest } from '@/vendor/control-plane/governance/result-ma
 import { parseCanonicalURI } from '@/vendor/control-plane/identity/canonical-uri.js';
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
+// The vendor digests identify the repository blobs, whose canonical line
+// ending is LF. Git may materialize those blobs with CRLF on Windows.
+const vendoredSource = (file: string) => readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
 const VENDORED: Record<string, string> = {
   'src/vendor/control-plane/governance/result-manifest.js': '315041ac785b2f9877f11296a5a7df1f62a2c8728ec6f120d3dfa79da796f621',
   'src/vendor/control-plane/identity/canonical-uri.js': '2a3357d9e680fbdd5d62de4e01240be8596a59588fa69b162101a72f4877a36b',
@@ -17,7 +20,7 @@ const VENDORED: Record<string, string> = {
 describe('result manifests conform to the control-plane contract', () => {
   it('the vendored contract code matches its pinned digest', () => {
     for (const [file, digest] of Object.entries(VENDORED)) {
-      expect(sha256(readFileSync(file, 'utf8')), file).toBe(digest);
+      expect(sha256(vendoredSource(file)), file).toBe(digest);
     }
   });
 
