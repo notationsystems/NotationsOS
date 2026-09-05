@@ -1,18 +1,27 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-test('earth twin: a keyless globe served from this origin, every layer with its source and state, the corpus asked for honestly, a view that is a link, and no request leaves the origin', async ({ page, baseURL }) => {
+test('earth twin: a keyless globe served from this origin, every layer with its source and state, the corpus asked for honestly, a view that is a link, and no request leaves the origin', async ({ page, baseURL }, testInfo) => {
   const origin = new URL(baseURL!).origin;
   const external: string[] = [];
   const errors: string[] = [];
   page.on('request', (request) => { const url = new URL(request.url()); if (!['blob:', 'data:'].includes(url.protocol) && url.origin !== origin) external.push(request.url()); });
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/earth');
+  const navigation = await page.goto('/earth');
+  // Withheld metadata must never arrive in the document/RSC payload, not merely be hidden by the UI.
+  expect(await navigation!.text()).not.toMatch(/REC-0305|REC-0401|REC-0402/);
   await expect(page.getByRole('heading', { level: 2, name: 'Payload OS Earth Twin' })).toBeVisible();
   const status = page.getByTestId('twin-status');
   await expect(status).toHaveAttribute('data-state', 'READY', { timeout: 45_000 });
   await expect(page.getByTestId('earth-renderer')).toContainText('CesiumJS on');
   await expect(page.locator('.earth-canvas canvas')).toBeVisible();
+  const assetResponse = await page.request.get('/cesium/VERSION.json');
+  expect(assetResponse.ok()).toBe(true);
+  const assets = await assetResponse.json();
+  expect(assets.schema).toBe('payload.earth-assets.v1');
+  expect(assets.version).toBe('1.124.0');
+  expect(assets.digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+  expect(assets.files.some((file: { path: string }) => file.path === 'LICENSE.md')).toBe(true);
 
   // Layers say what they are; only the bundled surface and the computed sun draw anything.
   await expect(page.locator('[data-layer="surface"][data-state="BUNDLED"]')).toHaveCount(1);
@@ -32,6 +41,7 @@ test('earth twin: a keyless globe served from this origin, every layer with its 
   const select = page.getByLabel('Record');
   const options = await select.locator('option').allTextContents();
   expect(options.length).toBeGreaterThan(1);
+  expect(options.join('\n')).not.toMatch(/REC-0305|REC-0401|REC-0402/);
   await select.selectOption({ index: options.length - 1 });
   await expect(projection).toHaveAttribute('data-outcome', /UNAVAILABLE|REFUSED/);
   const after = await page.getByTestId('earth-valid-at').textContent();
@@ -39,6 +49,7 @@ test('earth twin: a keyless globe served from this origin, every layer with its 
 
   // Time is computed, not observed.
   await expect(page.getByTestId('earth-subsolar')).toContainText('computed by CesiumJS', { timeout: 15_000 });
+  await page.screenshot({ path: testInfo.outputPath('earth-twin.png') });
 
   // A view is a link: a flight ends with the camera in the hash; the global preset is the global hash; a link restores its view.
   const global = '#v=0.0000,0.0000,26000000,0.0,-90.0';

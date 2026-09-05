@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { inspectEarthAssets } from '@/earth/assets.mjs';
 import { CARAVAN_CORPUS } from '@/fixtures/caravan/release';
-import { releaseRecords } from '@/domain/corpus';
 import { EARTH_ENGINE } from '@/domain/earth';
+import { earthRecordChoices } from '@/earth/records';
 import { describeProjectionSource } from '@/projection/source';
 import { EarthTwin } from '@/components/earth/EarthTwin';
 import { FixtureBanner } from '@/components/primitives/FixtureBanner';
@@ -16,8 +15,8 @@ export default function EarthPage() {
   const corpus = CARAVAN_CORPUS;
   const release = [...corpus.releases].sort((a, b) => (a.knownAt < b.knownAt ? 1 : -1))[0];
   const descriptor = describeProjectionSource(release.releaseId);
-  const records = releaseRecords(corpus, release).map((r) => ({ recordId: r.recordId, title: r.title, subjectId: r.subjectId, predicate: r.predicate, validFrom: r.validFrom, validTo: r.validTo }));
-  const assetsReady = ['Workers', 'Assets/Textures/NaturalEarthII', 'Widgets/widgets.css'].every((part) => existsSync(join(process.cwd(), 'public', EARTH_ENGINE.assetsPath, part)));
+  const records = earthRecordChoices(corpus, release);
+  const assetsReady = inspectEarthAssets().state === 'READY';
   return (
     <>
       <FixtureBanner note={`Corpus: committed demonstration release ${release.releaseId}. Globe: imagery bundled with ${EARTH_ENGINE.name}, served from this origin; no key, no live source.`} />
