@@ -26,6 +26,10 @@ test('desktop screenshots', async ({ page }) => {
   await page.goto('/candidates');
   await page.getByTestId('candidate-boundary').waitFor();
   await page.screenshot({ path: `${OUT}/00e-candidates.png`, fullPage: true });
+  await page.getByRole('article', { name: 'Normalization demo-caravan-carrier-normalization-001' }).getByRole('button', { name: /Inspect normalization/ }).click();
+  await page.getByTestId('production-inspector').waitFor();
+  await page.getByTestId('production-workspace').evaluate((element) => window.scrollTo({ top: element.getBoundingClientRect().top + window.scrollY - 64 }));
+  await page.screenshot({ path: `${OUT}/00e2-candidates-inspector.png`, fullPage: false });
   await page.goto('/products');
   await page.getByTestId('correction-demonstration').waitFor();
   await page.screenshot({ path: `${OUT}/00f-information-product.png`, fullPage: true });
@@ -69,5 +73,10 @@ test('mobile ruling viewer screenshot', async ({ browser }) => {
   await page.goto('/cases');
   await page.getByRole('table', { name: 'Case queue' }).waitFor();
   await page.screenshot({ path: `${OUT}/10-case-queue-mobile.png`, fullPage: false });
+  await page.goto('/candidates');
+  await page.getByRole('article', { name: 'Normalization demo-caravan-carrier-normalization-001' }).getByRole('button', { name: /Inspect normalization/ }).click();
+  await page.getByTestId('production-inspector').getByRole('heading', { level: 2 }).waitFor();
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: `${OUT}/11-candidates-inspector-mobile.png`, fullPage: false });
   await ctx.close();
 });

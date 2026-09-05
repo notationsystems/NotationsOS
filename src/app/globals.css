@@ -309,7 +309,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .workspace-top { grid-area: top; min-width: 0; }
 .workspace-bottom { grid-area: bottom; min-width: 0; }
 .inspector {
-  grid-area: inspector;
+  grid-area: inspector; scroll-margin-top: calc(var(--topbar-h) + 8px);
   background: var(--bg-secondary); border: 1px solid var(--border-default); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-1); min-width: 0;
   animation: panel-in var(--motion-base) var(--motion-ease-out);
@@ -327,10 +327,22 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .flash { animation: flash var(--motion-slow) var(--motion-ease-out); }
 @keyframes flash { from { background: rgba(var(--accent-rgb), 0.18); } to { background: transparent; } }
 
+/* ═══ Provenance as a sequence, and source bytes beside the record ═══ */
+.sequence { list-style: none; margin: 0; padding: 0 0 0 6px; display: flex; flex-direction: column; }
+.sequence li { position: relative; padding: 0 0 10px 16px; border-left: 1px solid var(--border-default); min-width: 0; }
+.sequence li:last-child { padding-bottom: 0; }
+.sequence li::before { content: ''; position: absolute; left: -5px; top: 5px; width: 9px; height: 9px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--text-muted); }
+.sequence li[data-outcome='DONE']::before { border-color: var(--check-passed); }
+.sequence li[data-outcome='REFUSED']::before { border-color: var(--status-refused); }
+.sequence li[data-outcome='NONE']::before { border-style: dashed; }
+.source-bytes { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 260px; overflow: auto; font-family: var(--font-mono); font-size: var(--text-xs); line-height: 1.5; color: var(--text-primary); }
+
 /* ═══ Selection in lists and tables ═══ */
 .row-selectable { transition: background var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease); }
 .row-selectable:hover { background: rgba(255, 255, 255, 0.035); }
-.row-selectable[aria-selected='true'], .row-selectable[aria-pressed='true'] { background: var(--highlight-bg); border-color: var(--highlight-border); }
+.row-selectable[aria-selected='true'], .row-selectable[aria-pressed='true'], .row-selectable[data-selected='true'] { background: var(--highlight-bg); border-color: var(--highlight-border); }
+tr.row-selectable[data-selected='true'] td { box-shadow: inset 2px 0 0 var(--accent); }
+tr.row-selectable[data-selected='true'] td + td { box-shadow: none; }
 
 /* ═══ Keyboard hints and empty states ═══ */
 @media (max-width: 767px) { .btn .kbd { display: none; } }
