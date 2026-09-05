@@ -4,6 +4,7 @@ import { MAX_EVIDENCE_BYTES } from './file-object-store';
 import { LocalEvidenceIntake, MAX_INTAKE_RECORD_BYTES } from './local-intake';
 import { LocalNormalizationStore } from './local-normalization';
 import { LocalCandidateBuildStore } from './local-candidate-build';
+import { CandidateBuildComparisonError, compareLocalCandidateBuilds } from './candidate-build-comparison';
 
 export const INTAKE_USAGE = [
   'Local development only: declared policy is not independently verified authorization.',
@@ -13,6 +14,7 @@ export const INTAKE_USAGE = [
   'npm run evidence -- inspect-normalization --normalization <id> [--root <directory>]',
   'npm run evidence -- build-candidates --request <manifest.json> [--root <directory>]',
   'npm run evidence -- inspect-candidate-build --build <id> [--root <directory>]',
+  'npm run evidence -- compare-candidate-builds --request <comparison.json> [--root <directory>]',
 ].join('\n');
 
 /** Bound reads even if a local input grows between stat and read. Never modifies the input. */
@@ -37,9 +39,9 @@ function readInput(path: string, maximum: number): Buffer {
 export function executeIntakeCli(args: readonly string[]) {
   if (args.length === 0 || (args.length === 1 && ['--help', '-h'].includes(args[0]))) return { help: INTAKE_USAGE };
   const [command, ...flags] = args;
-  if (!['capture', 'inspect', 'normalize', 'inspect-normalization', 'build-candidates', 'inspect-candidate-build'].includes(command) || flags.length % 2 !== 0) throw new Error(INTAKE_USAGE);
+  if (!['capture', 'inspect', 'normalize', 'inspect-normalization', 'build-candidates', 'inspect-candidate-build', 'compare-candidate-builds'].includes(command) || flags.length % 2 !== 0) throw new Error(INTAKE_USAGE);
   const allowed = command === 'capture' ? ['--request', '--input', '--root'] : command === 'inspect' ? ['--acquisition', '--root'] :
-    ['normalize', 'build-candidates'].includes(command) ? ['--request', '--root'] :
+    ['normalize', 'build-candidates', 'compare-candidate-builds'].includes(command) ? ['--request', '--root'] :
       command === 'inspect-normalization' ? ['--normalization', '--root'] : ['--build', '--root'];
   const options = new Map<string, string>();
   for (let i = 0; i < flags.length; i += 2) {
@@ -48,6 +50,14 @@ export function executeIntakeCli(args: readonly string[]) {
   }
   const required = (key: string) => { const value = options.get(key); if (!value) throw new Error(INTAKE_USAGE); return value; };
   const root = options.get('--root') ?? '.payload/evidence';
+  if (command === 'compare-candidate-builds') {
+    const path = required('--request');
+    let input: unknown;
+    try { input = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(readInput(path, MAX_INTAKE_RECORD_BYTES))); }
+    catch { throw new CandidateBuildComparisonError('INVALID_COMPARISON_REQUEST', 'Use a readable UTF-8 JSON comparison request no larger than 64 KiB.'); }
+    return { comparison: compareLocalCandidateBuilds(input, root), integrity: 'RECOMPUTED_LOCAL',
+      rawBytesIncluded: false, candidateFieldsIncluded: false, comparisonPersisted: false };
+  }
   if (command === 'build-candidates' || command === 'inspect-candidate-build') {
     const store = new LocalCandidateBuildStore(root);
     if (command === 'build-candidates') {
