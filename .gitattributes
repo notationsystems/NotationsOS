@@ -1,0 +1,2 @@
+# Preserve the captured demonstration bytes across Windows and Unix checkouts.
+examples/carrier/source.json text eol=lf

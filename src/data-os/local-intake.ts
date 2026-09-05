@@ -3,8 +3,9 @@ import type { EvidenceCaptureResult, SourceRegistration, SourceUseDecision } fro
 import { byteDigest, captureEvidence, storageKeyFor, verifyEvidenceCapture } from './evidence-capture';
 import { FileContentAddressedStore, MAX_EVIDENCE_BYTES } from './file-object-store';
 import { publishImmutableFile, readImmutableFile } from './local-files';
+import { encodeLocalRecord as encoded, exactFields, localJson, localRecordDigest as digest } from './local-record';
 import { evaluateSourceUse, validateSourceRegistration } from './source-policy';
-import { parseISOInstant, requireIdentifier, requireRecord, requireText } from './validation';
+import { parseISOInstant, requireIdentifier, requireText } from './validation';
 
 export const MAX_INTAKE_RECORD_BYTES = 64 * 1024;
 
@@ -31,34 +32,6 @@ export interface LocalAcquisition {
   capture: EvidenceCaptureResult;
   digest: string;
 }
-
-function exactFields(value: unknown, required: readonly string[], optional: readonly string[] = []): asserts value is Record<string, unknown> {
-  requireRecord(value, 'record');
-  const record = value as Record<string, unknown>;
-  if (required.some((key) => !Object.hasOwn(record, key)) || Object.keys(record).some((key) => !required.includes(key) && !optional.includes(key))) {
-    throw new Error(`Expected only these fields: ${[...required, ...optional].join(', ')}.`);
-  }
-}
-
-// Versioned local JSON encoding only: not the Kernel canonical object grammar.
-function localJson(value: unknown, depth = 0): string {
-  if (depth > 20) throw new Error('Intake metadata is too deeply nested.');
-  if (value === null || typeof value === 'string' || typeof value === 'boolean') return JSON.stringify(value);
-  if (typeof value === 'number' && Number.isFinite(value)) return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map((entry) => localJson(entry, depth + 1)).join(',')}]`;
-  if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
-    return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${localJson((value as Record<string, unknown>)[key], depth + 1)}`).join(',')}}`;
-  }
-  throw new Error('Intake metadata must contain plain, finite JSON values.');
-}
-
-function encoded(value: unknown): Buffer {
-  const bytes = Buffer.from(localJson(value), 'utf8');
-  if (bytes.length > MAX_INTAKE_RECORD_BYTES) throw new Error('Intake metadata exceeds 64 KiB.');
-  return bytes;
-}
-
-function digest(value: unknown) { return byteDigest(encoded(value)); }
 
 export function parseLocalIntakeManifest(value: unknown): LocalIntakeManifest {
   // Bound and snapshot the declaration before validation or any storage side effect.

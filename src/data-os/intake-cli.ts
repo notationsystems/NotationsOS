@@ -2,11 +2,14 @@ import { closeSync, fstatSync, openSync, readSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { MAX_EVIDENCE_BYTES } from './file-object-store';
 import { LocalEvidenceIntake, MAX_INTAKE_RECORD_BYTES } from './local-intake';
+import { LocalNormalizationStore } from './local-normalization';
 
 export const INTAKE_USAGE = [
   'Local development only: declared policy is not independently verified authorization.',
   'npm run evidence -- capture --request <manifest.json> --input <local-file> [--root <directory>]',
   'npm run evidence -- inspect --acquisition <id> [--root <directory>]',
+  'npm run evidence -- normalize --request <normalization.json> [--root <directory>]',
+  'npm run evidence -- inspect-normalization --normalization <id> [--root <directory>]',
 ].join('\n');
 
 /** Bound reads even if a local input grows between stat and read. Never modifies the input. */
@@ -31,15 +34,28 @@ function readInput(path: string, maximum: number): Buffer {
 export function executeIntakeCli(args: readonly string[]) {
   if (args.length === 0 || (args.length === 1 && ['--help', '-h'].includes(args[0]))) return { help: INTAKE_USAGE };
   const [command, ...flags] = args;
-  if (!['capture', 'inspect'].includes(command) || flags.length % 2 !== 0) throw new Error(INTAKE_USAGE);
-  const allowed = command === 'capture' ? ['--request', '--input', '--root'] : ['--acquisition', '--root'];
+  if (!['capture', 'inspect', 'normalize', 'inspect-normalization'].includes(command) || flags.length % 2 !== 0) throw new Error(INTAKE_USAGE);
+  const allowed = command === 'capture' ? ['--request', '--input', '--root'] : command === 'inspect' ? ['--acquisition', '--root'] :
+    command === 'normalize' ? ['--request', '--root'] : ['--normalization', '--root'];
   const options = new Map<string, string>();
   for (let i = 0; i < flags.length; i += 2) {
     if (!allowed.includes(flags[i]) || options.has(flags[i]) || !flags[i + 1] || flags[i + 1].startsWith('--')) throw new Error(INTAKE_USAGE);
     options.set(flags[i], flags[i + 1]);
   }
   const required = (key: string) => { const value = options.get(key); if (!value) throw new Error(INTAKE_USAGE); return value; };
-  const intake = new LocalEvidenceIntake(options.get('--root') ?? '.payload/evidence');
+  const root = options.get('--root') ?? '.payload/evidence';
+  if (command === 'normalize' || command === 'inspect-normalization') {
+    const store = new LocalNormalizationStore(root);
+    if (command === 'normalize') {
+      const manifest: unknown = JSON.parse(readInput(required('--request'), MAX_INTAKE_RECORD_BYTES).toString('utf8'));
+      const result = store.normalize(manifest);
+      return { ...result, integrity: 'RECOMPUTED_LOCAL', rawBytesIncluded: false, derivedFieldsIncluded: result.run.candidate !== null };
+    }
+    const run = store.inspect(required('--normalization'));
+    if (!run) throw new Error('NORMALIZATION_NOT_FOUND: no local normalization has this id.');
+    return { run, integrity: 'RECOMPUTED_LOCAL', rawBytesIncluded: false, derivedFieldsIncluded: run.candidate !== null };
+  }
+  const intake = new LocalEvidenceIntake(root);
   if (command === 'capture') {
     const manifest: unknown = JSON.parse(readInput(required('--request'), MAX_INTAKE_RECORD_BYTES).toString('utf8'));
     const bytes = readInput(required('--input'), MAX_EVIDENCE_BYTES);

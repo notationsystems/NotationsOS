@@ -1,0 +1,13 @@
+{
+  "schema": "payload.local-normalization-request.v1",
+  "normalizationId": "demo-caravan-carrier-normalization-001",
+  "acquisitionId": "demo-caravan-carrier-001",
+  "purpose": "CARAVAN_LOCAL_DEVELOPMENT",
+  "profile": {
+    "id": "demo-carrier-source-profile-v1",
+    "version": "1.0.0",
+    "sourceRegistrationId": "demo-carrier-declared-policy-v1",
+    "sourceId": "notation://source/notation-systems/carrier-demo",
+    "adapterId": "caravan.carrier-json/v1"
+  }
+}

@@ -50,4 +50,31 @@ describe('evidence CLI', () => {
     expect(() => executeIntakeCli(['capture', '--request', invalid, '--input', input, '--root', root])).toThrow();
     expect(existsSync(root)).toBe(false);
   });
+
+  it('captures, parses and reopens the carrier candidate through the CLI commands', () => {
+    executeIntakeCli(['capture', '--request', 'examples/carrier/acquisition.json', '--input', 'examples/carrier/source.json', '--root', root]);
+    const normalized = executeIntakeCli(['normalize', '--request', 'examples/carrier/normalization.json', '--root', root]);
+    expect(normalized).toMatchObject({ status: 'CREATED', rawBytesIncluded: false, derivedFieldsIncluded: true, run: {
+      state: 'NORMALIZED', canonicalAdmission: false, candidate: { state: 'UNADMITTED', fields: { legalName: 'Demonstration Carriers Incorporated' }, missingFields: ['operatingSite'] },
+    } });
+    expect(executeIntakeCli(['normalize', '--request', 'examples/carrier/normalization.json', '--root', root])).toMatchObject({ status: 'EXISTING' });
+    const inspected = executeIntakeCli(['inspect-normalization', '--normalization', 'demo-caravan-carrier-normalization-001', '--root', root]);
+    expect(inspected).toMatchObject({ run: { state: 'NORMALIZED', candidate: { identity: { state: 'UNRESOLVED', canonicalId: null } } } });
+  });
+
+  it('persists schema drift without returning derived fields', () => {
+    const drifted = join(temporary, 'drifted.json');
+    writeFileSync(drifted, '{"schema":"unknown"}');
+    executeIntakeCli(['capture', '--request', 'examples/carrier/acquisition.json', '--input', drifted, '--root', root]);
+    expect(executeIntakeCli(['normalize', '--request', 'examples/carrier/normalization.json', '--root', root])).toMatchObject({
+      derivedFieldsIncluded: false, run: { state: 'QUARANTINED', reasons: ['SCHEMA_MISMATCH'], candidate: null },
+    });
+  });
+
+  it('requires an existing acquisition and does not accept raw input during normalization', () => {
+    expect(() => executeIntakeCli(['normalize', '--request', 'examples/carrier/normalization.json', '--root', root])).toThrow('ACQUISITION_NOT_FOUND');
+    expect(() => executeIntakeCli(['normalize', '--request', 'examples/carrier/normalization.json', '--input', input, '--root', root])).toThrow();
+    expect(() => executeIntakeCli(['inspect-normalization', '--normalization', 'missing', '--root', root])).toThrow('NORMALIZATION_NOT_FOUND');
+    expect(existsSync(root)).toBe(false);
+  });
 });

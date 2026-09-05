@@ -1,0 +1,8 @@
+{
+  "schema": "caravan.carrier-source.v1",
+  "sourceRecordId": "demo-carrier-001",
+  "legalName": "  Demonstration Carriers Incorporated  ",
+  "registrationNumber": "DEMO-REG-001",
+  "operatingSite": null,
+  "validTime": { "state": "UNOBSERVED", "from": null, "to": null }
+}
