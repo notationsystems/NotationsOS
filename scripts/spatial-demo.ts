@@ -9,4 +9,3 @@ mkdirSync(output, { recursive: true });
 writeFileSync(join(output, 'floor-plan.svg'), FLOOR_PLAN);
 for (const [name, value] of Object.entries(result)) writeFileSync(join(output, `${name}.json`), JSON.stringify(value, null, 2) + (name === 'layout' ? '' : '\n'));
 console.log(JSON.stringify({ evidenceRoot: root, artifacts: output, changedSpaces: result.comparison.changes.map(s => s.id) }, null, 2));
-
