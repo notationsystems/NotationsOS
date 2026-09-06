@@ -18,7 +18,11 @@ A [local scientific baseline](docs/SCIENTIFIC_BASELINE.md) evaluates a fixed sca
 
 A [registration and access experiment](docs/REGISTRATION_ACCESS.md) adds weighted 3D rigid fitting, local covariance and withheld check-point discrepancies, alongside explicit Euclidean and permitted-network distances with passage-closure scenarios. `/compute/registration` inspects a synthetic example without reading operator history; `npm run spatial -- demo` retains a separate evidence-bound run. No real BIM/survey import, independently validated calibration, live routing, ellipsoid or mesh geodesics are claimed.
 
+The [clearance value-of-information experiment](docs/CLEARANCE_VOI.md) compares hypothetical measurements by expected reduction in decision loss minus cost, retaining a joint state/outcome model and shared alignment offset. `/compute/clearance` explains the synthetic prior, possible posterior outcomes and cheapest/variance/measure-all baselines. `npm run clearance -- demo` retains an evidence-bound local run. It neither executes measurements nor establishes active inference, a Markov blanket or independent physical validation.
+
 An operator-only [FMCSA Company Census connector](docs/LOCAL_SOURCE_CONNECTORS.md) now preserves bounded live source responses through that evidence rail. Its first request selects one U.S. corporate carrier, USDOT 80806, with 15 non-contact fields. Collection requires `PAYLOAD_SOURCE_COLLECTION=1`; historical inspection never reconnects. This is internal source qualification, not QCMobile, a fleet-wide feed, canonical admission or customer-distribution permission. The [21-source connection program](docs/SOURCE_CONNECTION_PROGRAM.md) records value-ranked scopes, readiness and rights/credential blockers for subsequent connectors.
+
+A separate [Samsara GPS-history adapter](docs/SAMSARA_CONNECTOR.md) is implemented and offline-tested: one authorized vehicle, at most 15 minutes, one page, explicit account region and current private-use/retention checks. `npm run samsara -- demo` retains three invented observations without reading a real token or contacting Samsara. Live fleet qualification, continuous synchronization, facility visits and customer delivery remain absent; real capture needs retained fleet permission and a securely supplied scoped token.
 
 The [synthesized architecture](docs/SYNTHESIZED_ARCHITECTURE.md) organizes the system into Acquisition, Corpus, State, Compute/Decision and Projection fabrics without changing Payload OS or its domain products. Read-only `GET /api/projections/sources/[releaseId]` supplies an exact fixture source descriptor, including a full snapshot digest; `POST /api/projections/preview` consumes it with explicit record selection, both times and viewer. It returns rights-filtered evidence records or a record-to-subject incidence graph with stable identities; spatial requests declare kepler.gl, CesiumJS or Three.js routing but return missing geometry explicitly. No renderer dependency, instance or new visual workbench is installed. Local unadmitted evidence and builds are not served by this fixture path.
 
@@ -105,6 +109,8 @@ Playwright uses the environment's Chromium when `PW_CHROMIUM_PATH` is set (for e
 - `docs/AGENT_COORDINATION.md` — the shared agent/apparatus stable, scoped board and inbox, contract synastry, JavaScript/Python clients, local worker and Bench references.
 - `docs/LOCAL_EVIDENCE_INTAKE.md` — local source-policy evaluation, content-addressed evidence, acquisition receipts, inspection and Bench-derived boundaries.
 - `docs/LOCAL_SOURCE_CONNECTORS.md` — operator-only live FMCSA Company Census qualification, strict transport, original-byte capture, permanent request bounds and historical inspection.
+- `docs/SAMSARA_CONNECTOR.md` — offline-tested, operator-only single-vehicle GPS history; retained fleet authorization, current-use gates, private-storage limits and source observation semantics. No live fleet qualification.
+- `docs/CLEARANCE_VOI.md` — exact finite-state measurement design, shared geometric dependencies, loss/cost comparisons, hypothetical posterior inspector and current-use-gated local evidence runs.
 - `docs/SOURCE_CONNECTION_PROGRAM.md` — 21-source market-value queue, exact initial scope, access/rights blockers and sequential acceptance requirements.
 - `docs/LOCAL_NORMALIZATION.md` — fixed Caravan Carrier parsing, separate derivation permission, source-scoped candidates, quarantine and read-only recomputation.
 - `docs/LOCAL_CANDIDATE_BUILDS.md` — explicit time-bounded candidate membership, build-time derivation permission, reference roots and historical inspection; no canonical admission.
@@ -123,7 +129,7 @@ src/projection  closed ProjectionSpec, full fixture-source snapshot descriptor a
 native/state-kernel small Rust notation command/replay kernel; stable IDs, explicit relations and inverse history, no renderer or filesystem
 src/state-kernel fixed native-process adapter, loopback contract and immutable local saved versions; not domain canonical state
 src/data-os     Bench-derived source policy/capture, local evidence store, fixed Carrier parser, candidate builds and read-only reference comparison; no canonical corpus admission
-src/acquisition operator-only source requests, fixed FMCSA HTTPS transport, source parser, immutable capture history and CLI; no customer API
+src/acquisition operator-only source requests, fixed FMCSA and Samsara HTTPS transports, source parsers, immutable capture history and CLIs; no customer API
 src/coordination agent/apparatus definitions, scope and message rules, contract matching, participant inbox, deterministic contract/build-inspection workers and opt-in local event log
 clients         dependency-free JavaScript and Python coordination clients
 scripts         local server launcher, contract-review and candidate-build-review workers; evidence intake/normalization/candidate-build entry points

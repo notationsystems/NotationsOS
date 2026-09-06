@@ -49,6 +49,9 @@ test('spatial inspector separates fit/check evidence and base/detour/unreachable
 test('spatial inspector has no serious accessibility violations and native controls work by keyboard', async ({ page }) => {
   await page.goto('/compute/registration');
   const select = page.getByLabel('Access scenario');
+  // The page streams: at load the select can still sit in React's hidden
+  // streaming container, where focus() is a no-op. Wait for it to be laid out.
+  await expect(select).toBeVisible();
   await select.focus();
   await expect(select).toBeFocused();
   await select.press('ArrowDown');

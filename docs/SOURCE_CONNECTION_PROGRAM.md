@@ -49,6 +49,8 @@ Each scope is a small proposed acceptance slice, not authority to collect its en
 
 ## Execution order versus value rank
 
+**Separately requested integration: Samsara.** The [bounded GPS-history adapter](SAMSARA_CONNECTOR.md) is implemented and offline-tested, not live-qualified. It is a customer-authorized private source, not one of the pinned 21 public/commercial prototype entries and not a public-collection fallback. It has its own exact authorization, account-region binding, finite current-use/retention gate and separate local root. No customer data was collected; provider access and fleet permission remain prerequisites. This addition does not reorder the inventory or imply completion of FMCSA's release continuity.
+
 **Current implementation priority (2026-09-06 UTC): finish the first source's continuity before expanding the connector fleet.** The retained FMCSA capture now has source-specific typed normalization and an unadmitted candidate build; evidence-linked notations, admission, internal release and correction remain subsequent work. See [Real-source continuity](REAL_SOURCE_CONTINUITY.md). The eligibility queue below remains future source onboarding order, not authorization to skip this milestone.
 
 Start with the Company Census qualification increment. Then assess **EIA's public publication**, followed by **SEC metadata once declared requester/contact is configured**, USGS copper, World Bank benchmarks, and CFTC copper. This execution queue uses qualified public routes while higher-value provider/license-dependent entries remain visible and blocked. Cochilco can proceed when the selected publication and attribution notice are pinned. Eligibility must be rechecked at execution; this document grants none.

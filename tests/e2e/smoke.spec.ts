@@ -89,9 +89,14 @@ test('the product page states the firm, the twelve stages, the three customer ca
   await expect(page.locator('[data-engine="kepler.gl"][data-presence="ABSENT"]')).toHaveCount(1);
   await expect(page.locator('[data-engine="records"][data-presence="FIXTURE"]')).toHaveCount(1);
   await expect(page.locator('[data-tier][data-reached="true"]')).toHaveCount(2);
+  await expect(page.getByRole('cell', { name: /^Samsara single-vehicle GPS-history adapter/ })).toContainText('offline-tested; live fleet qualification, continuous sync and inferred visits remain absent');
   await page.getByRole('link', { name: /^Local weighted rigid registration/ }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Registration and access' })).toBeVisible();
   await expect(page.getByTestId('registration-boundary')).toContainText('not a surveyed building');
+  await page.goto('/product');
+  await page.getByRole('link', { name: /^Local clearance value-of-information/ }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Clearance measurement design' })).toBeVisible();
+  await expect(page.getByTestId('clearance-boundary')).toContainText('Synthetic demonstration');
 });
 
 test('a release page states certification, the production record and the rights matrix with trading prohibited', async ({ page }) => {

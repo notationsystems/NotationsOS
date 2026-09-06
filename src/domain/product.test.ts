@@ -16,6 +16,13 @@ describe('honest live source presence', () => {
       expect(entries.find((entry) => entry.item === item)?.presence).toBe('ABSENT');
     }
   });
+  it('distinguishes the offline-tested Samsara adapter from a connected fleet or inferred visits', () => {
+    const data = ENGINES.find((engine) => engine.id === 'data_systems')!;
+    expect(data.inThisRepository.find((entry) => entry.item.startsWith('Samsara single-vehicle'))).toMatchObject({
+      presence: 'PRESENT', item: expect.stringContaining('offline-tested; live fleet qualification, continuous sync and inferred visits remain absent'),
+    });
+    expect(data.inThisRepository.find((entry) => entry.item === 'Feed API')?.presence).toBe('FIXTURE');
+  });
   it('states source normalization and membership as internal unadmitted production, not a live customer feed', () => {
     const data = ENGINES.find((engine) => engine.id === 'data_systems')!;
     expect(data.inThisRepository.find((entry) => entry.item.startsWith('FMCSA typed normalization'))).toMatchObject({
@@ -35,6 +42,12 @@ describe('honest live source presence', () => {
     const compute = ENGINES.find((e) => e.id === 'compute')!;
     expect(compute.inThisRepository.find((e) => e.item.startsWith('Local weighted rigid registration'))).toMatchObject({
       presence: 'PRESENT', where: '/compute/registration', item: expect.stringContaining('not physical validation or live routing'),
+    });
+  });
+  it('keeps clearance measurement recommendations separate from actions and physical validation', () => {
+    const compute = ENGINES.find((e) => e.id === 'compute')!;
+    expect(compute.inThisRepository.find((e) => e.item.startsWith('Local clearance value-of-information'))).toMatchObject({
+      presence: 'PRESENT', where: '/compute/clearance', item: expect.stringContaining('not active inference, independent calibration or action execution'),
     });
   });
 });
