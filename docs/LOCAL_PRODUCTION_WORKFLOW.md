@@ -16,6 +16,8 @@ The specialized [GAT IFC inspector](GAT_INSPECTOR.md) is a separate bounded inst
 
 ## Frontend contract
 
+The frontend that operates this contract is `/production`, the [production path](PRODUCTION_PATH.md): it sends the commands below from a loopback origin, renders every receipt as returned, and derives the path's states from them.
+
 Authoritative types and closed validators: [`contracts.ts`](../src/production/contracts.ts). Commands use `payload.production-command.v1`, **`kind`** as discriminator, and a stable caller-selected `requestId`. References are exact `{id, digest}` values returned by the backend.
 
 | Route | Meaning |

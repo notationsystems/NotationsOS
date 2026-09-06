@@ -436,3 +436,11 @@ details[open] > summary::before { transform: rotate(90deg); }
   }
   .workspace-left, .workspace-right { position: sticky; top: var(--topbar-h); align-self: start; max-height: calc(100vh - var(--topbar-h)); overflow-y: auto; }
 }
+
+/* The production path: seven stages in one row where they fit, wrapping in order where they do not. Each cell is a surface with its state. */
+.path-rail { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.path-rail > li { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: var(--radius-md); background: var(--bg-inset); border: 1px solid var(--border-subtle); min-width: 0; }
+.path-rail > li[data-state='DONE'] { border-color: color-mix(in srgb, var(--check-passed) 55%, transparent); }
+.path-rail > li[data-state='FAILED'], .path-rail > li[data-state='QUARANTINED'] { border-color: color-mix(in srgb, var(--status-refused) 55%, transparent); }
+.path-rail > li[data-state='RUNNING'] { border-color: color-mix(in srgb, var(--status-pending) 55%, transparent); }
+.path-rail > li[data-state='BLOCKED'] { border-style: dashed; }
