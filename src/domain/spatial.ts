@@ -20,7 +20,6 @@ const DIRECTION_VALUES = ['BOTH', 'FROM_TO'] as const;
 export type Comparison = ReturnType<typeof import('@/spatial/analysis').compare>;
 export type SpatialChange = Comparison['changes'][number];
 export type ResultPassage = AnalysisResult['passages'][number];
-export type ResultGraph = AnalysisResult['confirmed'];
 
 /** The distinct local-analysis projection the service assembles from retained artifacts. It never impersonates the corpus-release projection. */
 export interface SpatialProjection {

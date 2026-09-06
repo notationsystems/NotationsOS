@@ -18,15 +18,6 @@ export const AUTHORITY_LABEL: Record<InvariantResult['authorityClass'], string> 
   GOVERNANCE_POLICY: 'Governance policy',
 };
 
-export function CheckStatusMark({ status }: { status: InvariantResult['status'] }) {
-  const s = CHECK_SEMANTICS[status];
-  return (
-    <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: `var(${s.cssVar})` }} data-check-status={status}>
-      <span aria-hidden="true" className="mono">{s.glyph}</span>
-      <span>{s.label}</span>
-    </span>
-  );
-}
 
 /** A compact row for the decision rail and check lists. */
 export function InvariantRow({ result, selected, onSelect }: { result: InvariantResult; selected: boolean; onSelect: (id: string) => void }) {

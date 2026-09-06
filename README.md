@@ -89,7 +89,7 @@ npm test               # vitest: node tests for selectors/fixtures, jsdom tests 
 python -m unittest discover -s tests/python -v # standard-library coordination client checks
 npm run stamp:digests  # recompute committed sha256 digests after editing a fixture
 npm run e2e            # playwright: smoke, axe (WCAG 2.2 AA), keyboard, mobile, no horizontal document overflow
-npm run screenshots    # writes docs/screenshots/*.png
+npm run screenshots    # writes docs/screenshots/*.png (untracked local output)
 npm run mcp            # MCP server over the fixture feed (stdio)
 ```
 

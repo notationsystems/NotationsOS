@@ -15,7 +15,6 @@ import { CASE_7C104, REMEDIATIONS_7C104 } from './caravan/refused-7c104';
 import { CARAVAN_PROFILE } from './caravan/profile';
 import { CASE_2E118, CASE_3F440, CASE_6C305, CASE_8D902, CASE_9A017 } from './caravan/thin';
 
-export const FIXTURE_ONLY = true as const;
 
 export const FIXTURE_CASES: readonly ClaimCaseBundle[] = [
   CASE_7C104,

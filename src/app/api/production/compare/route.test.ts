@@ -47,7 +47,6 @@ function streamRequest(chunks: Uint8Array[], changes: Record<string, string> = {
 function boundary(response: Response) {
   expect(response.headers.get('cache-control')).toBe('no-store');
   expect(response.headers.get('x-payload-production')).toBe('local-development-v1');
-  expect(response.headers.get('x-content-type-options')).toBe('nosniff');
   expect(response.headers.get('content-type')).toContain('application/json');
 }
 

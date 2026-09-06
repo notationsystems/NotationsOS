@@ -43,7 +43,6 @@ export const NAV_AREAS: readonly NavArea[] = [
   ] },
 ];
 
-export const PRIMARY_NAV = NAV_AREAS.flatMap((a) => a.items);
 
 /** The area and item a path belongs to, for the top bar's context line. */
 export function locate(pathname: string): { area: NavArea; item: NavItem } | null {

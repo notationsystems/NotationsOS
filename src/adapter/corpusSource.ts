@@ -7,7 +7,7 @@
  */
 import type { VisibilityClass } from '@/domain/types';
 import type { AsOfAnswer, AsOfQuery, Corpus, CorpusRecord, CorpusRelease, Retraction } from '@/domain/corpus';
-import { currentRelease, deliverableRecords, queryAsOf, releaseById, retractionsSince } from '@/domain/corpus';
+import { deliverableRecords, queryAsOf, releaseById, retractionsSince } from '@/domain/corpus';
 import { FIXTURE_CORPORA } from '@/fixtures';
 
 export interface CorpusSource {
@@ -69,7 +69,3 @@ export function getCorpusSource(): CorpusSource {
   return source;
 }
 
-/** Synchronous helpers for client components that already hold the corpus. */
-export function currentReleaseOf(corpus: Corpus): CorpusRelease {
-  return currentRelease(corpus);
-}
