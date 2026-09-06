@@ -119,6 +119,10 @@ These mappings preserve the supplied synthesis without silently promoting old co
 
 ## Implemented boundary
 
+Compute update (2026-09-06): the [local scalar scientific baseline](SCIENTIFIC_BASELINE.md) is a bounded conventional estimator with exact evidence/model references and held-out-reference metrics. Its demo is synthetic; it establishes neither real sensor fusion, a learned model, independent physical validation nor managed execution. [Recorded-observation replay](RECORDED_OBSERVATION_REPLAY.md) remains a separate fixed-transform inspection contract. [Scientific model roles](SCIENTIFIC_MODEL_ROLES.md) names specialist methods without admission authority or changes to the data-product mandate.
+
+Spatial Compute increment: [weighted rigid registration and access geometry](REGISTRATION_ACCESS.md) fit supplied 3D controls and distinguish local Euclidean from permitted-network distance. A separate evidence-bound CLI retains immutable derivations; `/compute/registration` inspects only an in-memory synthetic example. Check-point discrepancies remain distinct from fitting error; declared closures do not become source events. No inferred calibration enters replay, GAT, Earth, corpus state or admission automatically.
+
 The [local production API](LOCAL_PRODUCTION_WORKFLOW.md) connects Acquisition and candidate organization through explicit registered inputs, stage receipts and historical inspection. The [GAT IFC inspector](GAT_INSPECTOR.md) is a pinned Compute/Decision instrument over preserved evidence, with a separate safe Projection response. Its analysis model does not become State Fabric canonical authority; the Rust notation kernel remains authored state only. Neither local path activates a release or public customer execution.
 
 The local acquisition, normalization and candidate-build rails and the manually launched coordination reviewers remain as documented. Their unadmitted local files do not become a released corpus or a source for the fixture projection endpoint. The public corpus/workbench surfaces remain demonstration fixtures.

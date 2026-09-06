@@ -31,6 +31,14 @@ describe('doctrine as data', () => {
     expect(VERIFICATION_TIERS.filter((t) => t.reachedHere).map((t) => t.tier)).toEqual(['V0', 'V1']);
   });
 
+  it('distinguishes bounded local compute from absent managed workloads and learned models', () => {
+    const compute = FABRICS.find((f) => f.id === 'compute')!;
+    expect(compute.presence).toBe('PRESENT');
+    expect(compute.inThisRepository).toContain('benchmark demonstration is synthetic');
+    expect(compute.inThisRepository).toContain('Managed customer workloads, trained neural models and automatic canonical admission remain absent');
+    expect(compute.inThisRepository).not.toContain('No model, simulation or optimizer runs here');
+  });
+
   it('states engine presence as the dependencies have it: CesiumJS installed for the Earth Twin, kepler.gl and Three.js absent, records over fixtures', () => {
     expect(PROJECTION_ENGINES_IN_REPOSITORY.map((e) => [e.engine, e.presence])).toEqual([['kepler.gl', 'ABSENT'], ['CesiumJS', 'PRESENT'], ['Three.js', 'ABSENT'], ['records', 'FIXTURE']]);
     const pkg = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8')) as { dependencies: Record<string, string> };

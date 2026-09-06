@@ -23,4 +23,18 @@ describe('honest live source presence', () => {
     });
     expect(data.inThisRepository.find((entry) => entry.item === 'Feed API')?.presence).toBe('FIXTURE');
   });
+  it('labels the scalar baseline as local and synthetic without claiming hosted or validated prediction', () => {
+    const compute = ENGINES.find((e) => e.id === 'compute')!;
+    expect(compute.inThisRepository.find((e) => e.item.startsWith('Local scalar linear-Gaussian'))).toMatchObject({
+      presence: 'PRESENT', item: expect.stringContaining('synthetic demonstration, not field validation'),
+    });
+    expect(compute.inThisRepository.find((e) => e.item.startsWith('Trained neural models'))?.presence).toBe('ABSENT');
+    expect(compute.inThisRepository.find((e) => e.item === 'Managed execution of customer workloads')?.presence).toBe('ABSENT');
+  });
+  it('links the spatial instrument without promoting the synthetic experiment to validated routing', () => {
+    const compute = ENGINES.find((e) => e.id === 'compute')!;
+    expect(compute.inThisRepository.find((e) => e.item.startsWith('Local weighted rigid registration'))).toMatchObject({
+      presence: 'PRESENT', where: '/compute/registration', item: expect.stringContaining('not physical validation or live routing'),
+    });
+  });
 });
