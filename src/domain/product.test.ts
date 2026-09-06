@@ -44,4 +44,10 @@ describe('honest live source presence', () => {
       presence: 'PRESENT', where: '/compute/registration', item: expect.stringContaining('not physical validation or live routing'),
     });
   });
+  it('keeps clearance measurement recommendations separate from actions and physical validation', () => {
+    const compute = ENGINES.find((e) => e.id === 'compute')!;
+    expect(compute.inThisRepository.find((e) => e.item.startsWith('Local clearance value-of-information'))).toMatchObject({
+      presence: 'PRESENT', where: '/compute/clearance', item: expect.stringContaining('not active inference, independent calibration or action execution'),
+    });
+  });
 });

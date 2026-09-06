@@ -6,6 +6,8 @@ Notation Systems builds provenance-bearing computational corpora for the physica
 
 Scientific models are specialized computation over permitted inputs, not a replacement for the information-production system. Customer evidence, customer workloads, and proprietary-capital activity retain their separate boundaries. Observations, assumptions, predictions, and operator interpretations remain distinguishable. A prediction never grants canonical admission or distribution rights.
 
+The [clearance measurement-design experiment](CLEARANCE_VOI.md) adds exact finite Bayesian decision analysis over a declared joint model. It evaluates expected decision-loss reduction minus acquisition cost without executing an action. A dependency representation is not proof of a Markov blanket; this experiment implements neither variational free-energy minimization nor an active-inference policy. The synthetic inspector separates hypothetical belief changes, model-expected performance and still-unresolved independent reference validation.
+
 ## Different methods answer different questions
 
 | Family | Role and distinction |

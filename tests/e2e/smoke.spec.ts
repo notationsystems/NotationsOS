@@ -93,6 +93,10 @@ test('the product page states the firm, the twelve stages, the three customer ca
   await page.getByRole('link', { name: /^Local weighted rigid registration/ }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Registration and access' })).toBeVisible();
   await expect(page.getByTestId('registration-boundary')).toContainText('not a surveyed building');
+  await page.goto('/product');
+  await page.getByRole('link', { name: /^Local clearance value-of-information/ }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Clearance measurement design' })).toBeVisible();
+  await expect(page.getByTestId('clearance-boundary')).toContainText('Synthetic demonstration');
 });
 
 test('a release page states certification, the production record and the rights matrix with trading prohibited', async ({ page }) => {

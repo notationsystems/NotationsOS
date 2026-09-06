@@ -22,6 +22,7 @@
     "benchmark": "esbuild scripts/benchmark.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/benchmark.mjs --log-level=warning && node .stamp/benchmark.mjs",
     "spatial": "esbuild scripts/spatial.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/spatial.mjs --log-level=warning && node .stamp/spatial.mjs",
     "samsara": "esbuild scripts/samsara.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/samsara.mjs --log-level=warning && node .stamp/samsara.mjs",
+    "clearance": "esbuild scripts/clearance.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/clearance.mjs --log-level=warning && node .stamp/clearance.mjs",
     "build": "next build && node scripts/check-state-kernel-traces.mjs",
     "start": "next start",
     "lint": "eslint",

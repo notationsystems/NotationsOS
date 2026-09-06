@@ -96,6 +96,7 @@ export const ENGINES: readonly Engine[] = [
       { item: 'Local instruments only: pinned GAT IFC audit and evidence-bound observation replay; not managed customer workloads', presence: 'PRESENT' },
       { item: 'Local scalar linear-Gaussian benchmark: evidence-linked model results and separate held-out-reference metrics; synthetic demonstration, not field validation', presence: 'PRESENT' },
       { item: 'Local weighted rigid registration and explicit Euclidean/access-network distances: evidence-bound CLI and synthetic inspector; not physical validation or live routing', presence: 'PRESENT', where: '/compute/registration' },
+      { item: 'Local clearance value-of-information experiment: exact joint beliefs, hypothetical measurement comparison and evidence-bound runs; not active inference, independent calibration or action execution', presence: 'PRESENT', where: '/compute/clearance' },
       { item: 'Trained neural models and independently validated physical prediction', presence: 'ABSENT' },
       { item: 'Managed execution of customer workloads', presence: 'ABSENT' },
     ],
