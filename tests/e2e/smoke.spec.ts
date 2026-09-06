@@ -156,6 +156,25 @@ test('the information product states its question, fields, correction at two kno
   await expect(page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Products' })).toBeVisible();
 });
 
+test('production path without the local rail: the committed demonstration stands on the path, the enable command is shown, and every blocker is named', async ({ page }) => {
+  await page.goto('/production');
+  await expect(page.getByRole('heading', { level: 1, name: 'Production path' })).toBeVisible();
+  await expect(page.getByTestId('production-path')).toHaveAttribute('data-mode', 'FIXTURE');
+  const states = await page.locator('[data-stage]').evaluateAll((cells) => cells.map((cell) => `${cell.getAttribute('data-stage')}:${cell.getAttribute('data-state')}`));
+  expect(states).toEqual(['source:DEMONSTRATION', 'acquisition:DEMONSTRATION', 'normalization:DEMONSTRATION', 'build:DEMONSTRATION', 'inspection:DEMONSTRATION', 'notation:BLOCKED', 'release:BLOCKED']);
+  await expect(page.getByTestId('rail-disabled')).toContainText('npm run dev:production');
+  await expect(page.getByTestId('run-console')).toHaveCount(0);
+  await expect(page.getByTestId('source-readback')).toHaveAttribute('data-status', 'UNAVAILABLE');
+  await expect(page.getByTestId('source-card')).toContainText('fmcsa-census-80806-2026-09-05-qualification');
+  await expect(page.getByTestId('notation-card')).toContainText('ATTACH_EVIDENCE_REFERENCE');
+  await expect(page.getByTestId('release-card')).toContainText('No admission authority exists');
+  // Nothing on this page reaches the rail: the disabled descriptor is the only answer it could get, and it is not asked.
+  await page.getByRole('link', { name: 'See the demonstration' }).first().click();
+  await expect(page).toHaveURL(/\/candidates/);
+  const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze();
+  expect(accessibility.violations.filter((violation) => violation.impact === 'serious' || violation.impact === 'critical')).toEqual([]);
+});
+
 test('notations without the local kernel: the workspace says DISABLED and the evidence-reference panel is a visibly marked fixture', async ({ page }) => {
   await page.goto('/notations');
   await expect(page.getByRole('heading', { level: 1, name: 'Notations', exact: true })).toBeVisible();

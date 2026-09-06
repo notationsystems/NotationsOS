@@ -36,6 +36,9 @@ test('desktop screenshots', async ({ page }) => {
   await page.goto('/notations');
   await page.getByTestId('evidence-fixture-marker').waitFor();
   await page.screenshot({ path: `${OUT}/00g-notations-disabled-with-evidence-references.png`, fullPage: true });
+  await page.goto('/production');
+  await page.getByTestId('path-rail').waitFor();
+  await page.screenshot({ path: `${OUT}/00l-production-path-fixture.png`, fullPage: true });
   await page.goto('/earth');
   await expect(page.getByTestId('twin-status')).toHaveAttribute('data-state', 'READY', { timeout: 45_000 });
   await page.getByTestId('earth-subsolar').filter({ hasText: 'computed' }).waitFor({ timeout: 15_000 });

@@ -13,6 +13,7 @@ export const NAV_AREAS: readonly NavArea[] = [
     { href: '/evidence', label: 'Evidence', match: /^\/evidence/ },
   ] },
   { id: 'corpus', label: 'Corpus', activity: 'Candidates, builds, releases and changes', items: [
+    { href: '/production', label: 'Production', match: /^\/production/ },
     { href: '/candidates', label: 'Candidates', match: /^\/candidates/ },
     { href: '/products', label: 'Products', match: /^\/products/ },
     { href: '/releases', label: 'Releases', match: /^\/releases/ },

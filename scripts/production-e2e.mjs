@@ -11,7 +11,9 @@ const directory = mkdtempSync(join(temporaryBase, 'payload-production-e2e-'));
 // The GAT case uses the separately bootstrapped, verified execution copy when GAT_INTEGRATION=1.
 const child = spawn(process.execPath, [require.resolve('@playwright/test/cli'), 'test', '--config', 'playwright.production.config.ts'], {
   windowsHide: true, stdio: 'inherit', env: { ...process.env, PRODUCTION_E2E: '1',
-    PAYLOAD_PRODUCTION_LOCAL: '1', PAYLOAD_PRODUCTION_DIR: directory },
+    PAYLOAD_PRODUCTION_LOCAL: '1', PAYLOAD_PRODUCTION_DIR: directory,
+    // The source readback reads an isolated, empty qualification root here: acceptance never reads operator captures.
+    PAYLOAD_SOURCE_QUALIFICATION_DIR: join(directory, 'source-qualification') },
 });
 child.on('error', () => { console.error('Unable to launch local production HTTP tests.'); process.exitCode = 1; });
 child.on('exit', (code) => {
