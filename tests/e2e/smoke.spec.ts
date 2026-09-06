@@ -89,6 +89,21 @@ test('the product page states the firm, the twelve stages, the three customer ca
   await expect(page.locator('[data-engine="kepler.gl"][data-presence="ABSENT"]')).toHaveCount(1);
   await expect(page.locator('[data-engine="records"][data-presence="FIXTURE"]')).toHaveCount(1);
   await expect(page.locator('[data-tier][data-reached="true"]')).toHaveCount(2);
+  // Storage is declared as candidates with an honest present state: six classes, none held by a running service.
+  // Identity: one core, three families, one absent join with its hazards named.
+  await expect(page.locator('[data-core]')).toHaveCount(4);
+  await expect(page.locator('[data-core="BITEMPORALITY"][data-core-state="PRESENT"]')).toHaveCount(1);
+  await expect(page.locator('[data-core="RESOLUTION"][data-core-state="ABSENT"]')).toHaveCount(1);
+  await expect(page.locator('[data-family]')).toHaveCount(3);
+  await expect(page.locator('[data-identifier-state="IN_USE"]')).toHaveCount(2);
+  await expect(page.locator('[data-join-key="RESOLVED_ENTITY"][data-join-state="ABSENT"]')).toContainText('matching name is not a resolution');
+  await expect(page.getByTestId('cross-line-join')).toContainText('A join built per line is not a join');
+  await expect(page.locator('[data-storage]')).toHaveCount(6);
+  await expect(page.locator('[data-storage][data-state="SERVICE"]')).toHaveCount(0);
+  await expect(page.locator('[data-storage="embeddings"][data-state="ABSENT"]')).toContainText('Qdrant, Milvus, pgvector');
+  await expect(page.getByRole('heading', { name: 'Where the corpus is stored' })).toBeVisible();
+  await expect(page.locator('#pm-storage')).toContainText('candidates, not selections');
+  await expect(page.locator('#pm-storage')).toContainText('not a canonical relation');
   await expect(page.getByRole('cell', { name: /^Samsara single-vehicle GPS-history adapter/ })).toContainText('offline-tested; live fleet qualification, continuous sync and inferred visits remain absent');
   await page.getByRole('link', { name: /^Local weighted rigid registration/ }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Registration and access' })).toBeVisible();
@@ -150,6 +165,24 @@ test('candidates: the local rail is visible, unadmitted, identity unresolved, an
   await expect(nav.getByRole('link', { name: 'Candidates' })).toBeVisible();
 });
 
+test('a retraction names what it reaches and what it cannot reach, and the recall machinery is stated on both sides', async ({ page }) => {
+  await page.goto('/retractions');
+  // The impact table is progressive disclosure: open every retraction's summary first.
+  const summaries = page.locator('summary', { hasText: 'What this correction reaches' });
+  const count = await summaries.count();
+  expect(count).toBeGreaterThan(0);
+  for (let i = 0; i < count; i++) await summaries.nth(i).click();
+  // A ruling the corpus knows relied on a corrected record is named; a pinned projection is clean.
+  await expect(page.locator('[data-impact="RULING"][data-taint="TAINTED"]').first()).toBeVisible();
+  await expect(page.locator('[data-impact="PROJECTION"][data-taint="CLEAN"]').first()).toContainText('pinned');
+  // What cannot be decided is shown as undecidable, never as unaffected.
+  await expect(page.locator('[data-impact="DELIVERED_RECORD"][data-taint="UNDETERMINED"]').first()).toBeVisible();
+  await expect(page.locator('[data-impact="NOTATION"][data-taint="UNDETERMINED"]').first()).toBeVisible();
+  await expect(page.getByTestId('recall-absent')).toContainText('delivery ledger');
+  await expect(page.getByTestId('delivery-ledger')).toContainText('specified and empty');
+  await expect(page.getByTestId('recall-machinery')).toContainText('not a convenience of the schema');
+});
+
 test('the information product states its question, fields, correction at two knowledge times, the ten-question contract and the acceptance target', async ({ page }) => {
   await page.goto('/products');
   await expect(page.getByRole('heading', { level: 1, name: 'Caravan lot state' })).toBeVisible();
@@ -179,6 +212,12 @@ test('production path without the local rail: the committed demonstration stands
   await expect(page.getByTestId('notation-card')).toContainText('ATTACH_EVIDENCE_REFERENCE');
   await expect(page.getByTestId('release-card')).toContainText('No admission authority exists');
   // Nothing on this page reaches the rail: the disabled descriptor is the only answer it could get, and it is not asked.
+  // Every stage carries what blocks it; the rail is where an operator reads it,
+  // beside the stage, rather than only in the console below. Recovery actions
+  // appear on a failed or quarantined run, which the fixture path never has.
+  await expect(page.getByTestId('stage-notation-blocker')).toContainText('ATTACH_EVIDENCE_REFERENCE');
+  await expect(page.getByTestId('stage-release-blocker')).toContainText('No admission authority exists');
+  await expect(page.getByTestId('stage-release-blocker')).toContainText('Admission contract');
   await page.getByRole('link', { name: 'See the demonstration' }).first().click();
   await expect(page).toHaveURL(/\/candidates/);
   const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze();

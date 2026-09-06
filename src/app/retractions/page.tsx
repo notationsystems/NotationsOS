@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getCorpusSource } from '@/adapter/corpusSource';
 import { FixtureBanner } from '@/components/primitives/FixtureBanner';
+import { AS_OF_CONTRACT, DELIVERY_LEDGER, TAINT_LABEL, TRACEABILITY_LABEL, correctionImpact } from '@/domain/correction';
 import { fmtUtc } from '@/lib/format';
 
 export const metadata: Metadata = { title: 'Retractions' };
@@ -13,6 +14,12 @@ export default async function RetractionsPage({ searchParams }: { searchParams: 
   const list = await source.retractions(since || undefined, 'COUNTERPARTY_SHARED');
   const corpora = await source.listCorpora();
   const recordTitle = (id: string) => corpora.flatMap((c) => c.records).find((r) => r.recordId === id);
+  // The blast radius per retraction, computed over what the corpus records. A class it cannot decide is named, not hidden.
+  const impactOf = (retractionId: string) => {
+    const corpus = corpora.find((c) => c.retractions.some((t) => t.retractionId === retractionId));
+    const retraction = corpus?.retractions.find((t) => t.retractionId === retractionId);
+    return corpus && retraction ? correctionImpact(corpus, retraction) : null;
+  };
   return (
     <>
       {source.origin.kind === 'FIXTURE' && <FixtureBanner note={source.origin.label} />}
@@ -45,9 +52,48 @@ export default async function RetractionsPage({ searchParams }: { searchParams: 
                 <dd className="flex flex-wrap gap-1">{t.affectedRulingIds?.length ? t.affectedRulingIds.map((id) => <Link key={id} href={`/rulings/${encodeURIComponent(id)}`} className="id" style={{ color: 'var(--info)' }}>{id}</Link>) : <span style={{ color: 'var(--text-muted)' }}>None known</span>}</dd>
                 {t.sourceId && (<><dt>Source</dt><dd className="id">{t.sourceId}</dd></>)}
               </dl>
+              {(() => {
+                const impact = impactOf(t.retractionId);
+                if (!impact) return null;
+                return (
+                  <details className="mt-2">
+                    <summary className="text-[12.5px] cursor-pointer" style={{ color: 'var(--text-secondary)' }}>What this correction reaches, and what it cannot reach ({impact.undetermined.length} of {impact.classes.length} undecidable)</summary>
+                    <div className="surface overflow-x-auto mt-2" tabIndex={0}>
+                      <table className="ledger-table text-[12px]" aria-label={`Downstream impact of ${t.retractionId}`}>
+                        <thead><tr><th scope="col">Derived artifact</th><th scope="col">State</th><th scope="col">Named</th><th scope="col">Because</th></tr></thead>
+                        <tbody>
+                          {impact.classes.map((c) => (
+                            <tr key={c.id} data-impact={c.id} data-taint={c.taint}>
+                              <td style={{ color: 'var(--text-heading)' }}>{c.title}</td>
+                              <td style={{ color: c.taint === 'TAINTED' ? 'var(--status-refused)' : c.taint === 'UNDETERMINED' ? 'var(--status-conditional)' : 'var(--check-passed)' }}>{TAINT_LABEL[c.taint]}</td>
+                              <td className="id">{c.identifiers.length ? c.identifiers.join(', ') : '—'}</td>
+                              <td style={{ color: 'var(--text-muted)' }}>{c.because} <span style={{ color: 'var(--text-secondary)' }}>{TRACEABILITY_LABEL[c.traceability]}.</span></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </details>
+                );
+              })()}
             </li>
           ))}
         </ol>
+        <section className="surface p-3 flex flex-col gap-2" aria-labelledby="recall-machinery" data-testid="recall-machinery">
+          <h2 id="recall-machinery" className="m-0 text-[14px] font-semibold" style={{ color: 'var(--text-heading)' }}>Correction and recall, as machinery</h2>
+          <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>{AS_OF_CONTRACT.statement}</p>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <span className="label-sm">What the corpus does</span>
+              <ul className="m-0 pl-5 text-[12px] flex flex-col gap-1" style={{ color: 'var(--text-secondary)' }}>{AS_OF_CONTRACT.present.map((line) => <li key={line}>{line}</li>)}</ul>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="label-sm">What it cannot do yet</span>
+              <ul className="m-0 pl-5 text-[12px] flex flex-col gap-1" style={{ color: 'var(--status-conditional)' }} data-testid="recall-absent">{AS_OF_CONTRACT.absent.map((line) => <li key={line}>{line}</li>)}</ul>
+            </div>
+          </div>
+          <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }} data-testid="delivery-ledger"><span className="label-sm">Delivery ledger</span> {DELIVERY_LEDGER.purpose} It is specified and empty: {DELIVERY_LEDGER.why} {DELIVERY_LEDGER.obligation}</p>
+        </section>
         <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }}>Automate against this feed: poll <span className="id">GET /api/v1/retractions?since=&lt;the knownAt of the release you hold&gt;</span> and act on each retraction&apos;s affected record and ruling identifiers.</p>
       </div>
     </>

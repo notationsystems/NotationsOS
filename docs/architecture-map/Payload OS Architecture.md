@@ -43,6 +43,7 @@ An editable map of the Notation Systems / Payload OS repository as it exists on 
 ### Runtimes, local stores and verification
 
 - [[Runtimes and local stores]] — `NODE · RUST · PYTHON` — Node.js/TypeScript is the facade and workbench; Rust is the deterministic notation state kernel; Python runs the pinned GAT engine.
+- [[Storage (polyglot persistence)]] — `DECLARED · NOTHING INSTALLED` — Six classes of information ask for six kinds of store; the technologies named are candidates and none is installed.
 - [[Verification harness]] — `GREEN ON THE BRANCH` — Vitest unit and component tests, three Playwright configurations (regular desktop and Pixel 7, production rail with a real worker, real Rust kernel), axe accessibility checks, horizontal-overflow guards and regenerated screenshots.
 - [[Sibling repositories and vendored contracts]] — `PINNED · READ-ONLY` — The control-plane result-manifest and canonical-URI code is vendored verbatim from Notations-Ecosystem at a pinned commit, used only by tests.
 
@@ -67,6 +68,8 @@ An editable map of the Notation Systems / Payload OS repository as it exists on 
 - [[Normalization adapters]] — `TWO ADAPTERS` — A fixed Caravan Carrier adapter and the FMCSA Census normalization turn captured bytes into typed candidates; every derived quantity names its method and version and every run carries the adapter digest.
 - [[Candidate builds and comparison]] — `IMPLEMENTED · UNADMITTED` — Exact, inspectable candidate builds assembled from normalizations, each member carrying its derivation decision, source class and knowledge time; two builds can be compared by source-scoped membership and immutable references.
 - [[Corpus object model]] — `THE PRODUCT · FIXTURE-BACKED` — Releases with knowledge cutoffs and build records; records with stable `notation://` identity, subject, predicate, value, unit, basis, uncertainty bounds, validity bounds, two clocks, evidence class and provenance; retractions; rights schedules; governance.
+- [[Correction and recall machinery]] — `MODELLED · LEDGER SPECIFIED AND EMPTY` — For one retraction, which derived artifacts a corrected fact taints, and which cannot be decided.
+- [[Identity core and cross-line join]] — `MODELLED · JOIN ABSENT` — One identity core, three per-line identifier families, and the absent cross-line join with what it needs.
 - [[Certified release manifest and production record]] — `COMMITTED · UNSIGNED` — Each release carries a manifest (build, release digest, record count, retractions applied, sources with rights, certification, governance) whose commitment is the digest of its canonical JSON, and a production record across the twelve stages.
 - [[Information products]] — `SPECIFIED · FIXTURE-COVERED` — The first information product: a customer question, subjects, fields with evidence requirements and the corpus's coverage of them, freshness by release, permitted uses, correction as the same question at two knowledge times, and the delivered-record contract.
 
