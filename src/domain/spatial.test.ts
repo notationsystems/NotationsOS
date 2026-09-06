@@ -21,6 +21,16 @@ describe('the spatial inquiry as data', () => {
     const short = structuredClone(example('baselineAnalysis')) as { projection: { result: { confirmed: { spaces: unknown[] } } } };
     short.projection.result.confirmed.spaces.pop();
     expect(() => readInspection(short)).toThrow(/v1 contract/);
+    // Vocabularies are validated at the boundary, not cast: a status or passage state outside the closed sets is refused.
+    const oddStatus = structuredClone(example('baselineAnalysis')) as { projection: { result: { reachability: { status: string }[] } } };
+    oddStatus.projection.result.reachability[4].status = 'MAYBE';
+    expect(() => readInspection(oddStatus)).toThrow(/v1 contract/);
+    const oddPassage = structuredClone(example('baselineAnalysis')) as { projection: { result: { passages: { effectiveState: string }[] } } };
+    oddPassage.projection.result.passages[3].effectiveState = 'AJAR';
+    expect(() => readInspection(oddPassage)).toThrow(/v1 contract/);
+    const oddDirection = structuredClone(example('baselineAnalysis')) as { projection: { result: { passages: { direction: string }[] } } };
+    oddDirection.projection.result.passages[0].direction = 'TO_FROM';
+    expect(() => readInspection(oddDirection)).toThrow(/v1 contract/);
     expect(readComparison(example('comparison')).changes.map((change) => change.id)).toEqual(['S-3', 'S-4', 'S-5']);
     expect(() => readComparison({ schema: 'payload.spatial-comparison.v1', changes: 'none' })).toThrow(/v1 contract/);
   });

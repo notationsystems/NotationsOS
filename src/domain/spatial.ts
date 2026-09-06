@@ -13,6 +13,10 @@ import type { AnalysisResult } from '@/spatial/analysis';
 
 export type Reachability = 'CONFIRMED' | 'POSSIBLE_ONLY' | 'DISCONNECTED';
 export type Access = 'OPEN' | 'CLOSED' | 'UNKNOWN';
+/** The closed vocabularies the surfaces accept. Values are validated at this boundary, never cast: a status outside them is a refusal, not a colour. */
+export const REACHABILITY_VALUES: readonly Reachability[] = ['CONFIRMED', 'POSSIBLE_ONLY', 'DISCONNECTED'];
+export const ACCESS_VALUES: readonly Access[] = ['OPEN', 'CLOSED', 'UNKNOWN'];
+const DIRECTION_VALUES = ['BOTH', 'FROM_TO'] as const;
 export type Comparison = ReturnType<typeof import('@/spatial/analysis').compare>;
 export type SpatialChange = Comparison['changes'][number];
 export type ResultPassage = AnalysisResult['passages'][number];
@@ -34,6 +38,12 @@ export interface SpatialProjection {
   independentlyVerified: false;
   sourceTruthClaimed: false;
 }
+/**
+ * The inspection response: a verified receipt and the historical projection.
+ * It is not the submission response (which adds `status: CREATED | EXISTING`);
+ * a missing or incomplete analysis arrives as a refusal (404, 409), never as
+ * an empty projection. The two are typed and handled as different responses.
+ */
 export interface InspectedAnalysis {
   receipt: { startedAt: string; completedAt: string; digest: string; request: AnalysisRequest; method: { id: string; version: string; scope: string; unknownPolicy: string; meanDepth: string } };
   projection: SpatialProjection;
@@ -67,6 +77,14 @@ export function readInspection(value: unknown): InspectedAnalysis {
     });
   }
   if (result.reachability.length !== spaces.length || result.passages.length !== passages.length) throw fail();
+  // Vocabularies are validated here, not cast: the service's types widen them to string.
+  result.reachability.forEach((entry, index) => {
+    const declared = spaces[index];
+    if (!isRecord(entry) || !isRecord(declared) || entry.id !== declared.id || !(REACHABILITY_VALUES as readonly unknown[]).includes(entry.status)) throw fail();
+  });
+  for (const passage of result.passages) {
+    if (!isRecord(passage) || !(ACCESS_VALUES as readonly unknown[]).includes(passage.declaredState) || !(ACCESS_VALUES as readonly unknown[]).includes(passage.effectiveState) || !(DIRECTION_VALUES as readonly unknown[]).includes(passage.direction) || typeof passage.assumed !== 'boolean') throw fail();
+  }
   if (typeof r.startedAt !== 'string' || typeof r.completedAt !== 'string' || typeof r.digest !== 'string' || !isRecord(r.request) || !isRecord(r.method)) throw fail();
   return value as unknown as InspectedAnalysis;
 }
@@ -123,7 +141,7 @@ export interface SpaceReading {
 export function spaceReadings(projection: SpatialProjection): SpaceReading[] {
   const { layout, result } = projection;
   return layout.spaces.map((space, index) => ({
-    id: space.id, label: space.label, status: result.reachability[index].status as Reachability,
+    id: space.id, label: space.label, status: result.reachability[index].status as Reachability, // validated by readInspection against REACHABILITY_VALUES
     confirmedDepth: result.confirmed.spaces[index].depth, possibleDepth: result.possible.spaces[index].depth,
     incomingNeighbors: result.possible.spaces[index].incomingNeighbors, outgoingNeighbors: result.possible.spaces[index].outgoingNeighbors,
     polygonVertices: space.polygon ? space.polygon.length : null,
