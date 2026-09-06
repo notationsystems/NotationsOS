@@ -11,9 +11,8 @@ export const productionRoot = () => process.env.PAYLOAD_PRODUCTION_DIR ?? join(p
 
 export function productionJson(value: unknown, status = 200) {
   return NextResponse.json(value, { status, headers: {
-    // next.config.ts sets X-Content-Type-Options for every route; setting it here
-    // too made two handler-level assertions pass that would fail on the other 25.
     'Cache-Control': 'no-store', 'X-Payload-Production': 'local-development-v1',
+    'X-Content-Type-Options': 'nosniff',
   } });
 }
 

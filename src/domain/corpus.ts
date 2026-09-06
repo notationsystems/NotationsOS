@@ -111,6 +111,9 @@ export function evaluateUse(rights: RightsSchedule, use: PermittedUse, at: ISODa
   return evaluateSourceUse(rights.registration, { requestId: `${rights.sourceId}:${use}:${at}`, registrationId: rights.registration.registrationId, purpose: r.purpose, operation: r.operation, audience: r.audience, requestedAt: at });
 }
 
+export function isUsePermitted(rights: RightsSchedule, use: PermittedUse, at: ISODateTime): boolean {
+  return evaluateUse(rights, use, at).state === 'ALLOWED';
+}
 
 /** The uses a registration permits at an instant, derived so the list and the matrix cannot disagree. */
 export function derivePermittedUses(registration: SourceRegistration, at: ISODateTime, sourceId: string): PermittedUse[] {

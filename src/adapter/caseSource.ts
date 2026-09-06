@@ -1,48 +1,67 @@
 /**
  * The adapter boundary.
- *
- * Screens read through `CaseSource`. The only implementation in this
- * repository is the fixture source. A real source would map the substrate's
- * objects (result manifests, notary verdicts, attestation classes, corpus
- * contract axes) onto ClaimCaseBundle in a narrow adapter and would NOT
- * re-implement any gate: the ruling arrives ruled.
- *
- * Nothing in this module fetches over the network and nothing here decides
- * admissibility.
  */
 import type { AdmissionProfile, ClaimCaseBundle, Remediation, Ruling } from '@/domain/types';
-import { FIXTURE_CASES, FIXTURE_PROFILES, FIXTURE_REMEDIATIONS } from '@/fixtures';
+import { FIXTURE_PROFILES, FIXTURE_REMEDIATIONS } from '@/fixtures';
 import { allRulings } from '@/domain/selectors';
+import { db } from '@/db';
+import { cases, rulings } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 export interface CaseSource {
-  /** Where the data comes from; rendered as a banner so fixtures are never mistaken for production. */
   readonly origin: { kind: 'FIXTURE'; label: string } | { kind: 'LIVE'; label: string };
   listCases(): Promise<ClaimCaseBundle[]>;
   getCase(caseId: string): Promise<ClaimCaseBundle | undefined>;
-  /** A ruling by id, with the bundle it belongs to. */
   getRuling(rulingId: string): Promise<{ bundle: ClaimCaseBundle; ruling: Ruling } | undefined>;
   listProfiles(): Promise<AdmissionProfile[]>;
   getProfile(profileId: string): Promise<AdmissionProfile | undefined>;
   getRemediation(remediationId: string): Promise<Remediation | undefined>;
 }
 
-export class FixtureCaseSource implements CaseSource {
-  readonly origin = { kind: 'FIXTURE', label: 'Demonstration fixtures (fixture_only: true)' } as const;
+export class LiveCaseSource implements CaseSource {
+  readonly origin = { kind: 'LIVE', label: 'Live Cloud SQL Workbench' } as const;
+
+  private async fetchFullCase(caseId: string): Promise<ClaimCaseBundle | undefined> {
+    const caseRes = await db.select().from(cases).where(eq(cases.caseId, caseId));
+    if (caseRes.length === 0) return undefined;
+    
+    const [c] = caseRes;
+    const allRulings = await db.select().from(rulings).where(eq(rulings.caseId, caseId));
+    
+    const sortedRulings = allRulings.map(r => r.data as unknown as Ruling).sort((a, b) => b.revision - a.revision);
+    
+    return {
+      ...(c.data as Record<string, unknown>),
+      currentRuling: sortedRulings.length > 0 ? sortedRulings[0] : undefined,
+      previousRulings: sortedRulings.length > 1 ? sortedRulings.slice(1) : []
+    } as ClaimCaseBundle;
+  }
 
   async listCases(): Promise<ClaimCaseBundle[]> {
-    return [...FIXTURE_CASES];
+    const allCases = await db.select().from(cases);
+    const results: ClaimCaseBundle[] = [];
+    for (const c of allCases) {
+       const full = await this.fetchFullCase(c.caseId);
+       if (full) results.push(full);
+    }
+    return results;
   }
 
   async getCase(caseId: string): Promise<ClaimCaseBundle | undefined> {
-    return FIXTURE_CASES.find((c) => c.caseId === caseId);
+    return this.fetchFullCase(caseId);
   }
 
   async getRuling(rulingId: string): Promise<{ bundle: ClaimCaseBundle; ruling: Ruling } | undefined> {
-    for (const bundle of FIXTURE_CASES) {
-      const ruling = allRulings(bundle).find((r) => r.rulingId === rulingId);
-      if (ruling) return { bundle, ruling };
-    }
-    return undefined;
+     const rulingRes = await db.select().from(rulings).where(eq(rulings.rulingId, rulingId));
+     if (rulingRes.length === 0) return undefined;
+     
+     const bundle = await this.fetchFullCase(rulingRes[0].caseId);
+     if (!bundle) return undefined;
+     
+     const ruling = allRulings(bundle).find((r) => r.rulingId === rulingId);
+     if (!ruling) return undefined;
+     
+     return { bundle, ruling };
   }
 
   async listProfiles(): Promise<AdmissionProfile[]> {
@@ -58,15 +77,10 @@ export class FixtureCaseSource implements CaseSource {
   }
 }
 
-/** Synchronous lookups for client components that already hold a bundle. */
-export function remediationById(id: string): Remediation | undefined {
-  return FIXTURE_REMEDIATIONS[id];
-}
-
 let source: CaseSource | undefined;
 
-/** The source the app runs on. Only the fixture source exists. */
+/** The source the app runs on. */
 export function getCaseSource(): CaseSource {
-  if (!source) source = new FixtureCaseSource();
+  if (!source) source = new LiveCaseSource();
   return source;
 }

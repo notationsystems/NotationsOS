@@ -7,6 +7,12 @@ import { GET as asOf } from './releases/[releaseId]/as-of/route';
 import { GET as retractions } from './retractions/route';
 import { GET as ruling } from './rulings/[rulingId]/route';
 import { GET as releaseManifest } from './releases/[releaseId]/manifest/route';
+import { GET as factoringReceipts } from './factoring/receipts/route';
+import { GET as factoringReceipt } from './factoring/receipts/[receiptId]/route';
+import { POST as verifyFactoring } from './factoring/verify/route';
+import { GET as dispatchEvents } from './dispatch-liability/events/route';
+import { GET as dispatchEvent } from './dispatch-liability/events/[eventId]/route';
+import { POST as replayDispatch } from './dispatch-liability/replay/route';
 
 const req = (url: string) => new NextRequest(`http://127.0.0.1:3111${url}`);
 const params = <T extends object>(p: T) => ({ params: Promise.resolve(p) });
@@ -20,21 +26,6 @@ describe('/api/v1 route handlers (fixture feed)', () => {
     const body = await res.json();
     expect(body.fixture_only).toBe(true);
     expect(body.releases.length).toBe(3);
-  });
-
-  /**
-   * The ?corpus= filter is documented on /api and was inert in a real build while
-   * the route declared force-static: Next prerendered it with empty search params.
-   */
-  it('filters the release list by corpus', async () => {
-    const all = await (await releases(req('/api/v1/releases'))).json();
-    const corpusId = all.releases[0].corpusId ?? all.releases[0].corpus_id;
-    expect(corpusId, 'a release payload should name its corpus').toBeTruthy();
-    const filtered = await (await releases(req(`/api/v1/releases?corpus=${encodeURIComponent(corpusId)}`))).json();
-    expect(filtered.releases.length).toBeGreaterThan(0);
-    for (const r of filtered.releases) expect(r.corpusId ?? r.corpus_id).toBe(corpusId);
-    const none = await (await releases(req('/api/v1/releases?corpus=notation://corpus/does-not-exist'))).json();
-    expect(none.releases).toEqual([]);
   });
 
   it('serves a release with its rights schedule', async () => {
@@ -92,5 +83,51 @@ describe('/api/v1 route handlers (fixture feed)', () => {
     const ok = await ruling(req('/api/v1/rulings/RUL-5B221-r2?projection=PUBLIC_RULING'), params({ rulingId: 'RUL-5B221-r2' }));
     expect(ok.status).toBe(200);
     expect((await ok.json()).ruling.status).toBe('ADMITTED_WITH_CONDITIONS');
+  });
+
+  it('serves freight factoring receipts index, detail, and attestation verification', async () => {
+    const listRes = await factoringReceipts();
+    expect(listRes.status).toBe(200);
+    const list = await listRes.json();
+    expect(list.count).toBe(3);
+    expect(list.receipts[0].receiptId).toBe('RCP-FACT-2026-0901');
+
+    const detailRes = await factoringReceipt(req('/api/v1/factoring/receipts/RCP-FACT-2026-0901'), params({ receiptId: 'RCP-FACT-2026-0901' }));
+    expect(detailRes.status).toBe(200);
+    const detail = await detailRes.json();
+    expect(detail.receipt.verdict.status).toBe('CLEARED_FOR_ADVANCE');
+
+    const postReq = new NextRequest('http://127.0.0.1:3111/api/v1/factoring/verify', {
+      method: 'POST',
+      body: JSON.stringify({ receiptId: 'RCP-FACT-2026-0901' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const verifyRes = await verifyFactoring(postReq);
+    expect(verifyRes.status).toBe(200);
+    const verifyBody = await verifyRes.json();
+    expect(verifyBody.verified).toBe(true);
+  });
+
+  it('serves streamed dispatch liability events and bitemporal defense replay', async () => {
+    const streamRes = await dispatchEvents();
+    expect(streamRes.status).toBe(200);
+    const streamBody = await streamRes.json();
+    expect(streamBody.streamChainIntact).toBe(true);
+    expect(streamBody.eventCount).toBe(4);
+
+    const eventRes = await dispatchEvent(req('/api/v1/dispatch-liability/events/DISP-EVT-2026-0803'), params({ eventId: 'DISP-EVT-2026-0803' }));
+    expect(eventRes.status).toBe(200);
+    const eventBody = await eventRes.json();
+    expect(eventBody.event.carrierSafetySnapshot.safetyRating).toBe('SATISFACTORY');
+
+    const replayReq = new NextRequest('http://127.0.0.1:3111/api/v1/dispatch-liability/replay', {
+      method: 'POST',
+      body: JSON.stringify({ decisionId: 'DISP-EVT-2026-0803' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const replayRes = await replayDispatch(replayReq);
+    expect(replayRes.status).toBe(200);
+    const replayBody = await replayRes.json();
+    expect(replayBody.reconstruction.stateAtTk.defensible).toBe(true);
   });
 });

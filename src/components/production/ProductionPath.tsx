@@ -360,18 +360,6 @@ export function ProductionPath({ enabled, demo, definition, sourceTemplate, purp
                 {stage.object && <div className="text-[11px]"><Ref reference={stage.object} /></div>}
                 {stage.run && <div className="text-[11px]" style={faint}>run <span className="id">{stage.run.id}</span> · <span className="mono" style={{ color: RUN_COLOR[stage.run.state] }}>{stage.run.state}</span></div>}
                 {stage.href && <Link href={stage.href} className="text-[11.5px]" style={{ color: 'var(--info)' }}>{stage.state === 'DEMONSTRATION' ? 'See the demonstration' : stage.id === 'notation' ? 'Open notations' : 'Open releases'}</Link>}
-                {/* The stage derives its blocker and its recovery; the rail is where an operator reads them. */}
-                {stage.blocker && <div data-testid={`stage-${stage.id}-blocker`}><BlockerView blocker={stage.blocker} /></div>}
-                {stage.recovery.length > 0 && (
-                  <ul className="m-0 p-0 list-none flex flex-col gap-1" data-testid={`stage-${stage.id}-recovery`} aria-label={`What to do at ${stage.label}`}>
-                    {stage.recovery.map((action) => (
-                      <li key={action.kind} className="text-[11.5px] flex flex-wrap items-baseline gap-x-2" data-stage-recovery={action.kind}>
-                        <span style={{ color: 'var(--text-heading)' }}>{action.label}</span>
-                        <span style={faint}>{action.why}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </li>
             ))}
           </ol>

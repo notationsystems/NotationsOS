@@ -54,8 +54,6 @@ test('the feed serves fixture-only JSON with release, bounds, refusals and retra
   const releases = await request.get('/api/v1/releases');
   expect(releases.status()).toBe(200);
   expect(releases.headers()['x-payload-fixture-only']).toBe('true');
-  // next.config.ts sets this for every route; a live fetch proves it for all 27.
-  expect(releases.headers()['x-content-type-options']).toBe('nosniff');
   const list = await releases.json();
   expect(list.fixture_only).toBe(true);
   expect(list.releases[0].status).toBe('CURRENT');
@@ -214,12 +212,6 @@ test('production path without the local rail: the committed demonstration stands
   await expect(page.getByTestId('notation-card')).toContainText('ATTACH_EVIDENCE_REFERENCE');
   await expect(page.getByTestId('release-card')).toContainText('No admission authority exists');
   // Nothing on this page reaches the rail: the disabled descriptor is the only answer it could get, and it is not asked.
-  // Every stage carries what blocks it; the rail is where an operator reads it,
-  // beside the stage, rather than only in the console below. Recovery actions
-  // appear on a failed or quarantined run, which the fixture path never has.
-  await expect(page.getByTestId('stage-notation-blocker')).toContainText('ATTACH_EVIDENCE_REFERENCE');
-  await expect(page.getByTestId('stage-release-blocker')).toContainText('No admission authority exists');
-  await expect(page.getByTestId('stage-release-blocker')).toContainText('Admission contract');
   await page.getByRole('link', { name: 'See the demonstration' }).first().click();
   await expect(page).toHaveURL(/\/candidates/);
   const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze();

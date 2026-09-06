@@ -58,3 +58,4 @@ export function sourceIntegrationInventory() {
   return structuredClone({ ...payload, digest: localRecordDigest(payload) });
 }
 
+export type SourceIntegrationInventory = ReturnType<typeof sourceIntegrationInventory>;

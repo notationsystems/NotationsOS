@@ -131,7 +131,6 @@ export function RulingViewer({ bundle: raw, rulingId }: { bundle: ClaimCaseBundl
         )}
 
         <Section title="Claims ruled on" id="rv-claims">
-          <div className="surface overflow-x-auto" tabIndex={0}>
           <table className="ledger-table text-[12.5px]">
             <thead><tr><th scope="col">Claim</th><th scope="col">Predicate</th><th scope="col">Asserted</th><th scope="col">Normalized</th><th scope="col">Evidence class</th></tr></thead>
             <tbody>
@@ -147,12 +146,10 @@ export function RulingViewer({ bundle: raw, rulingId }: { bundle: ClaimCaseBundl
               {claims.length === 0 && <tr><td colSpan={5} style={{ color: 'var(--text-muted)' }}>No claims visible at this projection.</td></tr>}
             </tbody>
           </table>
-          </div>
         </Section>
 
         <Section title={`Evidence visible at this projection (${evidence.length})`} id="rv-evidence">
           {withheldEvidence > 0 && <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }} role="status">{withheldEvidence} artifact{withheldEvidence === 1 ? '' : 's'} withheld at {VISIBILITY_SEMANTICS[viewer].label} visibility.</p>}
-          <div className="surface overflow-x-auto" tabIndex={0}>
           <table className="ledger-table text-[12.5px]">
             <thead><tr><th scope="col">Artifact</th><th scope="col">Kind</th><th scope="col">Producer</th><th scope="col">Content hash</th><th scope="col">Known by</th></tr></thead>
             <tbody>
@@ -168,11 +165,9 @@ export function RulingViewer({ bundle: raw, rulingId }: { bundle: ClaimCaseBundl
               {evidence.length === 0 && <tr><td colSpan={5} style={{ color: 'var(--text-muted)' }}>No evidence visible at this projection.</td></tr>}
             </tbody>
           </table>
-          </div>
         </Section>
 
         <Section title="Checks" id="rv-checks">
-          <div className="surface overflow-x-auto" tabIndex={0}>
           <table className="ledger-table text-[12.5px]">
             <thead><tr><th scope="col">Check</th><th scope="col">Authority</th><th scope="col">Result</th><th scope="col">Statement</th></tr></thead>
             <tbody>
@@ -186,7 +181,6 @@ export function RulingViewer({ bundle: raw, rulingId }: { bundle: ClaimCaseBundl
               ))}
             </tbody>
           </table>
-          </div>
           {projection.withheld.reducedChecks > 0 && <p className="m-0 text-[11.5px]" style={{ color: 'var(--text-muted)' }}>{projection.withheld.reducedChecks} check{projection.withheld.reducedChecks === 1 ? '' : 's'} shown as a bounded public statement only.</p>}
         </Section>
 

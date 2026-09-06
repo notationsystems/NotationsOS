@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { VerticalContext } from './VerticalContext';
 import { locate } from './nav';
 
+export { NAV_AREAS, PRIMARY_NAV } from './nav';
+
 /**
  * The top bar: brand, where you are (area · page), the domain product. The
  * primary navigation itself lives in the sidebar, which is a left rail on

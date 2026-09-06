@@ -16,6 +16,11 @@ export function fmtUtc(iso: ISODateTime | undefined, opts: { seconds?: boolean }
   return `${opts.seconds ? `${base}:${p(d.getUTCSeconds())}` : base} UTC`;
 }
 
+/** "2026-08-29" */
+export function fmtUtcDate(iso: ISODateTime | undefined): string {
+  if (!iso) return 'Not recorded';
+  return iso.slice(0, 10);
+}
 
 /** Relative duration between two instants, signed, coarse. */
 export function fmtDelta(from: ISODateTime, to: ISODateTime): string {

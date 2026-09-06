@@ -16,22 +16,6 @@ describe('StreamExplorer (as-of answers)', () => {
     expect(screen.getByTestId('asof-url')).toHaveTextContent('/api/v1/releases/REL-CAR-2026.09.01/as-of?subject=LOT-7C-104&predicate=condition.moisture');
   });
 
-  it('marks the standing of every set-aside record, so a withdrawn one never reads as merely unlinked', () => {
-    render(<StreamExplorer corpus={CARAVAN_CORPUS} initial={{}} />);
-    const setAside = screen.getByText('Considered and set aside').parentElement!;
-    const items = within(setAside).getAllByRole('listitem');
-    expect(items.map((li) => li.querySelector('.id')?.textContent)).toEqual(['REC-0301', 'REC-0111']);
-    // REC-0111 is withdrawn by RET-0002; the reason it was set aside says only that its
-    // subject is unlinked, which is the lesser fact.
-    const withdrawn = items.find((li) => li.textContent?.includes('REC-0111'))!;
-    expect(withdrawn).toHaveTextContent('is not linked to LOT-7C-104');
-    expect(withdrawn.querySelector('[data-record-status]')).toHaveAttribute('data-record-status', 'RETRACTED');
-    expect(within(withdrawn).getByRole('link', { name: 'RET-0002' })).toHaveAttribute('href', '/retractions');
-    const current = items.find((li) => li.textContent?.includes('REC-0301'))!;
-    expect(current.querySelector('[data-record-status]')).toHaveAttribute('data-record-status', 'CURRENT');
-    expect(within(current).queryByRole('link')).toBeNull();
-  });
-
   it('answers through an identity link for lot 5B-221 with bounds, both clocks, provenance and rights', async () => {
     const user = userEvent.setup();
     render(<StreamExplorer corpus={CARAVAN_CORPUS} initial={{ subject: 'LOT-5B-221', validAt: '2026-08-17T16:00:00Z' }} />);

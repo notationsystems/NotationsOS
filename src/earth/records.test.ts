@@ -26,13 +26,13 @@ function freeze<T>(value: T): T {
 }
 
 describe('Earth record choices before client serialization', () => {
-  it('passes only gated choices from the server page to EarthTwin with the original source descriptor', () => {
-    const page = EarthPage();
-    const child = Children.toArray(page.props.children).find((entry) => isValidElement(entry) && entry.type === EarthTwin);
+  it('passes only gated choices from the server page to EarthTwin with the original source descriptor', async () => {
+    const page = await EarthPage();
+    const child = Children.toArray((page as React.ReactElement<{ children: React.ReactNode }>).props.children).find((entry) => isValidElement(entry) && entry.type === EarthTwin);
     expect(isValidElement<EarthTwinProps>(child)).toBe(true);
     if (!isValidElement<EarthTwinProps>(child)) throw new Error('EarthTwin child is absent.');
     const release = currentRelease(CARAVAN_CORPUS);
-    const descriptor = describeProjectionSource(release.releaseId);
+    const descriptor = describeProjectionSource(release.releaseId, [CARAVAN_CORPUS]);
     expect(child.props.records).toEqual(earthRecordChoices(CARAVAN_CORPUS, release));
     expect(child.props.source).toEqual(descriptor.source);
     expect(child.props.release).toEqual({ releaseId: release.releaseId, corpusId: release.corpusId, knownAt: descriptor.knownAt });
@@ -43,7 +43,7 @@ describe('Earth record choices before client serialization', () => {
     for (const release of CARAVAN_CORPUS.releases) {
       const before = structuredClone(CARAVAN_CORPUS);
       const choices = earthRecordChoices(CARAVAN_CORPUS, release);
-      const descriptor = describeProjectionSource(release.releaseId);
+      const descriptor = describeProjectionSource(release.releaseId, [CARAVAN_CORPUS]);
       expect(choices.map((entry) => entry.recordId)).toEqual(
         deliverableRecords(CARAVAN_CORPUS, release, 'COUNTERPARTY_SHARED').records.map((entry) => entry.recordId),
       );
@@ -133,7 +133,7 @@ describe('Earth record choices before client serialization', () => {
   it('preserves selectable historical retractions and corrections, leaving status to the compiler', () => {
     const release = currentRelease(CARAVAN_CORPUS);
     const choices = earthRecordChoices(CARAVAN_CORPUS, release);
-    const descriptor = describeProjectionSource(release.releaseId);
+    const descriptor = describeProjectionSource(release.releaseId, [CARAVAN_CORPUS]);
     for (const [recordId, status] of [['REC-0111', 'RETRACTED'], ['REC-0203', 'SUPERSEDED']] as const) {
       const choice = choices.find((entry) => entry.recordId === recordId)!;
       const record = CARAVAN_CORPUS.records.find((entry) => entry.recordId === recordId)!;

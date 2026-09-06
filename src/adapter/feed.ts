@@ -7,6 +7,7 @@
  * functions so tests can call them directly.
  */
 import type { VisibilityClass } from '@/domain/types';
+import { VISIBILITY_CLASSES } from '@/domain/types';
 import type { AsOfQuery } from '@/domain/corpus';
 import { deliveryDecision } from '@/domain/corpus';
 import { getCorpusSource } from './corpusSource';
@@ -24,6 +25,9 @@ export function viewerFromParam(v: string | null | undefined): VisibilityClass {
   return 'COUNTERPARTY_SHARED';
 }
 
+export function isVisibilityClass(v: string): v is VisibilityClass {
+  return (VISIBILITY_CLASSES as readonly string[]).includes(v);
+}
 
 export async function releasesPayload(corpusId?: string) {
   const src = getCorpusSource();

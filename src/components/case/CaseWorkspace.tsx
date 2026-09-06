@@ -3,8 +3,7 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import type { ClaimCaseBundle, LineageNode, Remediation, Ruling, VisibilityClass } from '@/domain/types';
-import { allRulings, highlightsForInvariant, lineagePathFor, projectForViewer, remediationsFor, STATUS_SEMANTICS } from '@/domain/selectors';
-import { remediationById } from '@/adapter/caseSource';
+import { allRulings, highlightsForInvariant, lineagePathFor, projectForViewer, remediationsFor, STATUS_SEMANTICS, remediationById } from '@/domain/selectors';
 import { FixtureBanner } from '@/components/primitives/FixtureBanner';
 import { Section } from '@/components/primitives/Section';
 import { RulingStatusPill } from '@/components/primitives/RulingStatus';

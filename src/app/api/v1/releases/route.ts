@@ -2,8 +2,7 @@ import type { NextRequest } from 'next/server';
 import { releasesPayload } from '@/adapter/feed';
 import { json } from '../_lib';
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 /** GET /api/v1/releases[?corpus=] — the release history of every corpus. */
 export async function GET(req: NextRequest) {

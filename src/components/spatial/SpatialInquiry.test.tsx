@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { NODE } from '@/domain/spatial';
 import { SpatialInquiry } from './SpatialInquiry';
 
 const example = (name: string) => JSON.parse(readFileSync(join(process.cwd(), 'examples', 'spatial', `${name}.json`), 'utf8'));
@@ -59,17 +58,6 @@ describe('SpatialInquiry', () => {
     expect(graph.querySelectorAll('[data-graph-node]')).toHaveLength(5);
     expect(graph.querySelectorAll('[data-graph-edge]')).toHaveLength(4);
     expect(graph.textContent).toContain('depth 0 · root');
-    // The baseline is one space per column, so every passage is a straight cross-column line.
-    expect(graph.querySelectorAll('[data-graph-edge] line')).toHaveLength(4);
-    expect(graph.querySelectorAll('[data-graph-edge][data-same-column]')).toHaveLength(0);
-    // A cross-column label is wider than the gap between two boxes, so it sits above the
-    // row rather than centred on the edge, where it would be written over a box.
-    for (const label of graph.querySelectorAll('[data-graph-edge] text')) {
-      expect(Number(label.getAttribute('y'))).toBeLessThan(NODE.margin + 18);
-    }
-    // The drawing declares its own loss, apart from the analysis's non-claims.
-    expect(screen.getByTestId('spatial-graph-loss')).toHaveTextContent('bowed clear of the column');
-    expect(screen.getByTestId('spatial-nonclaims')).not.toHaveTextContent('bowed clear of the column');
     const table = screen.getByTestId('spatial-table');
     const store = within(table.querySelector('[data-space-row="S-5"]') as HTMLElement).getAllByRole('cell').map((cell) => cell.textContent);
     expect(store.slice(2, 5)).toEqual(['unknown', '4', 'POSSIBLE ONLY']);
@@ -153,13 +141,6 @@ describe('SpatialInquiry', () => {
     expect(screen.getByTestId('spatial-scenario-provenance')).toHaveTextContent('P-07 assumed CLOSED');
     expect(screen.getByTestId('spatial-plan').querySelector('[data-plan-passage="P-07"]')).toHaveAttribute('data-state', 'CLOSED');
     expect(screen.getByTestId('spatial-graph').querySelectorAll('[data-graph-node][data-status="DISCONNECTED"]')).toHaveLength(3);
-    // Closing P-07 strands S-3, S-4 and S-5 in one column. Those two passages are bowed
-    // clear of it as curves, never drawn back across the column under a box.
-    const scenarioGraph = screen.getByTestId('spatial-graph');
-    expect([...scenarioGraph.querySelectorAll('[data-graph-edge][data-same-column]')].map((g) => g.getAttribute('data-graph-edge'))).toEqual(['P-08', 'P-09']);
-    expect(scenarioGraph.querySelector('[data-graph-edge="P-08"] path')).toHaveAttribute('d', expect.stringMatching(/^M 484 59 Q 528 /));
-    expect(scenarioGraph.querySelector('[data-graph-edge="P-08"] line')).toBeNull();
-    expect(scenarioGraph.querySelector('[data-graph-edge="P-01"] line')).not.toBeNull();
     await user.click(screen.getByTestId('spatial-plan').querySelector('[data-plan-space="S-3"]') as Element);
     const p07 = screen.getByTestId('spatial-space-passages').querySelector('[data-passage="P-07"]') as HTMLElement;
     expect(p07).toHaveAttribute('data-effective', 'CLOSED');

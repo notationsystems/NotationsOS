@@ -13,8 +13,6 @@ export const NAV_AREAS: readonly NavArea[] = [
     { href: '/evidence', label: 'Evidence', match: /^\/evidence/ },
   ] },
   { id: 'corpus', label: 'Corpus', activity: 'Candidates, builds, releases and changes', items: [
-    // Anchored: /product is the operating model, /production and /products are different pages.
-    { href: '/product', label: 'Operating model', match: /^\/product$/ },
     { href: '/production', label: 'Production', match: /^\/production/ },
     { href: '/candidates', label: 'Candidates', match: /^\/candidates/ },
     { href: '/products', label: 'Products', match: /^\/products/ },
@@ -27,15 +25,16 @@ export const NAV_AREAS: readonly NavArea[] = [
     { href: '/notations', label: 'Notations', match: /^\/notations/ },
   ] },
   { id: 'inquiry', label: 'Inquiry', activity: 'Explore evidence, compare observations, investigate questions', items: [
+    { href: '/frontier', label: 'Frontier Wedges', match: /^\/frontier/ },
     { href: '/cases', label: 'Cases', match: /^\/cases/ },
     { href: '/rulings', label: 'Rulings', match: /^\/rulings/ },
+    { href: '/factoring', label: 'Factoring Desk', match: /^\/factoring/ },
+    { href: '/dispatch-liability', label: 'Dispatch Liability', match: /^\/dispatch-liability/ },
     { href: '/replay', label: 'Replay', match: /^\/replay/ },
     { href: '/profiles', label: 'Profiles', match: /^\/profiles/ },
     { href: '/earth', label: 'Earth Twin', match: /^\/earth/ },
     { href: '/spatial', label: 'Spatial Inquiry', match: /^\/spatial/ },
     { href: '/compute/observations', label: 'Observations', match: /^\/compute\/observations/ },
-    { href: '/compute/registration', label: 'Registration and access', match: /^\/compute\/registration/ },
-    { href: '/compute/clearance', label: 'Clearance', match: /^\/compute\/clearance/ },
   ] },
   { id: 'coordination', label: 'Coordination', activity: 'Participants, requests, results and blockers', items: [
     { href: '/agents', label: 'Stable', match: /^\/agents/ },
@@ -43,6 +42,7 @@ export const NAV_AREAS: readonly NavArea[] = [
   ] },
 ];
 
+export const PRIMARY_NAV = NAV_AREAS.flatMap((a) => a.items);
 
 /** The area and item a path belongs to, for the top bar's context line. */
 export function locate(pathname: string): { area: NavArea; item: NavItem } | null {

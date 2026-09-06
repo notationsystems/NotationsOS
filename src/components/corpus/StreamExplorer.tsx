@@ -103,23 +103,7 @@ export function StreamExplorer({ corpus, initial }: { corpus: Corpus; initial: S
               <div>
                 <span className="label-sm">Considered and set aside</span>
                 <ul className="m-0 mt-1 pl-4 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>
-                  {answer.refusal.considered.map((c) => {
-                    // A set-aside record carries its standing, exactly as the candidate list
-                    // below does. Why it was set aside is not the only thing a reader needs:
-                    // a withdrawn record must never read as merely unlinked, because the
-                    // vocabulary says it must not be relied on at all.
-                    const record = recordById(corpus, c.recordId);
-                    const status = record ? recordStatusAt(corpus, record, answer.query.knownAt) : undefined;
-                    return (
-                      <li key={c.recordId}>
-                        <span className="id">{c.recordId}</span> — {c.because}{' '}
-                        {status && <RecordStatusPill status={status} />}
-                        {status === 'RETRACTED' && record?.retractedByRetractionId && (
-                          <>{' '}<Link href="/retractions" className="id" style={{ color: 'var(--status-revoked)' }}>{record.retractedByRetractionId}</Link></>
-                        )}
-                      </li>
-                    );
-                  })}
+                  {answer.refusal.considered.map((c) => <li key={c.recordId}><span className="id">{c.recordId}</span> — {c.because}</li>)}
                 </ul>
               </div>
             )}
@@ -143,7 +127,7 @@ export function StreamExplorer({ corpus, initial }: { corpus: Corpus; initial: S
 
       <Section title="Reproduce with the feed" id="st-api" aside={<CopyButton value={body} label="Copy JSON" />}>
         <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>The same reconstruction from the API. A customer&apos;s own model or agent reads this; nothing here depends on the workbench.</p>
-        <p className="m-0"><a href={url} className="id" style={{ color: 'var(--info)' }} data-testid="asof-url">GET {url}</a></p>
+        <p className="m-0"><Link href={url} className="id" style={{ color: 'var(--info)' }} data-testid="asof-url">GET {url}</Link></p>
         <pre tabIndex={0} className="m-0 surface-inset p-3 overflow-x-auto text-[11.5px] mono" style={{ color: 'var(--text-secondary)', maxHeight: 360 }}>{body}</pre>
       </Section>
     </div>

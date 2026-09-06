@@ -1,3 +1,4 @@
+'use client';
 
 import type { ClaimCaseBundle, LineageEdge, LineageNode } from '@/domain/types';
 import { LINEAGE_LAYERS } from '@/domain/selectors';

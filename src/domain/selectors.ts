@@ -18,10 +18,16 @@ import type {
   InvariantResult,
   LineageEdge,
   LineageNode,
+  Remediation,
   Ruling,
   RulingStatus,
   VisibilityClass,
 } from './types';
+import { FIXTURE_REMEDIATIONS } from '../fixtures';
+
+export function remediationById(id: string): Remediation | undefined {
+  return FIXTURE_REMEDIATIONS[id];
+}
 
 /* ── Status semantics (labels, glyphs, colour tokens) ── */
 

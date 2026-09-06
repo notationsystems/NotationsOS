@@ -3,8 +3,41 @@ import { MCP_TOOLS, runMcpTool } from './tools';
 
 describe('MCP tools (a distribution mechanism over the same feed)', () => {
   it('every tool has a name, a description and a schema', () => {
-    expect(MCP_TOOLS.map((t) => t.name)).toEqual(['list_releases', 'get_release', 'get_release_manifest', 'list_records', 'query_as_of', 'list_retractions', 'get_ruling', 'get_ruling_manifest']);
+    expect(MCP_TOOLS.map((t) => t.name)).toEqual([
+      'list_releases',
+      'get_release',
+      'get_release_manifest',
+      'list_records',
+      'query_as_of',
+      'list_retractions',
+      'get_ruling',
+      'get_ruling_manifest',
+      'get_factoring_receipt',
+      'verify_factoring_receipt',
+      'get_dispatch_event',
+      'replay_dispatch_liability',
+    ]);
     for (const t of MCP_TOOLS) expect(t.description.length).toBeGreaterThan(20);
+  });
+
+  it('serves evidence-grade factoring receipts and verifies attestation', async () => {
+    const res = (await runMcpTool('get_factoring_receipt', { receiptId: 'RCP-FACT-2026-0901' })) as { receiptId: string; verdict: { status: string } };
+    expect(res.receiptId).toBe('RCP-FACT-2026-0901');
+    expect(res.verdict.status).toBe('CLEARED_FOR_ADVANCE');
+
+    const audit = (await runMcpTool('verify_factoring_receipt', { receiptId: 'RCP-FACT-2026-0901' })) as { intact: boolean; verdict: string };
+    expect(audit.intact).toBe(true);
+    expect(audit.verdict).toBe('CLEARED_FOR_ADVANCE');
+  });
+
+  it('serves streamed dispatch events and bitemporal liability replay', async () => {
+    const event = (await runMcpTool('get_dispatch_event', { decisionId: 'DISP-EVT-2026-0803' })) as { decisionId: string; sequenceIndex: number };
+    expect(event.decisionId).toBe('DISP-EVT-2026-0803');
+    expect(event.sequenceIndex).toBe(2);
+
+    const replay = (await runMcpTool('replay_dispatch_liability', { decisionId: 'DISP-EVT-2026-0803' })) as { stateAtTk: { defensible: boolean }; evidentiaryFinding: string };
+    expect(replay.stateAtTk.defensible).toBe(true);
+    expect(replay.evidentiaryFinding).toContain('CONFIRMED DEFENSE');
   });
 
   it('query_as_of returns the same reconstruction as the HTTP feed, and a refusal is a successful return', async () => {

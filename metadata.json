@@ -1,0 +1,6 @@
+{
+  "name": "Payload OS",
+  "description": "Information-production system and distribution-workbench for notation systems, state-dependent commercial factoring, dispatch liability, insurability stress, and N11 VOI tasking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
