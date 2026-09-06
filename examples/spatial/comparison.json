@@ -1,0 +1,46 @@
+{
+  "schema": "payload.spatial-comparison.v1",
+  "baselineDigest": "sha256:05502ffb642cfd0be954a943465191835204121b3d2afd7d6aed6d5be3185929",
+  "scenarioDigest": "sha256:54bb0063d6d1966b2856c5c389204246c2e762a948dba3795b41680ec55e51bd",
+  "changes": [
+    {
+      "id": "S-3",
+      "baseline": {
+        "reachability": "CONFIRMED",
+        "confirmedDepth": 2,
+        "possibleDepth": 2
+      },
+      "scenario": {
+        "reachability": "DISCONNECTED",
+        "confirmedDepth": null,
+        "possibleDepth": null
+      }
+    },
+    {
+      "id": "S-4",
+      "baseline": {
+        "reachability": "CONFIRMED",
+        "confirmedDepth": 3,
+        "possibleDepth": 3
+      },
+      "scenario": {
+        "reachability": "DISCONNECTED",
+        "confirmedDepth": null,
+        "possibleDepth": null
+      }
+    },
+    {
+      "id": "S-5",
+      "baseline": {
+        "reachability": "POSSIBLE_ONLY",
+        "confirmedDepth": null,
+        "possibleDepth": 4
+      },
+      "scenario": {
+        "reachability": "DISCONNECTED",
+        "confirmedDepth": null,
+        "possibleDepth": null
+      }
+    }
+  ]
+}

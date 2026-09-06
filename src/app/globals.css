@@ -359,6 +359,16 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .earth-inspector { grid-column: 2; position: static; max-height: none; overflow: visible; border-left: 1px solid var(--border-default); }
 }
 
+/* ═══ Spatial Inquiry: a plan and a graph that act as selection surfaces ═══ */
+.spatial-plan { display: block; width: 100%; height: auto; max-height: 360px; background: var(--bg-void); border-radius: var(--radius-md); }
+.spatial-graph { display: block; background: var(--bg-void); border-radius: var(--radius-md); max-width: none; }
+.spatial-space, .spatial-node { cursor: pointer; outline: none; }
+.spatial-space polygon, .spatial-node rect { transition: stroke var(--motion-fast) var(--motion-ease), fill-opacity var(--motion-fast) var(--motion-ease); }
+.spatial-space:hover polygon { fill-opacity: 0.34; }
+.spatial-node:hover rect { fill: var(--bg-tertiary); }
+.spatial-space:focus-visible polygon, .spatial-node:focus-visible rect { stroke: var(--accent); stroke-width: 3; }
+.spatial-plan text, .spatial-graph text { pointer-events: none; user-select: none; }
+
 /* ═══ Selection in lists and tables ═══ */
 .row-selectable { transition: background var(--motion-fast) var(--motion-ease), border-color var(--motion-fast) var(--motion-ease); }
 .row-selectable:hover { background: rgba(255, 255, 255, 0.035); }

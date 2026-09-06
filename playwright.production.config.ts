@@ -10,6 +10,8 @@ export default defineConfig({
   projects: [
     { name: 'api', testMatch: 'production-api.spec.ts', use: { extraHTTPHeaders: { origin: 'http://127.0.0.1:3113', 'sec-fetch-site': 'same-origin' } } },
     { name: 'browser', testMatch: 'production-path.spec.ts', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
+    // Spatial Inquiry drives the real spatial service from the browser; the spec seeds the runner's evidence root itself.
+    { name: 'spatial', testMatch: 'spatial.spec.ts', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
   ],
   webServer: {
     command: 'npm run start -- --hostname 127.0.0.1 --port 3113',

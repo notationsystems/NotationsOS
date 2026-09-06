@@ -1,0 +1,3 @@
+# Retained example JSON must preserve its exact byte representation across platforms.
+*.json text eol=lf
+*.svg text eol=lf

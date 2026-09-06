@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
 // own region, and nothing positioned inside a scroll region escapes it. On
 // mobile Chrome an escaped box widens the layout viewport and every pointer
 // coordinate after it lands on the wrong element.
-const PAGES = ['/', '/cases', '/cases/new', '/cases/CASE-7C104', '/cases/CASE-5B221', '/evidence', '/profiles', '/rulings', '/rulings/RUL-5B221', '/replay', '/replay/CASE-7C104', '/releases', '/releases/REL-CAR-2026.09.01', '/stream', '/retractions', '/product', '/products', '/api', '/candidates', '/production', '/notations', '/earth', '/agents', '/board'];
+const PAGES = ['/', '/cases', '/cases/new', '/cases/CASE-7C104', '/cases/CASE-5B221', '/evidence', '/profiles', '/rulings', '/rulings/RUL-5B221', '/replay', '/replay/CASE-7C104', '/releases', '/releases/REL-CAR-2026.09.01', '/stream', '/retractions', '/product', '/products', '/api', '/candidates', '/production', '/notations', '/earth', '/spatial', '/agents', '/board'];
 
 for (const path of PAGES) {
   test(`no horizontal document overflow on ${path}, disclosures open`, async ({ page }) => {

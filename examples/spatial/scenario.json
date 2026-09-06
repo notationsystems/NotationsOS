@@ -1,0 +1,30 @@
+{
+  "schema": "payload.spatial-analysis-request.v1",
+  "requestId": "spatial-demo-closed-bridge",
+  "purpose": "SPATIAL_INQUIRY",
+  "layout": {
+    "acquisition": {
+      "id": "spatial-demo-layout",
+      "digest": "sha256:e9ce7601eb31c37f9c3352327c0d25d747da9ac92c2db291bc59b7cc07d190ef"
+    },
+    "evidence": {
+      "id": "spatial-evidence-layout",
+      "contentDigest": "sha256:ccb47f376511e7e38c478a17e5e215277a403c5da471f9234b1f062d3eb56fcc"
+    }
+  },
+  "rootSpaceId": "S-1",
+  "scenario": {
+    "schema": "payload.spatial-scenario.v1",
+    "baselineLayoutDigest": "sha256:35b8ba58c1f8076cd14904ac510364eeb198d5e5cf284530a91a8879152cf707",
+    "passageId": "P-07",
+    "assumedState": "CLOSED",
+    "provenance": {
+      "kind": "SCENARIO_ASSUMPTION",
+      "author": "NotationsOS demonstration fixture",
+      "note": "What if the studio connection is closed?",
+      "sourceIds": [
+        "plan"
+      ]
+    }
+  }
+}
