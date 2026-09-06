@@ -1,0 +1,663 @@
+{
+  "status": "CREATED",
+  "receipt": {
+    "completedAt": "2026-09-05T12:00:00.000Z",
+    "decisions": [
+      {
+        "decisionId": "source-use:spatial-demo-baseline:derive",
+        "evaluatedAt": "2026-09-05T12:00:00.000Z",
+        "reasons": [
+          "EXPLICIT_POLICY_GRANT"
+        ],
+        "registrationId": "spatial-policy-layout",
+        "request": {
+          "audience": "INTERNAL",
+          "operation": "DERIVE",
+          "purpose": "SPATIAL_INQUIRY",
+          "requestedAt": "2026-09-05T12:00:00.000Z"
+        },
+        "requestId": "spatial-demo-baseline:derive",
+        "sourceId": "notation://source/spatial/layout",
+        "state": "ALLOWED"
+      },
+      {
+        "decisionId": "source-use:spatial-demo-baseline:derive",
+        "evaluatedAt": "2026-09-05T12:00:00.000Z",
+        "reasons": [
+          "EXPLICIT_POLICY_GRANT"
+        ],
+        "registrationId": "spatial-policy-plan",
+        "request": {
+          "audience": "INTERNAL",
+          "operation": "DERIVE",
+          "purpose": "SPATIAL_INQUIRY",
+          "requestedAt": "2026-09-05T12:00:00.000Z"
+        },
+        "requestId": "spatial-demo-baseline:derive",
+        "sourceId": "notation://source/spatial/plan",
+        "state": "ALLOWED"
+      }
+    ],
+    "digest": "sha256:6f4fa3231605423538a5f66f7b83981ddda2e963439c839ba6109c4372942ed4",
+    "method": {
+      "id": "directed-room-access",
+      "meanDepth": "REACHABLE_NON_ROOT_SPACES",
+      "scope": "SINGLE_FLOOR_PEDESTRIAN",
+      "unknownPolicy": "CONFIRMED_AND_POSSIBLE",
+      "version": "1.0.0"
+    },
+    "request": {
+      "layout": {
+        "acquisition": {
+          "digest": "sha256:e9ce7601eb31c37f9c3352327c0d25d747da9ac92c2db291bc59b7cc07d190ef",
+          "id": "spatial-demo-layout"
+        },
+        "evidence": {
+          "contentDigest": "sha256:ccb47f376511e7e38c478a17e5e215277a403c5da471f9234b1f062d3eb56fcc",
+          "id": "spatial-evidence-layout"
+        }
+      },
+      "purpose": "SPATIAL_INQUIRY",
+      "requestId": "spatial-demo-baseline",
+      "rootSpaceId": "S-1",
+      "scenario": null,
+      "schema": "payload.spatial-analysis-request.v1"
+    },
+    "reservationDigest": "sha256:070663755251ca9ce0db36dac23f739803c7e5a349f1a5e86cc04f8d30b0b63d",
+    "result": {
+      "confirmed": {
+        "meanDepth": 2,
+        "meanDepthDenominator": 3,
+        "reachableCount": 4,
+        "spaces": [
+          {
+            "depth": 0,
+            "id": "S-1",
+            "incomingNeighbors": 1,
+            "outgoingNeighbors": 1
+          },
+          {
+            "depth": 1,
+            "id": "S-2",
+            "incomingNeighbors": 2,
+            "outgoingNeighbors": 2
+          },
+          {
+            "depth": 2,
+            "id": "S-3",
+            "incomingNeighbors": 2,
+            "outgoingNeighbors": 2
+          },
+          {
+            "depth": 3,
+            "id": "S-4",
+            "incomingNeighbors": 1,
+            "outgoingNeighbors": 1
+          },
+          {
+            "depth": null,
+            "id": "S-5",
+            "incomingNeighbors": 0,
+            "outgoingNeighbors": 0
+          }
+        ],
+        "unreachableIds": [
+          "S-5"
+        ]
+      },
+      "coverage": {
+        "geometryUsedForTraversal": false,
+        "passageCount": 4,
+        "spaceCount": 5,
+        "unresolvedPassageIds": [
+          "P-09"
+        ]
+      },
+      "digest": "sha256:05502ffb642cfd0be954a943465191835204121b3d2afd7d6aed6d5be3185929",
+      "layoutDigest": "sha256:35b8ba58c1f8076cd14904ac510364eeb198d5e5cf284530a91a8879152cf707",
+      "method": {
+        "id": "directed-room-access",
+        "meanDepth": "REACHABLE_NON_ROOT_SPACES",
+        "scope": "SINGLE_FLOOR_PEDESTRIAN",
+        "unknownPolicy": "CONFIRMED_AND_POSSIBLE",
+        "version": "1.0.0"
+      },
+      "parameters": {
+        "rootSpaceId": "S-1"
+      },
+      "passages": [
+        {
+          "assumed": false,
+          "conditions": [],
+          "declaredState": "OPEN",
+          "direction": "BOTH",
+          "effectiveState": "OPEN",
+          "from": "S-1",
+          "id": "P-01",
+          "to": "S-2"
+        },
+        {
+          "assumed": false,
+          "conditions": [],
+          "declaredState": "OPEN",
+          "direction": "BOTH",
+          "effectiveState": "OPEN",
+          "from": "S-2",
+          "id": "P-07",
+          "to": "S-3"
+        },
+        {
+          "assumed": false,
+          "conditions": [],
+          "declaredState": "OPEN",
+          "direction": "BOTH",
+          "effectiveState": "OPEN",
+          "from": "S-3",
+          "id": "P-08",
+          "to": "S-4"
+        },
+        {
+          "assumed": false,
+          "conditions": [],
+          "declaredState": "UNKNOWN",
+          "direction": "BOTH",
+          "effectiveState": "UNKNOWN",
+          "from": "S-4",
+          "id": "P-09",
+          "to": "S-5"
+        }
+      ],
+      "possible": {
+        "meanDepth": 2.5,
+        "meanDepthDenominator": 4,
+        "reachableCount": 5,
+        "spaces": [
+          {
+            "depth": 0,
+            "id": "S-1",
+            "incomingNeighbors": 1,
+            "outgoingNeighbors": 1
+          },
+          {
+            "depth": 1,
+            "id": "S-2",
+            "incomingNeighbors": 2,
+            "outgoingNeighbors": 2
+          },
+          {
+            "depth": 2,
+            "id": "S-3",
+            "incomingNeighbors": 2,
+            "outgoingNeighbors": 2
+          },
+          {
+            "depth": 3,
+            "id": "S-4",
+            "incomingNeighbors": 2,
+            "outgoingNeighbors": 2
+          },
+          {
+            "depth": 4,
+            "id": "S-5",
+            "incomingNeighbors": 1,
+            "outgoingNeighbors": 1
+          }
+        ],
+        "unreachableIds": []
+      },
+      "reachability": [
+        {
+          "id": "S-1",
+          "status": "CONFIRMED"
+        },
+        {
+          "id": "S-2",
+          "status": "CONFIRMED"
+        },
+        {
+          "id": "S-3",
+          "status": "CONFIRMED"
+        },
+        {
+          "id": "S-4",
+          "status": "CONFIRMED"
+        },
+        {
+          "id": "S-5",
+          "status": "POSSIBLE_ONLY"
+        }
+      ],
+      "scenario": null,
+      "scenarioDigest": null,
+      "schema": "payload.spatial-analysis-result.v1",
+      "source": {
+        "acquisition": {
+          "digest": "sha256:e9ce7601eb31c37f9c3352327c0d25d747da9ac92c2db291bc59b7cc07d190ef",
+          "id": "spatial-demo-layout"
+        },
+        "evidence": {
+          "contentDigest": "sha256:ccb47f376511e7e38c478a17e5e215277a403c5da471f9234b1f062d3eb56fcc",
+          "id": "spatial-evidence-layout"
+        }
+      }
+    },
+    "schema": "payload.spatial-receipt.v1",
+    "startedAt": "2026-09-05T12:00:00.000Z"
+  },
+  "projection": {
+    "schema": "payload.spatial-analysis-projection.v1",
+    "sourceKind": "LOCAL_ANALYSIS",
+    "receiptDigest": "sha256:6f4fa3231605423538a5f66f7b83981ddda2e963439c839ba6109c4372942ed4",
+    "resultDigest": "sha256:05502ffb642cfd0be954a943465191835204121b3d2afd7d6aed6d5be3185929",
+    "source": {
+      "acquisition": {
+        "digest": "sha256:e9ce7601eb31c37f9c3352327c0d25d747da9ac92c2db291bc59b7cc07d190ef",
+        "id": "spatial-demo-layout"
+      },
+      "evidence": {
+        "contentDigest": "sha256:ccb47f376511e7e38c478a17e5e215277a403c5da471f9234b1f062d3eb56fcc",
+        "id": "spatial-evidence-layout"
+      }
+    },
+    "layout": {
+      "floorId": "floor-1",
+      "frame": {
+        "axes": "X_RIGHT_Y_UP",
+        "id": "plan-frame",
+        "origin": [
+          0,
+          0
+        ],
+        "parentFrame": null,
+        "units": "m"
+      },
+      "id": "demo-floor",
+      "label": "Synthetic single-floor access example",
+      "passages": [
+        {
+          "conditions": [],
+          "direction": "BOTH",
+          "from": "S-1",
+          "id": "P-01",
+          "provenance": {
+            "author": "NotationsOS demonstration fixture",
+            "kind": "MANUAL_ANNOTATION",
+            "note": "Synthetic declared connections; no measured building or polygon inference.",
+            "sourceIds": [
+              "plan"
+            ]
+          },
+          "state": "OPEN",
+          "to": "S-2"
+        },
+        {
+          "conditions": [],
+          "direction": "BOTH",
+          "from": "S-2",
+          "id": "P-07",
+          "provenance": {
+            "author": "NotationsOS demonstration fixture",
+            "kind": "MANUAL_ANNOTATION",
+            "note": "Synthetic declared connections; no measured building or polygon inference.",
+            "sourceIds": [
+              "plan"
+            ]
+          },
+          "state": "OPEN",
+          "to": "S-3"
+        },
+        {
+          "conditions": [],
+          "direction": "BOTH",
+          "from": "S-3",
+          "id": "P-08",
+          "provenance": {
+            "author": "NotationsOS demonstration fixture",
+            "kind": "MANUAL_ANNOTATION",
+            "note": "Synthetic declared connections; no measured building or polygon inference.",
+            "sourceIds": [
+              "plan"
+            ]
+          },
+          "state": "OPEN",
+          "to": "S-4"
+        },
+        {
+          "conditions": [],
+          "direction": "BOTH",
+          "from": "S-4",
+          "id": "P-09",
+          "provenance": {
+            "author": "NotationsOS demonstration fixture",
+            "kind": "MANUAL_ANNOTATION",
+            "note": "Synthetic declared connections; no measured building or polygon inference.",
+            "sourceIds": [
+              "plan"
+            ]
+          },
+          "state": "UNKNOWN",
+          "to": "S-5"
+        }
+      ],
+      "provenance": {
+        "author": "NotationsOS demonstration fixture",
+        "kind": "MANUAL_ANNOTATION",
+        "note": "Synthetic declared connections; no measured building or polygon inference.",
+        "sourceIds": [
+          "plan"
+        ]
+      },
+      "schema": "payload.spatial-layout.v1",
+      "sourceArtifacts": [
+        {
+          "id": "plan",
+          "reference": {
+            "acquisition": {
+              "digest": "sha256:e176383db97a16243701fee2ac651a72a52fdfe3bbdb7098179686ec4937fde6",
+              "id": "spatial-demo-plan"
+            },
+            "evidence": {
+              "contentDigest": "sha256:a2142cf576d450547b8bce5b9be241d76860007a04b7894742a638c5495f70e0",
+              "id": "spatial-evidence-plan"
+            }
+          }
+        }
+      ],
+      "spaces": [
+        {
+          "id": "S-1",
+          "label": "Entrance",
+          "polygon": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "id": "S-2",
+          "label": "Hall",
+          "polygon": [
+            [
+              5,
+              0
+            ],
+            [
+              9,
+              0
+            ],
+            [
+              9,
+              4
+            ],
+            [
+              5,
+              4
+            ]
+          ]
+        },
+        {
+          "id": "S-3",
+          "label": "Studio",
+          "polygon": [
+            [
+              10,
+              0
+            ],
+            [
+              14,
+              0
+            ],
+            [
+              14,
+              4
+            ],
+            [
+              10,
+              4
+            ]
+          ]
+        },
+        {
+          "id": "S-4",
+          "label": "Office",
+          "polygon": [
+            [
+              15,
+              0
+            ],
+            [
+              19,
+              0
+            ],
+            [
+              19,
+              4
+            ],
+            [
+              15,
+              4
+            ]
+          ]
+        },
+        {
+          "id": "S-5",
+          "label": "Store",
+          "polygon": [
+            [
+              20,
+              0
+            ],
+            [
+              24,
+              0
+            ],
+            [
+              24,
+              4
+            ],
+            [
+              20,
+              4
+            ]
+          ]
+        }
+      ]
+    },
+    "result": {
+      "confirmed": {
+        "meanDepth": 2,
+        "meanDepthDenominator": 3,
+        "reachableCount": 4,
+        "spaces": [
+          {
+            "depth": 0,
+            "id": "S-1",
+            "incomingNeighbors": 1,
+            "outgoingNeighbors": 1
+          },
+          {
+            "depth": 1,
+            "id": "S-2",
+            "incomingNeighbors": 2,
+            "outgoingNeighbors": 2
+          },
+          {
+            "depth": 2,
+            "id": "S-3",
+            "incomingNeighbors": 2,
+            "outgoingNeighbors": 2
+          },
+          {
+            "depth": 3,
+            "id": "S-4",
+            "incomingNeighbors": 1,
+            "outgoingNeighbors": 1
+          },
+          {
+            "depth": null,
+            "id": "S-5",
+            "incomingNeighbors": 0,
+            "outgoingNeighbors": 0
+          }
+        ],
+        "unreachableIds": [
+          "S-5"
+        ]
+      },
+      "coverage": {
+        "geometryUsedForTraversal": false,
+        "passageCount": 4,
+        "spaceCount": 5,
+        "unresolvedPassageIds": [
+          "P-09"
+        ]
+      },
+      "digest": "sha256:05502ffb642cfd0be954a943465191835204121b3d2afd7d6aed6d5be3185929",
+      "layoutDigest": "sha256:35b8ba58c1f8076cd14904ac510364eeb198d5e5cf284530a91a8879152cf707",
+      "method": {
+        "id": "directed-room-access",
+        "meanDepth": "REACHABLE_NON_ROOT_SPACES",
+        "scope": "SINGLE_FLOOR_PEDESTRIAN",
+        "unknownPolicy": "CONFIRMED_AND_POSSIBLE",
+        "version": "1.0.0"
+      },
+      "parameters": {
+        "rootSpaceId": "S-1"
+      },
+      "passages": [
+        {
+          "assumed": false,
+          "conditions": [],
+          "declaredState": "OPEN",
+          "direction": "BOTH",
+          "effectiveState": "OPEN",
+          "from": "S-1",
+          "id": "P-01",
+          "to": "S-2"
+        },
+        {
+          "assumed": false,
+          "conditions": [],
+          "declaredState": "OPEN",
+          "direction": "BOTH",
+          "effectiveState": "OPEN",
+          "from": "S-2",
+          "id": "P-07",
+          "to": "S-3"
+        },
+        {
+          "assumed": false,
+          "conditions": [],
+          "declaredState": "OPEN",
+          "direction": "BOTH",
+          "effectiveState": "OPEN",
+          "from": "S-3",
+          "id": "P-08",
+          "to": "S-4"
+        },
+        {
+          "assumed": false,
+          "conditions": [],
+          "declaredState": "UNKNOWN",
+          "direction": "BOTH",
+          "effectiveState": "UNKNOWN",
+          "from": "S-4",
+          "id": "P-09",
+          "to": "S-5"
+        }
+      ],
+      "possible": {
+        "meanDepth": 2.5,
+        "meanDepthDenominator": 4,
+        "reachableCount": 5,
+        "spaces": [
+          {
+            "depth": 0,
+            "id": "S-1",
+            "incomingNeighbors": 1,
+            "outgoingNeighbors": 1
+          },
+          {
+            "depth": 1,
+            "id": "S-2",
+            "incomingNeighbors": 2,
+            "outgoingNeighbors": 2
+          },
+          {
+            "depth": 2,
+            "id": "S-3",
+            "incomingNeighbors": 2,
+            "outgoingNeighbors": 2
+          },
+          {
+            "depth": 3,
+            "id": "S-4",
+            "incomingNeighbors": 2,
+            "outgoingNeighbors": 2
+          },
+          {
+            "depth": 4,
+            "id": "S-5",
+            "incomingNeighbors": 1,
+            "outgoingNeighbors": 1
+          }
+        ],
+        "unreachableIds": []
+      },
+      "reachability": [
+        {
+          "id": "S-1",
+          "status": "CONFIRMED"
+        },
+        {
+          "id": "S-2",
+          "status": "CONFIRMED"
+        },
+        {
+          "id": "S-3",
+          "status": "CONFIRMED"
+        },
+        {
+          "id": "S-4",
+          "status": "CONFIRMED"
+        },
+        {
+          "id": "S-5",
+          "status": "POSSIBLE_ONLY"
+        }
+      ],
+      "scenario": null,
+      "scenarioDigest": null,
+      "schema": "payload.spatial-analysis-result.v1",
+      "source": {
+        "acquisition": {
+          "digest": "sha256:e9ce7601eb31c37f9c3352327c0d25d747da9ac92c2db291bc59b7cc07d190ef",
+          "id": "spatial-demo-layout"
+        },
+        "evidence": {
+          "contentDigest": "sha256:ccb47f376511e7e38c478a17e5e215277a403c5da471f9234b1f062d3eb56fcc",
+          "id": "spatial-evidence-layout"
+        }
+      }
+    },
+    "inspection": "HISTORICAL",
+    "currentRightsGrant": false,
+    "mode": "LOCAL_DEVELOPMENT",
+    "canonicalAdmission": false,
+    "independentlyVerified": false,
+    "sourceTruthClaimed": false
+  }
+}
