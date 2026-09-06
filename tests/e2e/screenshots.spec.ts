@@ -36,6 +36,10 @@ test('desktop screenshots', async ({ page }) => {
   await page.goto('/notations');
   await page.getByTestId('evidence-fixture-marker').waitFor();
   await page.screenshot({ path: `${OUT}/00g-notations-disabled-with-evidence-references.png`, fullPage: true });
+  await page.goto('/compute/observations');
+  await page.getByTestId('observation-register').locator('[data-observation="session-b-RADAR-observation"]').getByRole('button').click();
+  await page.getByTestId('replay-inspector').waitFor();
+  await page.screenshot({ path: `${OUT}/00n-observation-replay.png`, fullPage: false });
   await page.goto('/production');
   await page.getByTestId('path-rail').waitFor();
   await page.screenshot({ path: `${OUT}/00l-production-path-fixture.png`, fullPage: true });
