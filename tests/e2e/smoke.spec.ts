@@ -89,6 +89,13 @@ test('the product page states the firm, the twelve stages, the three customer ca
   await expect(page.locator('[data-engine="kepler.gl"][data-presence="ABSENT"]')).toHaveCount(1);
   await expect(page.locator('[data-engine="records"][data-presence="FIXTURE"]')).toHaveCount(1);
   await expect(page.locator('[data-tier][data-reached="true"]')).toHaveCount(2);
+  // Storage is declared as candidates with an honest present state: six classes, none held by a running service.
+  await expect(page.locator('[data-storage]')).toHaveCount(6);
+  await expect(page.locator('[data-storage][data-state="SERVICE"]')).toHaveCount(0);
+  await expect(page.locator('[data-storage="embeddings"][data-state="ABSENT"]')).toContainText('Qdrant, Milvus, pgvector');
+  await expect(page.getByRole('heading', { name: 'Where the corpus is stored' })).toBeVisible();
+  await expect(page.locator('#pm-storage')).toContainText('candidates, not selections');
+  await expect(page.locator('#pm-storage')).toContainText('not a canonical relation');
   await expect(page.getByRole('cell', { name: /^Samsara single-vehicle GPS-history adapter/ })).toContainText('offline-tested; live fleet qualification, continuous sync and inferred visits remain absent');
   await page.getByRole('link', { name: /^Local weighted rigid registration/ }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Registration and access' })).toBeVisible();

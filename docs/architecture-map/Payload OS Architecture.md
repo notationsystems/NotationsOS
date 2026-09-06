@@ -43,6 +43,7 @@ An editable map of the Notation Systems / Payload OS repository as it exists on 
 ### Runtimes, local stores and verification
 
 - [[Runtimes and local stores]] — `NODE · RUST · PYTHON` — Node.js/TypeScript is the facade and workbench; Rust is the deterministic notation state kernel; Python runs the pinned GAT engine.
+- [[Storage (polyglot persistence)]] — `DECLARED · NOTHING INSTALLED` — Six classes of information ask for six kinds of store; the technologies named are candidates and none is installed.
 - [[Verification harness]] — `GREEN ON THE BRANCH` — Vitest unit and component tests, three Playwright configurations (regular desktop and Pixel 7, production rail with a real worker, real Rust kernel), axe accessibility checks, horizontal-overflow guards and regenerated screenshots.
 - [[Sibling repositories and vendored contracts]] — `PINNED · READ-ONLY` — The control-plane result-manifest and canonical-URI code is vendored verbatim from Notations-Ecosystem at a pinned commit, used only by tests.
 

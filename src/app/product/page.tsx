@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CUSTOMER_CATEGORIES, DISTRIBUTION_MECHANISMS, ECONOMIC_ARCHITECTURE, ENGINES, MATERIAL_CLASSES_IN_CORPUS, PRESENCE_LABEL, PRODUCTION_SYSTEM, PRODUCT_ARCHITECTURE, REFERENCE_IMPLEMENTATION, THESIS, VALUE_PROPOSITION } from '@/domain/product';
 import { DOCTRINE, EXTRACTION_INTERFACE, FABRICS, IDENTITY_CHAIN, INFORMATION_STATES, OPERATIONAL_RULE, PROJECTION_ENGINES_IN_REPOSITORY, VERIFICATION_TIERS, WORKBENCH_RUNTIME } from '@/domain/doctrine';
+import { STORAGE_CLASSES, STORAGE_PRESENT_STATE, STORAGE_SEQUENCE, STORAGE_STATE_LABEL, STORE_KIND_LABEL } from '@/domain/storage';
 import { Section } from '@/components/primitives/Section';
 
 export const metadata: Metadata = { title: 'Product model' };
@@ -153,6 +154,41 @@ ${PRODUCT_ARCHITECTURE.domains.map((d, i, a) => `   ${i === a.length - 1 ? 'â””â
       <Section title="Shared OS coordination" id="pm-coordination">
         <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>The <Link href="/agents" style={{ color: 'var(--info)' }}>agent and apparatus stable</Link> records definitions, capabilities, and compatible input/output contracts. The <Link href="/board" style={{ color: 'var(--info)' }}>message board</Link> records requests, handoffs, blockers, results, and acknowledgements with corpus release context.</p>
         <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }}>Present as a local coordination prototype with a demonstration registry, participant inboxes, and JavaScript/Python clients. A manually started local worker reviews declared contracts and records results and receipts. The board does not launch workers, authenticate customers, or execute models.</p>
+      </Section>
+
+      <Section title="Where the corpus is stored" id="pm-storage">
+        <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>Six classes of information with different access patterns ask for different stores. The technologies below are candidates, not selections. {STORAGE_PRESENT_STATE.summary}</p>
+        <div className="surface overflow-x-auto" tabIndex={0}>
+          <table className="ledger-table text-[12px]" aria-label="Storage classes and their candidate stores">
+            <thead><tr><th scope="col">Information</th><th scope="col">Store kind</th><th scope="col">Candidates</th><th scope="col">Fabric</th><th scope="col">Here</th></tr></thead>
+            <tbody>
+              {STORAGE_CLASSES.map((c) => (
+                <tr key={c.id} data-storage={c.id} data-state={c.here.state}>
+                  <td style={{ color: 'var(--text-heading)' }}>{c.dataClass}</td>
+                  <td>{STORE_KIND_LABEL[c.kind]}</td>
+                  <td className="mono">{c.candidates.join(', ')}</td>
+                  <td className="id">{c.fabric}</td>
+                  <td style={{ color: c.here.state === 'ABSENT' ? 'var(--status-refused)' : c.here.state === 'FIXTURE' ? 'var(--status-conditional)' : 'var(--text-secondary)' }}>{STORAGE_STATE_LABEL[c.here.state]}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          {STORAGE_CLASSES.map((c) => (
+            <article key={c.id} className="surface p-3 flex flex-col gap-1.5" aria-labelledby={`storage-${c.id}`}>
+              <h3 id={`storage-${c.id}`} className="m-0 text-[13px] font-semibold" style={{ color: 'var(--text-heading)' }}>{STORE_KIND_LABEL[c.kind]}</h3>
+              <p className="m-0 text-[12px]" style={{ color: 'var(--text-secondary)' }}>{c.why}</p>
+              <p className="m-0 text-[12px]" style={{ color: 'var(--text-secondary)' }}><span className="label-sm">Must not break</span> {c.invariant}</p>
+              <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }}><span className="label-sm">Here</span> {c.here.what}{c.here.where ? <> <Link href={c.here.where} style={{ color: 'var(--info)' }}>{c.here.where}</Link></> : null}</p>
+              <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }}><span className="label-sm">Before choosing one</span> {c.before}</p>
+            </article>
+          ))}
+        </div>
+        <ul className="m-0 pl-5 text-[12px] flex flex-col gap-1" style={{ color: 'var(--text-muted)' }} aria-label="Adoption sequence">
+          {STORAGE_SEQUENCE.map((step) => <li key={step}>{step}</li>)}
+        </ul>
+        <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }}>Local roots today: <span className="mono">{STORAGE_PRESENT_STATE.roots}</span>. {STORAGE_PRESENT_STATE.dependencies}</p>
       </Section>
 
       <Section title="Projection fabric" id="pm-projection">
