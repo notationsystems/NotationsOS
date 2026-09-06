@@ -94,6 +94,7 @@ export const ENGINES: readonly Engine[] = [
       { item: 'Release-bound execution context: every answer names its release, build, both clocks and bounds so a workload can cite them', presence: 'FIXTURE', where: '/api' },
       { item: 'Local instruments only: pinned GAT IFC audit and evidence-bound observation replay; not managed customer workloads', presence: 'PRESENT' },
       { item: 'Local scalar linear-Gaussian benchmark: evidence-linked model results and separate held-out-reference metrics; synthetic demonstration, not field validation', presence: 'PRESENT' },
+      { item: 'Local weighted rigid registration and explicit Euclidean/access-network distances: evidence-bound CLI and synthetic inspector; not physical validation or live routing', presence: 'PRESENT', where: '/compute/registration' },
       { item: 'Trained neural models and independently validated physical prediction', presence: 'ABSENT' },
       { item: 'Managed execution of customer workloads', presence: 'ABSENT' },
     ],
