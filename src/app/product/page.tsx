@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CUSTOMER_CATEGORIES, DISTRIBUTION_MECHANISMS, ECONOMIC_ARCHITECTURE, ENGINES, MATERIAL_CLASSES_IN_CORPUS, PRESENCE_LABEL, PRODUCTION_SYSTEM, PRODUCT_ARCHITECTURE, REFERENCE_IMPLEMENTATION, THESIS, VALUE_PROPOSITION } from '@/domain/product';
 import { DOCTRINE, EXTRACTION_INTERFACE, FABRICS, IDENTITY_CHAIN, INFORMATION_STATES, OPERATIONAL_RULE, PROJECTION_ENGINES_IN_REPOSITORY, VERIFICATION_TIERS, WORKBENCH_RUNTIME } from '@/domain/doctrine';
+import { CROSS_LINE_JOIN, CORE_STATE_LABEL, FAMILY_STATE_LABEL, IDENTIFIER_FAMILIES, IDENTITY_CORE, JOIN_KEYS } from '@/domain/identity';
 import { STORAGE_CLASSES, STORAGE_PRESENT_STATE, STORAGE_SEQUENCE, STORAGE_STATE_LABEL, STORE_KIND_LABEL } from '@/domain/storage';
 import { Section } from '@/components/primitives/Section';
 
@@ -154,6 +155,61 @@ ${PRODUCT_ARCHITECTURE.domains.map((d, i, a) => `   ${i === a.length - 1 ? '└�
       <Section title="Shared OS coordination" id="pm-coordination">
         <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>The <Link href="/agents" style={{ color: 'var(--info)' }}>agent and apparatus stable</Link> records definitions, capabilities, and compatible input/output contracts. The <Link href="/board" style={{ color: 'var(--info)' }}>message board</Link> records requests, handoffs, blockers, results, and acknowledgements with corpus release context.</p>
         <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }}>Present as a local coordination prototype with a demonstration registry, participant inboxes, and JavaScript/Python clients. A manually started local worker reviews declared contracts and records results and receipts. The board does not launch workers, authenticate customers, or execute models.</p>
+      </Section>
+
+      <Section title="Identity: one core, three families, one join" id="pm-identity">
+        <p className="m-0 text-[12.5px]" style={{ color: 'var(--text-secondary)' }}>Identity is line-agnostic; the verticals are not. Resolution, provenance, bitemporality and linkage are solved once for every line; the identifiers beneath them belong to their line. {CROSS_LINE_JOIN.claim}</p>
+        <div className="surface overflow-x-auto" tabIndex={0}>
+          <table className="ledger-table text-[12px]" aria-label="The identity core">
+            <thead><tr><th scope="col">Facility</th><th scope="col">Owes every line</th><th scope="col">State</th><th scope="col">Here</th></tr></thead>
+            <tbody>
+              {IDENTITY_CORE.map((f) => (
+                <tr key={f.id} data-core={f.id} data-core-state={f.state}>
+                  <td style={{ color: 'var(--text-heading)' }}>{f.title}</td>
+                  <td>{f.obligation}</td>
+                  <td style={{ color: f.state === 'ABSENT' ? 'var(--status-refused)' : f.state === 'PARTIAL' ? 'var(--status-conditional)' : 'var(--check-passed)' }}>{CORE_STATE_LABEL[f.state]}</td>
+                  <td style={{ color: 'var(--text-muted)' }}>{f.here}{f.missing ? <> <span style={{ color: 'var(--status-conditional)' }}>Missing: {f.missing}</span></> : null}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {IDENTIFIER_FAMILIES.map((family) => (
+            <article key={family.domain} className="surface p-3 flex flex-col gap-1.5" aria-labelledby={`family-${family.domain}`} data-family={family.domain}>
+              <h3 id={`family-${family.domain}`} className="m-0 text-[13px] font-semibold" style={{ color: 'var(--text-heading)' }}>{family.domain}</h3>
+              <ul className="m-0 p-0 list-none flex flex-col gap-1">
+                {family.identifiers.map((i) => (
+                  <li key={i.id} data-identifier={i.id} data-identifier-state={i.state} className="text-[12px]">
+                    <span className="id">{i.id}</span> <span style={{ color: 'var(--text-muted)' }}>— {i.what}. Issued by {i.issuer}.</span>{' '}
+                    <span style={{ color: i.state === 'IN_USE' ? 'var(--check-passed)' : 'var(--status-conditional)' }}>{FAMILY_STATE_LABEL[i.state]}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="m-0 text-[12px]" style={{ color: 'var(--text-secondary)' }}>{family.whyLineSpecific}</p>
+            </article>
+          ))}
+        </div>
+        <div className="surface p-3 flex flex-col gap-2" data-testid="cross-line-join">
+          <h3 className="m-0 text-[13px] font-semibold" style={{ color: 'var(--text-heading)' }}>The cross-line join <span style={{ color: 'var(--status-refused)' }}>Absent</span></h3>
+          <p className="m-0 text-[12px]" style={{ color: 'var(--text-secondary)' }}>{CROSS_LINE_JOIN.why}</p>
+          <ol className="m-0 pl-5 text-[12px] flex flex-col gap-1" style={{ color: 'var(--text-secondary)' }} aria-label="What the cross-line join requires">
+            {CROSS_LINE_JOIN.requires.map((r) => <li key={r}>{r}</li>)}
+          </ol>
+          <table className="ledger-table text-[12px]" aria-label="Join keys and their hazards">
+            <thead><tr><th scope="col">Key</th><th scope="col">State</th><th scope="col">The mistake it invites</th></tr></thead>
+            <tbody>
+              {JOIN_KEYS.map((k) => (
+                <tr key={k.id} data-join-key={k.id} data-join-state={k.state}>
+                  <td style={{ color: 'var(--text-heading)' }}>{k.title}</td>
+                  <td style={{ color: k.state === 'ABSENT' ? 'var(--status-refused)' : 'var(--check-passed)' }}>{k.state === 'ABSENT' ? 'Absent' : 'Present'}</td>
+                  <td style={{ color: 'var(--text-muted)' }}>{k.hazard}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="m-0 text-[12px]" style={{ color: 'var(--text-muted)' }}>{CROSS_LINE_JOIN.discipline}</p>
+        </div>
       </Section>
 
       <Section title="Where the corpus is stored" id="pm-storage">
