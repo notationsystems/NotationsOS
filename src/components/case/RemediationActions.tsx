@@ -1,4 +1,3 @@
-'use client';
 
 import { useState } from 'react';
 import type { ClaimCaseBundle, Remediation, RemediationKind } from '@/domain/types';

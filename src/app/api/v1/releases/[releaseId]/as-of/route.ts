@@ -2,6 +2,9 @@ import type { NextRequest } from 'next/server';
 import { asOfPayload } from '@/adapter/feed';
 import { json, refusal } from '../../../_lib';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?Z$/;
 
 /** GET /api/v1/releases/:releaseId/as-of?subject=&predicate=&validAt=&knownAt= — one reconstructed answer or a typed refusal. */

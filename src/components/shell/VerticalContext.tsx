@@ -1,4 +1,3 @@
-'use client';
 
 import type { Domain } from '@/domain/types';
 

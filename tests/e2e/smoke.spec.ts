@@ -54,6 +54,8 @@ test('the feed serves fixture-only JSON with release, bounds, refusals and retra
   const releases = await request.get('/api/v1/releases');
   expect(releases.status()).toBe(200);
   expect(releases.headers()['x-payload-fixture-only']).toBe('true');
+  // next.config.ts sets this for every route; a live fetch proves it for all 27.
+  expect(releases.headers()['x-content-type-options']).toBe('nosniff');
   const list = await releases.json();
   expect(list.fixture_only).toBe(true);
   expect(list.releases[0].status).toBe('CURRENT');

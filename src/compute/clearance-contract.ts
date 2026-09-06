@@ -39,7 +39,6 @@ const schema = z.object({
   }).strict(),
 }).strict();
 export type ClearanceExperiment = z.infer<typeof schema>;
-export type ClearanceState = ClearanceExperiment['model']['states'][number];
 export type ClearanceAction = ClearanceExperiment['model']['actions'][number];
 export const clearanceRequestSchema = z.object({ schema: z.literal('payload.clearance-voi-request.v1'), runId: id, manifest: artifactReference }).strict();
 export type ClearanceRequest = z.infer<typeof clearanceRequestSchema>;

@@ -76,7 +76,6 @@ export const MCP_TOOLS = [
   }),
 ] as const;
 
-export type McpToolName = (typeof MCP_TOOLS)[number]['name'];
 
 /** Validate arguments against the tool's schema and run it. Throws on malformed arguments only. */
 export async function runMcpTool(name: string, args: unknown): Promise<unknown> {

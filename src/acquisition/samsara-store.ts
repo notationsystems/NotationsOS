@@ -257,4 +257,3 @@ export class SamsaraCaptureStore {
         surveyAccuracyEstablished: false, continuousSynchronization: false }, integrity: 'RECOMPUTED_LOCAL' as const };
   }
 }
-export type SamsaraCaptureInspection = NonNullable<ReturnType<SamsaraCaptureStore['inspect']>>;

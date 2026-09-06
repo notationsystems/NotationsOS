@@ -22,6 +22,21 @@ describe('/api/v1 route handlers (fixture feed)', () => {
     expect(body.releases.length).toBe(3);
   });
 
+  /**
+   * The ?corpus= filter is documented on /api and was inert in a real build while
+   * the route declared force-static: Next prerendered it with empty search params.
+   */
+  it('filters the release list by corpus', async () => {
+    const all = await (await releases(req('/api/v1/releases'))).json();
+    const corpusId = all.releases[0].corpusId ?? all.releases[0].corpus_id;
+    expect(corpusId, 'a release payload should name its corpus').toBeTruthy();
+    const filtered = await (await releases(req(`/api/v1/releases?corpus=${encodeURIComponent(corpusId)}`))).json();
+    expect(filtered.releases.length).toBeGreaterThan(0);
+    for (const r of filtered.releases) expect(r.corpusId ?? r.corpus_id).toBe(corpusId);
+    const none = await (await releases(req('/api/v1/releases?corpus=notation://corpus/does-not-exist'))).json();
+    expect(none.releases).toEqual([]);
+  });
+
   it('serves a release with its rights schedule', async () => {
     const res = await release(req('/api/v1/releases/REL-CAR-2026.09.01'), params({ releaseId: 'REL-CAR-2026.09.01' }));
     const body = await res.json();
