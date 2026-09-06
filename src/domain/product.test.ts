@@ -16,4 +16,11 @@ describe('honest live source presence', () => {
       expect(entries.find((entry) => entry.item === item)?.presence).toBe('ABSENT');
     }
   });
+  it('states source normalization and membership as internal unadmitted production, not a live customer feed', () => {
+    const data = ENGINES.find((engine) => engine.id === 'data_systems')!;
+    expect(data.inThisRepository.find((entry) => entry.item.startsWith('FMCSA typed normalization'))).toMatchObject({
+      presence: 'PRESENT', item: expect.stringMatching(/operator CLI only, UNADMITTED, outside customer feeds/),
+    });
+    expect(data.inThisRepository.find((entry) => entry.item === 'Feed API')?.presence).toBe('FIXTURE');
+  });
 });

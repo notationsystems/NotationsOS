@@ -10,6 +10,8 @@ The profile accepts 1–25 unique, explicit corporate USDOT identifiers. The que
 
 This is a source observation contract, not the synthetic Caravan Carrier JSON contract. The connector does not run identity resolution, turn a Census record into an admitted Carrier, assemble a corpus, or infer a business recommendation.
 
+**Continuity update (2026-09-06 UTC):** retained `CAPTURED` responses now enter a separate FMCSA-specific adapter and exact-reference v2 candidate build through operator commands. This preserves the capture contract above; it does not force observations into synthetic Carrier v1 or grant admission/release/customer delivery. See [Real-source continuity](REAL_SOURCE_CONTINUITY.md) for contracts, commands and the executed one-record acceptance.
+
 ## Operator commands
 
 From the repository root in PowerShell:
