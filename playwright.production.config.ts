@@ -1,9 +1,11 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './tests/e2e', testMatch: 'production-api.spec.ts',
+  testDir: './tests/e2e', testMatch: ['production-api.spec.ts', 'spatial.spec.ts'],
   timeout: 90_000, workers: 1, retries: 0, reporter: [['list']],
   use: { baseURL: 'http://127.0.0.1:3113', trace: 'off',
+    // The environment pre-installs Chromium here; do not download browsers.
+    launchOptions: process.env.PW_CHROMIUM_PATH ? { executablePath: process.env.PW_CHROMIUM_PATH } : undefined,
     extraHTTPHeaders: { origin: 'http://127.0.0.1:3113', 'sec-fetch-site': 'same-origin' } },
   webServer: {
     command: 'npm run start -- --hostname 127.0.0.1 --port 3113',
