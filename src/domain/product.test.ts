@@ -16,6 +16,13 @@ describe('honest live source presence', () => {
       expect(entries.find((entry) => entry.item === item)?.presence).toBe('ABSENT');
     }
   });
+  it('distinguishes the offline-tested Samsara adapter from a connected fleet or inferred visits', () => {
+    const data = ENGINES.find((engine) => engine.id === 'data_systems')!;
+    expect(data.inThisRepository.find((entry) => entry.item.startsWith('Samsara single-vehicle'))).toMatchObject({
+      presence: 'PRESENT', item: expect.stringContaining('offline-tested; live fleet qualification, continuous sync and inferred visits remain absent'),
+    });
+    expect(data.inThisRepository.find((entry) => entry.item === 'Feed API')?.presence).toBe('FIXTURE');
+  });
   it('states source normalization and membership as internal unadmitted production, not a live customer feed', () => {
     const data = ENGINES.find((engine) => engine.id === 'data_systems')!;
     expect(data.inThisRepository.find((entry) => entry.item.startsWith('FMCSA typed normalization'))).toMatchObject({
