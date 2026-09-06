@@ -25,6 +25,11 @@ const census = { schema: 'payload.source-capture-inspection.v1', state: 'CAPTURE
   observations: { schema: 'payload.fmcsa-census-observations.v1', sourceId: 'fmcsa-company-census', records: [{ dot_number: '80806', legal_name: 'SYNTHETIC CENSUS CORPORATION', business_org_desc: 'CORPORATION', phy_country: 'US', phy_state: 'OH', status_code: 'A', carrier_operation: null, power_units: '4', total_drivers: '5', mcs150_date: '20260801', mcs150_mileage: null, mcs150_mileage_year: null, docket1prefix: null, docket1: null, docket1_status_code: null, identityStatus: 'UNRESOLVED', canonicalId: null }], notReturned: [] } };
 
 /** A fake rail with the real rail's identity discipline: an identity names its inputs forever; a changed command conflicts; malformed bytes are captured and quarantined at normalization. */
+const censusRun = { schema: 'payload.fmcsa-census-normalization.v1', mode: 'LOCAL_SOURCE_QUALIFICATION', state: 'NORMALIZED', normalizedAt: '2026-09-06T01:29:10.984Z', deriveDecision: { state: 'ALLOWED' }, notReturned: [], digest: digestOf('census-run'), canonicalAdmission: false, sourceTruthClaimed: false, fieldAccuracyClaimed: false, independentlyVerified: false, customerDistributionPermitted: false,
+  candidate: { candidateId: 'fmcsa-census-80806-2026-09-05-normalized-v1:candidate', recordType: 'FMCSACompanyCensusObservation', state: 'UNADMITTED', identity: { state: 'UNRESOLVED', sourceId: 'fmcsa-company-census', sourceRecordId: '80806', canonicalId: null }, temporal: { capturedAt: '2026-09-05T20:48:11.364Z', providerLastModified: 'Sat, 05 Sep 2026 10:16:48 GMT', filingDateMeaning: 'SOURCE_FILING_DATE_NOT_VALID_TIME', validTimeMeaning: 'NOT_ESTABLISHED_BY_SNAPSHOT' },
+    fields: { dot_number: { raw: '80806', presence: 'PRESENT', value: '80806', unit: null, interpretation: 'USDOT identifier as text' }, power_units: { raw: '4', presence: 'PRESENT', value: 4, unit: 'power units', interpretation: 'count' }, docket1: { raw: null, presence: 'OMITTED', value: null, unit: null, interpretation: 'not in the response' } }, digest: digestOf('census-candidate') } };
+const censusBuildRecord = { schema: 'payload.local-candidate-build.v2', state: 'UNADMITTED', builtAt: '2026-09-06T01:30:14.817Z', knownThrough: '2026-09-06T01:29:10.984Z', recordCount: 1, recordsRoot: digestOf('root2'), digest: digestOf('census-build'), request: { manifest: { definition: { id: 'caravan-fmcsa-census-qualification', version: '1.0.0', domain: 'CARAVAN', recordType: 'FMCSACompanyCensusObservation' } } }, members: [{ normalization: { id: 'fmcsa-census-80806-2026-09-05-normalized-v1', digest: digestOf('census-run') }, candidate: { id: 'fmcsa-census-80806-2026-09-05-normalized-v1:candidate', digest: digestOf('census-candidate') } }], canonicalAdmission: false, releaseActivated: false, identityResolved: false, customerDistributionPermitted: false };
+
 function fakeRail(options: { availability?: 'ENABLED' | 'DISABLED' | 'LOCAL_ONLY'; readback?: 'FOUND' | 'NOT_FOUND' } = {}) {
   const runs = new Map<string, { digest: string; result: ProductionResult }>();
   const bytes = new Map<string, string>();
@@ -62,6 +67,8 @@ function fakeRail(options: { availability?: 'ENABLED' | 'DISABLED' | 'LOCAL_ONLY
       return json({ schema: 'payload.production-catalog.v1', mode: 'LOCAL_DEVELOPMENT', corpora: [...runs.values()].filter((entry) => entry.result.run.outputs[0]?.kind === 'CORPUS').map((entry) => ({ reference: entry.result.run.outputs[0], version: '1.0.0', domain: 'CARAVAN', recordType: 'Carrier' })), sources: [], runs: [...runs.values()].map((entry) => ({ id: entry.result.run.id, kind: 'X', state: entry.result.run.state, reference: { id: entry.result.run.id, digest: entry.result.run.digest }, startedAt: AT, outputCount: entry.result.run.outputs.length })), canonicalAdmission: false });
     }
     if (url.startsWith('/api/production/source-captures/')) return options.readback === 'FOUND' ? json({ schema: 'payload.source-capture-readback.v1', requestId: 'fmcsa-census-80806-2026-09-05-qualification', inspection: census, collectionPerformed: false }) : json(refusal('SOURCE_CAPTURE_NOT_FOUND', 'No stored source capture has this request ID.'), 404);
+    if (url.startsWith('/api/production/source-normalizations/')) return options.readback === 'FOUND' ? json({ schema: 'payload.source-normalization-readback.v1', run: censusRun, derivationPerformed: false }) : json(refusal('CENSUS_NORMALIZATION_NOT_FOUND', 'No stored FMCSA normalization has this identifier.'), 404);
+    if (url.startsWith('/api/production/source-builds/')) return options.readback === 'FOUND' ? json({ schema: 'payload.source-build-readback.v1', build: censusBuildRecord, assemblyPerformed: false }) : json(refusal('CENSUS_BUILD_NOT_FOUND', 'No stored FMCSA candidate build has this identifier.'), 404);
     if (url === '/api/production/inspect') {
       const { kind, reference } = JSON.parse(String(init?.body));
       // The real rail's reference parser: exactly an identifier and a full digest, nothing else.
@@ -81,7 +88,7 @@ function fakeRail(options: { availability?: 'ENABLED' | 'DISABLED' | 'LOCAL_ONLY
 function props(overrides: Partial<ProductionPathProps> = {}): ProductionPathProps {
   return { enabled: true, demo, definition: CARAVAN_DEMO_DEFINITION, sourceTemplate: caravanDemoSource({ id: 'PENDING', digest: `sha256:${'0'.repeat(64)}` }), purpose: CARAVAN_DEMO_PURPOSE,
     carrier: { path: 'examples/carrier/source.json', text: carrierText, base64: Buffer.from(carrierText, 'utf8').toString('base64'), byteLength: Buffer.byteLength(carrierText) },
-    fmcsa: { request: { requestId: 'fmcsa-census-80806-2026-09-05-qualification', sourceId: 'fmcsa-company-census', usdot: ['80806'] }, policy, fields: FIELDS, requestPath: 'examples/sources/fmcsa-company-census.json' }, defaultName: 'path-test', ...overrides };
+    fmcsa: { request: { requestId: 'fmcsa-census-80806-2026-09-05-qualification', sourceId: 'fmcsa-company-census', usdot: ['80806'] }, policy, fields: FIELDS, requestPath: 'examples/sources/fmcsa-company-census.json', normalization: { id: 'fmcsa-census-80806-2026-09-05-normalized-v1', requestPath: 'examples/sources/fmcsa-company-census-normalize.json' }, build: { id: 'fmcsa-census-80806-2026-09-06-candidate-build-v1', requestPath: 'examples/sources/fmcsa-company-census-build.json' } }, defaultName: 'path-test', ...overrides };
 }
 const stage = (id: string) => document.querySelector(`[data-stage="${id}"]`)!;
 const step = (key: string) => screen.getByTestId(`step-${key}`);
@@ -100,7 +107,9 @@ describe('ProductionPath', () => {
     expect(screen.getByTestId('source-readback')).toHaveAttribute('data-status', 'UNAVAILABLE');
     expect(screen.getByTestId('source-readback')).toHaveTextContent('npm run source -- inspect --request-id fmcsa-census-80806-2026-09-05-qualification');
     expect(screen.getByTestId('source-card')).toHaveTextContent('2026-09-05 00:00 UTC → 2026-10-05 00:00 UTC');
-    expect(screen.getByTestId('source-card')).toHaveTextContent('No normalization adapter exists for fmcsa-company-census');
+    expect(screen.getByTestId('source-card')).toHaveTextContent('Neither is on the HTTP rail');
+    expect(screen.getByTestId('source-normalization')).toHaveAttribute('data-status', 'UNAVAILABLE');
+    expect(screen.getByTestId('source-build')).toHaveAttribute('data-status', 'UNAVAILABLE');
     expect(screen.getByTestId('notation-card')).toHaveTextContent('ATTACH_EVIDENCE_REFERENCE');
     expect(screen.getByTestId('release-card')).toHaveTextContent('No admission authority exists');
     expect(screen.getByTestId('no-reference')).toBeInTheDocument();
@@ -112,6 +121,8 @@ describe('ProductionPath', () => {
     render(<ProductionPath {...props({ fetchImpl: rail.fetch })} />);
     expect(screen.getByTestId('production-path')).toHaveAttribute('data-mode', 'LOCAL');
     await waitFor(() => expect(screen.getByTestId('source-readback')).toHaveAttribute('data-status', 'NOT_FOUND'));
+    await waitFor(() => expect(screen.getByTestId('source-build')).toHaveAttribute('data-status', 'NOT_FOUND'));
+    expect(screen.getByTestId('source-normalization')).toHaveTextContent('CENSUS_NORMALIZATION_NOT_FOUND');
     expect(screen.getByTestId('stage-source-detail')).toHaveTextContent('not in this machine’s qualification root');
     expect(stage('acquisition')).toHaveAttribute('data-state', 'WAITING');
     expect(screen.getByTestId('send-source')).toBeDisabled();
@@ -219,16 +230,27 @@ describe('ProductionPath', () => {
     expect(stage('acquisition')).toHaveTextContent('acq:path-test-capture-a2');
   });
 
-  it('reads the real source capture back where it exists, marks the source DONE and names the missing adapter', async () => {
+  it('reads the real source capture, its operator normalization and its v2 build back where they exist, marks the source DONE and names the rail boundary', async () => {
     const rail = fakeRail({ readback: 'FOUND' });
     render(<ProductionPath {...props({ fetchImpl: rail.fetch })} />);
     await waitFor(() => expect(screen.getByTestId('source-readback')).toHaveAttribute('data-status', 'FOUND'));
     expect(stage('source')).toHaveAttribute('data-state', 'DONE');
-    expect(screen.getByTestId('stage-source-detail')).toHaveTextContent('CAPTURED, 1 record, 0 not returned. Cannot enter normalization.');
+    expect(screen.getByTestId('stage-source-detail')).toHaveTextContent('CAPTURED, 1 record, 0 not returned.');
     expect(screen.getByTestId('census-records')).toHaveTextContent('80806');
     expect(screen.getByTestId('census-records')).toHaveTextContent('UNRESOLVED · null');
     expect(screen.getByTestId('source-readback')).toHaveTextContent('371 source-original bytes');
     expect(screen.getByTestId('source-readback')).toHaveTextContent('customerDistributionPermitted false');
+    // The operator's continuation, read back the same way: the typed candidate with presence and separate clocks, and the exact v2 build.
+    await waitFor(() => expect(screen.getByTestId('source-build')).toHaveAttribute('data-status', 'FOUND'));
+    expect(screen.getByTestId('stage-source-detail')).toHaveTextContent('Operator normalization NORMALIZED; candidate build UNADMITTED, 1 member. Not on the HTTP rail.');
+    expect(screen.getByTestId('census-candidate')).toHaveTextContent('FMCSACompanyCensusObservation · identity UNRESOLVED · canonical id null');
+    expect(screen.getByTestId('census-candidate')).toHaveTextContent('filing date SOURCE_FILING_DATE_NOT_VALID_TIME');
+    // jsdom joins table cells without whitespace; the browser does not.
+    expect(screen.getByTestId('census-fields')).toHaveTextContent(/docket1\s*OMITTED\s*null\s*null\s*not in the response/);
+    expect(screen.getByTestId('census-fields')).toHaveTextContent(/power_units\s*PRESENT\s*4\s*4\s*power units\s*count/);
+    expect(screen.getByTestId('census-build')).toHaveTextContent('UNADMITTED');
+    expect(screen.getByTestId('census-build')).toHaveTextContent('caravan-fmcsa-census-qualification v1.0.0');
+    expect(screen.getByTestId('census-build')).toHaveTextContent('releaseActivated false');
   });
 
   it('follows the rail’s own answer about its mode: an availability descriptor makes the page fixture, and a loopback refusal is shown with its recovery', async () => {

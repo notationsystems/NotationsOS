@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import carrier from '../../../examples/carrier/source.json';
 import fmcsaRequest from '../../../examples/sources/fmcsa-company-census.json';
+import fmcsaNormalize from '../../../examples/sources/fmcsa-company-census-normalize.json';
+import fmcsaBuild from '../../../examples/sources/fmcsa-company-census-build.json';
 import { CENSUS_FIELDS } from '@/acquisition/fmcsa';
 import { censusQualificationPolicy } from '@/acquisition/store';
 import { getProductionSource } from '@/adapter/productionSource';
@@ -26,7 +28,8 @@ export default async function ProductionPathPage() {
           enabled={enabled} demo={demo} definition={CARAVAN_DEMO_DEFINITION}
           sourceTemplate={caravanDemoSource({ id: 'PENDING', digest: `sha256:${'0'.repeat(64)}` })} purpose={CARAVAN_DEMO_PURPOSE}
           carrier={{ path: 'examples/carrier/source.json', text: JSON.stringify(carrier, null, 2), base64: caravanDemoContent(), byteLength: Buffer.byteLength(text, 'utf8') }}
-          fmcsa={{ request: { requestId: request.requestId, sourceId: request.sourceId, usdot: request.usdot }, policy: censusQualificationPolicy(), fields: CENSUS_FIELDS, requestPath: 'examples/sources/fmcsa-company-census.json' }}
+          fmcsa={{ request: { requestId: request.requestId, sourceId: request.sourceId, usdot: request.usdot }, policy: censusQualificationPolicy(), fields: CENSUS_FIELDS, requestPath: 'examples/sources/fmcsa-company-census.json',
+            normalization: { id: fmcsaNormalize.normalizationId, requestPath: 'examples/sources/fmcsa-company-census-normalize.json' }, build: { id: fmcsaBuild.buildId, requestPath: 'examples/sources/fmcsa-company-census-build.json' } }}
         />
       </div>
     </>

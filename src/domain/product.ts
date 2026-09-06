@@ -78,6 +78,7 @@ export const ENGINES: readonly Engine[] = [
       { item: 'Decision workbench (Caravan ruling application)', presence: 'FIXTURE', where: '/cases' },
       { item: 'Small Rust notation state kernel: local authored objects, undo/redo and frontend save/reload; not canonical corpus state', presence: 'PRESENT', where: '/notations' },
       { item: 'One bounded live source connector: FMCSA Company Census, operator-only internal qualification; no customer redistribution or canonical admission', presence: 'PRESENT' },
+      { item: 'FMCSA typed normalization and exact-reference v2 candidate builds over retained captures: operator CLI only, UNADMITTED, outside customer feeds', presence: 'PRESENT' },
       { item: 'Production source fleet, recurring ingestion and customer-released live data', presence: 'ABSENT' },
       { item: 'Production storage and identity', presence: 'ABSENT' },
       { item: 'Deployed customer delivery', presence: 'ABSENT' },

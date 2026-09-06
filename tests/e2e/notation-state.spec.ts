@@ -40,6 +40,9 @@ test('notations: real local state keeps navigation drafts in the document and su
   await page.getByLabel('Relation label', { exact: true }).fill('Unapplied relation');
   const nav = page.getByRole('navigation', { name: 'Primary' });
   await expect(nav.getByTestId('nav-draft-marker')).toBeVisible();
+  // The marker in the mobile strip must not widen the document: a widened layout viewport makes every later click miss.
+  const widths = await page.evaluate(() => ({ content: document.documentElement.scrollWidth, viewport: document.documentElement.clientWidth }));
+  expect(widths.content).toBeLessThanOrEqual(widths.viewport + 1);
   await nav.getByRole('link', { name: 'Releases', exact: true }).click();
   await expect(page).toHaveURL(/\/releases$/);
   await expect(page.getByRole('region', { name: 'What a release is', exact: true })).toBeVisible();

@@ -77,7 +77,8 @@ describe('the production path as data', () => {
     expect(stages.find((stage) => stage.id === 'release')?.blocker).toEqual(BLOCKERS.release);
     expect(BLOCKERS.notation.what).toContain('ATTACH_EVIDENCE_REFERENCE');
     expect(BLOCKERS.release.what).toContain('UNADMITTED');
-    expect(BLOCKERS.fmcsaAdapter.what).toContain('fmcsa-company-census');
+    expect(BLOCKERS.fmcsaRail.what).toContain('fmcsa.company-census-observation/v1');
+    expect(BLOCKERS.fmcsaRail.what).toContain('Neither is on the HTTP rail');
     for (const stage of stages.filter((entry) => entry.state === 'DEMONSTRATION')) expect(stage.href).toMatch(/^\/candidates/);
   });
 
@@ -103,9 +104,14 @@ describe('the production path as data', () => {
     const refused = deriveStages({ mode: 'LOCAL', session, sourceReadback: null, demo });
     expect(refused[3]).toMatchObject({ state: 'FAILED', run: { id: 'p-build', state: 'REFUSED', digest: null } });
     expect(refused[3].recovery.map((action) => action.kind)).toEqual(['NEW_IDENTITY']);
-    const found = deriveStages({ mode: 'LOCAL', session, sourceReadback: { status: 'FOUND', summary: { state: 'CAPTURED', requestId: 'fmcsa-census-80806-2026-09-05-qualification', capturedAt: '2026-09-05T20:48:11.364Z', records: 1, notReturned: 0 } }, demo });
-    expect(found[0]).toMatchObject({ state: 'DONE', blocker: BLOCKERS.fmcsaAdapter });
-    expect(found[0].detail).toContain('CAPTURED, 1 record, 0 not returned');
+    const summary = { state: 'CAPTURED' as const, requestId: 'fmcsa-census-80806-2026-09-05-qualification', capturedAt: '2026-09-05T20:48:11.364Z', records: 1, notReturned: 0 };
+    const found = deriveStages({ mode: 'LOCAL', session, sourceReadback: { status: 'FOUND', summary, continuation: { normalization: { status: 'NOT_FOUND', code: 'CENSUS_NORMALIZATION_NOT_FOUND' }, build: { status: 'NOT_FOUND', code: 'CENSUS_BUILD_NOT_FOUND' } } }, demo });
+    expect(found[0]).toMatchObject({ state: 'DONE', blocker: BLOCKERS.fmcsaRail });
+    expect(found[0].detail).toContain('CAPTURED, 1 record, 0 not returned. Operator normalization not on this machine; candidate build not on this machine. Not on the HTTP rail.');
+    const continued = deriveStages({ mode: 'LOCAL', session, sourceReadback: { status: 'FOUND', summary, continuation: { normalization: { status: 'FOUND', state: 'NORMALIZED', id: 'n' }, build: { status: 'FOUND', state: 'UNADMITTED', id: 'b', recordCount: 1 } } }, demo });
+    expect(continued[0].detail).toContain('Operator normalization NORMALIZED; candidate build UNADMITTED, 1 member. Not on the HTTP rail.');
+    expect(ERROR_MEANING.CENSUS_NORMALIZATION_NOT_FOUND.text).toMatch(/not on this machine|on this machine/);
+    expect(ERROR_MEANING.CENSUS_BUILD_NOT_FOUND).toBeDefined();
     session.build = { ...session.build, status: 'DONE', error: undefined, result: done('p-build', 'CANDIDATE_BUILD') };
     expect(deriveStages({ mode: 'LOCAL', session, sourceReadback: null, demo })[5].detail).toContain('attachment is disabled');
   });

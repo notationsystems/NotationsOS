@@ -125,6 +125,8 @@ export const ERROR_MEANING: Record<string, { text: string; recovery: RecoveryKin
   STORED_RECORD_INVALID: { text: 'A stored record failed local integrity checks; no record was changed.', recovery: ['REVIEW'] },
   CLOCK_ORDER_INVALID: { text: 'The backend clock moved backwards during the run.', recovery: ['INSPECT_OUTPUTS', 'REVIEW', 'NEW_IDENTITY'] },
   SOURCE_CAPTURE_NOT_FOUND: { text: 'No stored source capture has this request identifier in the operator’s qualification root on this machine.', recovery: ['REVIEW'] },
+  CENSUS_NORMALIZATION_NOT_FOUND: { text: 'No stored FMCSA normalization has this identifier in the operator’s qualification root on this machine.', recovery: ['REVIEW'] },
+  CENSUS_BUILD_NOT_FOUND: { text: 'No stored FMCSA candidate build has this identifier in the operator’s qualification root on this machine.', recovery: ['REVIEW'] },
   SOURCE_HISTORY_INVALID: { text: 'Stored source history failed local integrity checks; nothing was changed.', recovery: ['REVIEW'] },
 };
 
@@ -210,10 +212,10 @@ export function stepInputs(session: PathSession): Record<StepKey, { ready: boole
 
 export interface Blocker { what: string; owner: string; remedy: string }
 /** What stops the path beyond the rail today. Owners are the contracts, not people. */
-export const BLOCKERS: Record<'notation' | 'release' | 'fmcsaAdapter' | 'railDisabled', Blocker> = {
+export const BLOCKERS: Record<'notation' | 'release' | 'fmcsaRail' | 'railDisabled', Blocker> = {
   notation: { what: 'The notation kernel’s closed command set has no ATTACH_EVIDENCE_REFERENCE or DETACH_EVIDENCE_REFERENCE; a saved notation cannot carry a reference yet.', owner: 'Notation state kernel contract (docs/NOTATION_WORKSPACE.md, backend contract request)', remedy: 'The two commands, validated by Rust, with a references list per notation; resolution stays in the application.' },
   release: { what: 'No admission authority exists: no versioned profile evaluates a candidate build and records admission, refusal or unresolved requirements, so nothing can enter a release. Every build stays UNADMITTED and the release history is the committed corpus.', owner: 'Admission contract (docs/CROSS_REPOSITORY_BASELINE.md: one authoritative route for evaluation, identity, version history and release eligibility)', remedy: 'A reviewed, committed admission contract; then an internal release separate from demonstration fixtures.' },
-  fmcsaAdapter: { what: 'No normalization adapter exists for fmcsa-company-census. The observation is a source observation contract, not the synthetic Carrier contract, and the rail’s NORMALIZE takes only caravan.carrier-json/v1 and payload.ifc-artifact/v1.', owner: 'Source-specific normalization adapter (docs/LOCAL_SOURCE_CONNECTORS.md)', remedy: 'An adapter that keeps identifiers, original values, units, filing dates, capture time and unresolved interpretations, with notReturned kept as not returned.' },
+  fmcsaRail: { what: 'The real observation continues only by operator command: the FMCSA adapter (fmcsa.company-census-observation/v1) normalizes a retained capture into a typed, UNADMITTED candidate and the v2 build assembles exact references, both over the qualification root through npm run source. Neither is on the HTTP rail, so this page reads them back and cannot run them; the rail’s NORMALIZE still takes only caravan.carrier-json/v1 and payload.ifc-artifact/v1.', owner: 'Real-source continuity (docs/REAL_SOURCE_CONTINUITY.md) and the local production rail (docs/LOCAL_PRODUCTION_WORKFLOW.md)', remedy: 'Either the rail exposes the census operations under its identity discipline, or the real source stays operator-command only by design and the path stays read-only for it; then an admission contract, which no build has yet.' },
   railDisabled: { what: 'The local production rail is not enabled on this origin, so nothing can be registered, captured, normalized, built or inspected here.', owner: 'Operator (PAYLOAD_PRODUCTION_LOCAL=1 on loopback)', remedy: 'npm run dev:production, then open this page at http://127.0.0.1:<port>/production.' },
 };
 
@@ -231,11 +233,13 @@ export interface StageView {
 }
 
 export interface SourceReadbackSummary { state: 'CAPTURED' | 'QUARANTINED' | 'FAILED' | 'INCOMPLETE'; requestId: string; capturedAt: string | null; records: number; notReturned: number }
+/** What the operator's normalization and build readbacks say, when they exist on this machine. */
+export interface SourceContinuationSummary { normalization: { status: 'FOUND'; state: 'NORMALIZED' | 'NOT_RETURNED'; id: string } | { status: 'NOT_FOUND' | 'ERROR' | 'LOADING'; code?: string }; build: { status: 'FOUND'; state: 'UNADMITTED'; id: string; recordCount: number } | { status: 'NOT_FOUND' | 'ERROR' | 'LOADING'; code?: string } }
 export interface PathContext {
   mode: 'LOCAL' | 'FIXTURE';
   session: PathSession;
   /** The real source readback, when the rail is enabled and the operator's capture exists on this machine. */
-  sourceReadback: { status: 'LOADING' | 'FOUND' | 'NOT_FOUND' | 'ERROR'; summary?: SourceReadbackSummary; code?: string } | null;
+  sourceReadback: { status: 'LOADING' | 'FOUND' | 'NOT_FOUND' | 'ERROR'; summary?: SourceReadbackSummary; code?: string; continuation?: SourceContinuationSummary } | null;
   demo: ProductionDemo;
 }
 
@@ -277,13 +281,15 @@ export function deriveStages(context: PathContext): StageView[] {
   const build = stepState(session.build, inputs.build.ready);
   const registered = session.corpus.result && session.source.result;
   const readback = context.sourceReadback;
+  const continuation = readback?.continuation;
+  const continued = continuation ? ` Operator normalization ${continuation.normalization.status === 'FOUND' ? continuation.normalization.state : continuation.normalization.status === 'LOADING' ? 'reading' : 'not on this machine'}; candidate build ${continuation.build.status === 'FOUND' ? `${continuation.build.state}, ${continuation.build.recordCount} member${continuation.build.recordCount === 1 ? '' : 's'}` : continuation.build.status === 'LOADING' ? 'reading' : 'not on this machine'}. Not on the HTTP rail.` : ' Not on the HTTP rail.';
   const sourceDetail = readback?.status === 'FOUND' && readback.summary
-    ? `FMCSA capture ${readback.summary.requestId}: ${readback.summary.state}, ${readback.summary.records} record${readback.summary.records === 1 ? '' : 's'}, ${readback.summary.notReturned} not returned. Cannot enter normalization.`
+    ? `FMCSA capture ${readback.summary.requestId}: ${readback.summary.state}, ${readback.summary.records} record${readback.summary.records === 1 ? '' : 's'}, ${readback.summary.notReturned} not returned.${continued}`
     : readback?.status === 'NOT_FOUND' ? 'The synthetic Carrier bytes are ready to capture. The FMCSA capture is not in this machine’s qualification root.'
       : readback?.status === 'ERROR' ? `The FMCSA readback was refused: ${readback.code ?? 'error'}.` : 'The synthetic Carrier bytes are ready to capture.';
   const inspectionDone = [session.capture, session.normalize, session.build].some((step) => step.result);
   return [
-    { ...base('source'), state: readback?.status === 'FOUND' ? 'DONE' : 'READY', detail: sourceDetail, blocker: readback?.status === 'FOUND' ? BLOCKERS.fmcsaAdapter : null },
+    { ...base('source'), state: readback?.status === 'FOUND' ? 'DONE' : 'READY', detail: sourceDetail, blocker: readback?.status === 'FOUND' ? BLOCKERS.fmcsaRail : null },
     { ...base('acquisition'), state: registered ? capture.state : stepState(session.capture, false).state, detail: registered ? capture.detail : 'Register the corpus and the source first.', object: outputOf(session.capture.result, 'ACQUISITION'), run: stepRun(session.capture), recovery: capture.recovery },
     { ...base('normalization'), state: normalize.state, detail: normalize.detail, object: session.normalize.result?.run.state === 'COMPLETED' ? outputOf(session.normalize.result, 'NORMALIZATION') : null, run: stepRun(session.normalize), recovery: normalize.recovery },
     { ...base('build'), state: build.state, detail: build.detail, object: outputOf(session.build.result, 'CANDIDATE_BUILD'), run: stepRun(session.build), recovery: build.recovery },

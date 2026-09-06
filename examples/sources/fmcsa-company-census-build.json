@@ -1,0 +1,19 @@
+{
+  "schema": "payload.local-candidate-build-request.v2",
+  "buildId": "fmcsa-census-80806-2026-09-06-candidate-build-v1",
+  "purpose": "source-qualification",
+  "knownThrough": "2026-09-06T01:29:10.984Z",
+  "definition": {
+    "id": "caravan-fmcsa-census-qualification",
+    "version": "1.0.0",
+    "domain": "CARAVAN",
+    "recordType": "FMCSACompanyCensusObservation",
+    "sourceClasses": ["public-government-company-census"]
+  },
+  "normalizations": [
+    {
+      "id": "fmcsa-census-80806-2026-09-05-normalized-v1",
+      "digest": "sha256:e94800cf1216ee7de525e50872326c7e6d4ec4031e62fce1ba70c600890efb00"
+    }
+  ]
+}

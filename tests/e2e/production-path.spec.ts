@@ -20,7 +20,10 @@ test('production path: registers, captures, normalizes, builds and inspects on t
   await expect(page.getByTestId('source-readback')).toHaveAttribute('data-status', 'NOT_FOUND', { timeout: 15_000 });
   await expect(page.getByTestId('source-readback')).toContainText('SOURCE_CAPTURE_NOT_FOUND');
   await expect(page.getByTestId('source-card')).toContainText('fmcsa-census-80806-2026-09-05-qualification');
-  await expect(page.getByTestId('source-card')).toContainText('No normalization adapter exists for fmcsa-company-census');
+  await expect(page.getByTestId('source-normalization')).toHaveAttribute('data-status', 'NOT_FOUND', { timeout: 15_000 });
+  await expect(page.getByTestId('source-build')).toHaveAttribute('data-status', 'NOT_FOUND', { timeout: 15_000 });
+  await expect(page.getByTestId('source-card')).toContainText('CENSUS_BUILD_NOT_FOUND');
+  await expect(page.getByTestId('source-card')).toContainText('Neither is on the HTTP rail');
   await expect(stage(page, 'source')).toHaveAttribute('data-state', 'READY');
   await expect(stage(page, 'acquisition')).toHaveAttribute('data-state', 'WAITING');
   await expect(stage(page, 'notation')).toHaveAttribute('data-state', 'BLOCKED');

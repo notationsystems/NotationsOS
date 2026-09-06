@@ -6,7 +6,7 @@ import type { SourceRegistration } from '@/data-os/contracts';
 import { Inspector } from '@/components/primitives/Inspector';
 import { Digest } from '@/components/primitives/ManifestCommitment';
 import type { ProductionDemo } from '@/domain/production';
-import { BLOCKERS, PRODUCTION_STAGE_LABEL, STAGE_STATE_MEANING, STEP_LABEL, STEP_ORDER, buildReference, byteLength, deriveStages, emptySession, errorRecovery, errorText, nextAttemptName, outputOf, remediationText, requestIds, runRecovery, stepInputs, toBase64, type Blocker, type PathSession, type PathStageState, type ProductionCorpusDefinition, type ProductionErrorBody, type ProductionOutputRef, type ProductionResult, type ProductionRun, type ProductionSourceConfig, type RecoveryAction, type SourceReadbackSummary, type StageView, type StepKey } from '@/domain/productionPath';
+import { BLOCKERS, PRODUCTION_STAGE_LABEL, STAGE_STATE_MEANING, STEP_LABEL, STEP_ORDER, buildReference, byteLength, deriveStages, emptySession, errorRecovery, errorText, nextAttemptName, outputOf, remediationText, requestIds, runRecovery, stepInputs, toBase64, type Blocker, type PathSession, type PathStageState, type ProductionCorpusDefinition, type ProductionErrorBody, type ProductionOutputRef, type ProductionResult, type ProductionRun, type ProductionSourceConfig, type RecoveryAction, type SourceContinuationSummary, type SourceReadbackSummary, type StageView, type StepKey } from '@/domain/productionPath';
 import type { ProductionObjectKind } from '@/production/contracts';
 import { fmtUtc } from '@/lib/format';
 
@@ -19,7 +19,7 @@ export interface ProductionPathProps {
   sourceTemplate: ProductionSourceConfig;
   purpose: string;
   carrier: { path: string; text: string; base64: string; byteLength: number };
-  fmcsa: { request: { requestId: string; sourceId: string; usdot: string[] }; policy: SourceRegistration; fields: readonly string[]; requestPath: string };
+  fmcsa: { request: { requestId: string; sourceId: string; usdot: string[] }; policy: SourceRegistration; fields: readonly string[]; requestPath: string; normalization: { id: string; requestPath: string }; build: { id: string; requestPath: string } };
   fetchImpl?: typeof fetch;
   /** The default run name; the date on the operator's machine unless a test fixes it. */
   defaultName?: string;
@@ -30,6 +30,7 @@ type Availability = { schema: 'payload.production-availability.v1'; enabled: fal
 type CatalogState = { status: 'LOADING' } | { status: 'READY'; catalog: Catalog } | { status: 'DISABLED' } | { status: 'ERROR'; code: string; message: string };
 type Inspection = { kind: ProductionObjectKind; reference: { id: string; digest: string } } & ({ status: 'LOADING' } | { status: 'DONE'; data: Record<string, unknown>; flags: Record<string, unknown> } | { status: 'FAILED'; code: string; message: string });
 type Readback = { status: 'LOADING' } | { status: 'FOUND'; summary: SourceReadbackSummary; inspection: Record<string, unknown> } | { status: 'NOT_FOUND'; code: string } | { status: 'ERROR'; code: string; message: string } | { status: 'UNAVAILABLE' };
+type Continuation = { status: 'LOADING' } | { status: 'FOUND'; record: Record<string, unknown> } | { status: 'NOT_FOUND'; code: string } | { status: 'ERROR'; code: string; message: string } | { status: 'UNAVAILABLE' };
 
 const muted = { color: 'var(--text-secondary)' };
 const faint = { color: 'var(--text-muted)' };
@@ -210,6 +211,8 @@ export function ProductionPath({ enabled, demo, definition, sourceTemplate, purp
   const [catalog, setCatalog] = useState<CatalogState>(enabled ? { status: 'LOADING' } : { status: 'DISABLED' });
   const [inspection, setInspection] = useState<Inspection | null>(null);
   const [readback, setReadback] = useState<Readback>(enabled ? { status: 'LOADING' } : { status: 'UNAVAILABLE' });
+  const [normalization, setNormalization] = useState<Continuation>(enabled ? { status: 'LOADING' } : { status: 'UNAVAILABLE' });
+  const [censusBuild, setCensusBuild] = useState<Continuation>(enabled ? { status: 'LOADING' } : { status: 'UNAVAILABLE' });
   const [copied, setCopied] = useState('');
   const pastedField = useRef<HTMLTextAreaElement>(null);
   const mode: 'LOCAL' | 'FIXTURE' = enabled && catalog.status !== 'DISABLED' ? 'LOCAL' : 'FIXTURE';
@@ -239,8 +242,21 @@ export function ProductionPath({ enabled, demo, definition, sourceTemplate, purp
         } else if (response.status === 404) setReadback({ status: 'NOT_FOUND', code: body?.error?.code ?? 'SOURCE_CAPTURE_NOT_FOUND' });
         else setReadback({ status: 'ERROR', code: body?.error?.code ?? `HTTP_${response.status}`, message: body?.error?.message ?? 'The readback was refused.' });
       } catch { setReadback({ status: 'ERROR', code: 'UNREACHABLE', message: 'The readback could not be reached on this origin.' }); }
+      // The operator's continuation of the real observation, read back the same way: normalization, then the v2 build.
+      const readOne = async (url: string, key: 'run' | 'build', set: (value: Continuation) => void) => {
+        try {
+          const response = await send(url, { cache: 'no-store' });
+          const body = await response.json().catch(() => null) as Record<string, unknown> & Partial<ProductionErrorBody> | null;
+          const record = body?.[key] as Record<string, unknown> | undefined;
+          if (response.ok && record) set({ status: 'FOUND', record });
+          else if (response.status === 404) set({ status: 'NOT_FOUND', code: body?.error?.code ?? 'NOT_FOUND' });
+          else set({ status: 'ERROR', code: body?.error?.code ?? `HTTP_${response.status}`, message: body?.error?.message ?? 'The readback was refused.' });
+        } catch { set({ status: 'ERROR', code: 'UNREACHABLE', message: 'The readback could not be reached on this origin.' }); }
+      };
+      await readOne(`/api/production/source-normalizations/${encodeURIComponent(fmcsa.normalization.id)}`, 'run', setNormalization);
+      await readOne(`/api/production/source-builds/${encodeURIComponent(fmcsa.build.id)}`, 'build', setCensusBuild);
     })();
-  }, [enabled, send, fmcsa.request.requestId, refreshCatalog]);
+  }, [enabled, send, fmcsa.request.requestId, fmcsa.normalization.id, fmcsa.build.id, refreshCatalog]);
 
   const inspect = useCallback(async (kind: ProductionObjectKind, reference: { id: string; digest: string }) => {
     // An exact reference is exactly an identifier and a digest: an output's kind travels separately.
@@ -314,7 +330,11 @@ export function ProductionPath({ enabled, demo, definition, sourceTemplate, purp
   }
   const nameValid = (() => { try { requestIds(nameDraft); return true; } catch { return false; } })();
 
-  const stages: StageView[] = deriveStages({ mode, session, sourceReadback: mode === 'LOCAL' ? (readback.status === 'FOUND' ? { status: 'FOUND', summary: readback.summary } : readback.status === 'NOT_FOUND' ? { status: 'NOT_FOUND', code: readback.code } : readback.status === 'ERROR' ? { status: 'ERROR', code: readback.code } : { status: 'LOADING' }) : null, demo });
+  const continuation: SourceContinuationSummary = {
+    normalization: normalization.status === 'FOUND' ? { status: 'FOUND', state: normalization.record.state as 'NORMALIZED' | 'NOT_RETURNED', id: fmcsa.normalization.id } : normalization.status === 'NOT_FOUND' || normalization.status === 'ERROR' ? { status: normalization.status, code: normalization.code } : { status: 'LOADING' },
+    build: censusBuild.status === 'FOUND' ? { status: 'FOUND', state: 'UNADMITTED', id: fmcsa.build.id, recordCount: Number(censusBuild.record.recordCount ?? 0) } : censusBuild.status === 'NOT_FOUND' || censusBuild.status === 'ERROR' ? { status: censusBuild.status, code: censusBuild.code } : { status: 'LOADING' },
+  };
+  const stages: StageView[] = deriveStages({ mode, session, sourceReadback: mode === 'LOCAL' ? (readback.status === 'FOUND' ? { status: 'FOUND', summary: readback.summary, continuation } : readback.status === 'NOT_FOUND' ? { status: 'NOT_FOUND', code: readback.code } : readback.status === 'ERROR' ? { status: 'ERROR', code: readback.code } : { status: 'LOADING' }) : null, demo });
   const running = STEP_ORDER.some((step) => session[step].status === 'RUNNING');
   const reference = refs.build && session.build.result ? buildReference(refs.build, session.build.result.run) : null;
 
@@ -410,7 +430,7 @@ export function ProductionPath({ enabled, demo, definition, sourceTemplate, purp
 
       <div className="workspace-bottom flex flex-col gap-4">
         <Part title="Source · a real observation: FMCSA Company Census, operator capture" testId="source-card">
-          <p className="m-0 text-[12px]" style={muted}>The one real source observation the system holds today. Captured by the operator CLI under a time-bounded internal qualification policy; read back here without collecting, where the rail is enabled and the capture exists in this machine’s qualification root. <span className="mono">notReturned</span> stays not returned, never nonexistence.</p>
+          <p className="m-0 text-[12px]" style={muted}>The one real source observation the system holds today. Captured by the operator CLI under a time-bounded internal qualification policy, normalized by a source-specific adapter into a typed UNADMITTED candidate and assembled into an exact v2 build by operator commands; each is read back here without collecting, deriving or assembling, where the rail is enabled and the record exists in this machine’s qualification root. <span className="mono">notReturned</span> stays not returned, never nonexistence.</p>
           <dl className="kv m-0 text-[12px]">
             <dt style={faint}>Request</dt><dd className="m-0"><span className="id">{fmcsa.request.requestId}</span> · source <span className="mono">{fmcsa.request.sourceId}</span> · USDOT {fmcsa.request.usdot.join(', ')} · <span className="mono">{fmcsa.requestPath}</span></dd>
             <dt style={faint}>Policy</dt><dd className="m-0"><span className="id">{fmcsa.policy.registrationId}</span> v{fmcsa.policy.policyVersion} · {fmcsa.policy.sourceClass} · licence <span className="mono">{fmcsa.policy.licenseId}</span><div style={faint}>effective <span className="ts">{fmtUtc(fmcsa.policy.effectiveFrom)}</span> → {fmcsa.policy.effectiveUntil ? <span className="ts">{fmtUtc(fmcsa.policy.effectiveUntil)}</span> : 'open'} · purposes {fmcsa.policy.permittedPurposes.join(', ')} · operations {fmcsa.policy.allowedOperations.join(', ')} · audiences {fmcsa.policy.allowedAudiences.join(', ')} · retention {fmcsa.policy.retention.mode}</div></dd>
@@ -429,8 +449,43 @@ export function ProductionPath({ enabled, demo, definition, sourceTemplate, purp
                   <Raw value={i} />
                 </div>); })()}
             </dd>
+            <dt style={faint}>Normalization</dt><dd className="m-0" data-testid="source-normalization" data-status={normalization.status}>
+              <div style={faint}>Operator command over the retained capture: <span className="mono">npm run source -- normalize --request {fmcsa.normalization.requestPath}</span> · adapter <span className="mono">fmcsa.company-census-observation/v1</span> · id <span className="id">{fmcsa.normalization.id}</span></div>
+              {normalization.status === 'UNAVAILABLE' && <span style={muted}>Needs the local rail to read back.</span>}
+              {normalization.status === 'LOADING' && <span style={faint}>Reading…</span>}
+              {normalization.status === 'NOT_FOUND' && <span style={muted}><span className="mono">{normalization.code}</span> · {errorText(normalization.code, '')} Nothing was derived; the operator command derives, this page does not.</span>}
+              {normalization.status === 'ERROR' && <span style={{ color: 'var(--status-refused)' }}><span className="mono">{normalization.code}</span> · {normalization.message}</span>}
+              {normalization.status === 'FOUND' && (() => { const r = normalization.record; const candidate = r.candidate as Record<string, unknown> | null; const fields = candidate?.fields as Record<string, { raw: string | null; presence: string; value: string | number | null; unit: string | null; interpretation: string }> | undefined; const temporal = candidate?.temporal as Record<string, string | null> | undefined; const identity = candidate?.identity as Record<string, unknown> | undefined; const derive = r.deriveDecision as Record<string, unknown> | undefined; return (
+                <div className="flex flex-col gap-1">
+                  <div><span className="mono" style={{ color: r.state === 'NORMALIZED' ? 'var(--check-passed)' : 'var(--status-conditional)' }}>{String(r.state)}</span> <span style={faint}>· normalized <span className="ts">{fmtUtc(String(r.normalizedAt), { seconds: true })}</span> · declared backend time · DERIVE <span className="mono">{String(derive?.state)}</span> · <Digest value={String(r.digest)} copy={false} /></span></div>
+                  {candidate ? (
+                    <div className="flex flex-col gap-1" data-testid="census-candidate">
+                      <div><span className="id break-all">{String(candidate.candidateId)}</span> <span className="mono" style={{ color: 'var(--status-conditional)' }}>{String(candidate.state)}</span> <span style={faint}>· {String(candidate.recordType)} · identity <span className="mono">{String(identity?.state)}</span> · canonical id <span className="mono">{String(identity?.canonicalId)}</span></span></div>
+                      {temporal && <div style={faint}>captured <span className="ts">{fmtUtc(String(temporal.capturedAt), { seconds: true })}</span> · provider last modified <span className="mono">{temporal.providerLastModified ?? 'null'}</span> · filing date <span className="mono">{temporal.filingDateMeaning}</span> · valid time <span className="mono">{temporal.validTimeMeaning}</span></div>}
+                      <div className="overflow-x-auto"><table className="ledger-table text-[11.5px]" data-testid="census-fields"><thead><tr><th>Field</th><th>Presence</th><th>Raw</th><th>Value</th><th>Unit</th><th>Interpretation</th></tr></thead><tbody>{Object.entries(fields ?? {}).map(([name, field]) => <tr key={name}><td className="mono">{name}</td><td className="mono">{field.presence}</td><td className="mono">{field.raw ?? 'null'}</td><td className="mono">{field.value === null ? 'null' : String(field.value)}</td><td className="mono">{field.unit ?? ''}</td><td>{field.interpretation}</td></tr>)}</tbody></table></div>
+                    </div>
+                  ) : <div style={muted}>No candidate: the requested identifier was not returned by the bounded query. Not proof of nonexistence.</div>}
+                  <Flags record={{ canonicalAdmission: false, sourceTruthClaimed: false, fieldAccuracyClaimed: false, independentlyVerified: false, customerDistributionPermitted: false }} />
+                  <Raw value={r} />
+                </div>); })()}
+            </dd>
+            <dt style={faint}>Candidate build</dt><dd className="m-0" data-testid="source-build" data-status={censusBuild.status}>
+              <div style={faint}>Operator command over exact normalization references: <span className="mono">npm run source -- build --request {fmcsa.build.requestPath}</span> · contract <span className="mono">payload.local-candidate-build.v2</span> · id <span className="id">{fmcsa.build.id}</span></div>
+              {censusBuild.status === 'UNAVAILABLE' && <span style={muted}>Needs the local rail to read back.</span>}
+              {censusBuild.status === 'LOADING' && <span style={faint}>Reading…</span>}
+              {censusBuild.status === 'NOT_FOUND' && <span style={muted}><span className="mono">{censusBuild.code}</span> · {errorText(censusBuild.code, '')} Nothing was assembled; the operator command assembles, this page does not.</span>}
+              {censusBuild.status === 'ERROR' && <span style={{ color: 'var(--status-refused)' }}><span className="mono">{censusBuild.code}</span> · {censusBuild.message}</span>}
+              {censusBuild.status === 'FOUND' && (() => { const b = censusBuild.record; const members = b.members as Array<Record<string, unknown>> | undefined; const manifest = (b.request as Record<string, unknown> | undefined)?.manifest as Record<string, unknown> | undefined; const definition = manifest?.definition as Record<string, unknown> | undefined; return (
+                <div className="flex flex-col gap-1" data-testid="census-build">
+                  <div><span className="mono" style={{ color: 'var(--status-conditional)' }}>{String(b.state)}</span> <span style={faint}>· built <span className="ts">{fmtUtc(String(b.builtAt), { seconds: true })}</span> · known through <span className="ts">{fmtUtc(String(b.knownThrough), { seconds: true })}</span> · {String(b.recordCount)} member{Number(b.recordCount) === 1 ? '' : 's'} · root <Digest value={String(b.recordsRoot)} copy={false} /> · <Digest value={String(b.digest)} copy={false} /></span></div>
+                  {definition && <div style={faint}>definition <span className="id">{String(definition.id)}</span> v{String(definition.version)} · {String(definition.domain)} / {String(definition.recordType)}</div>}
+                  <ul className="m-0 p-0 list-none flex flex-col gap-0.5">{(members ?? []).map((member, index) => { const n = member.normalization as { id: string; digest: string } | undefined; const c = member.candidate as { id: string; digest: string } | undefined; return <li key={n?.id ?? index} className="flex flex-wrap items-baseline gap-x-2 text-[11.5px]"><span style={faint}>normalization</span><span className="id break-all">{n?.id}</span>{n && <Digest value={n.digest} copy={false} />}{c && <><span style={faint}>candidate</span><span className="id break-all">{c.id}</span><Digest value={c.digest} copy={false} /></>}</li>; })}</ul>
+                  <Flags record={{ canonicalAdmission: false, releaseActivated: false, identityResolved: false, completenessClaimed: false, customerDistributionPermitted: false }} />
+                  <Raw value={b} />
+                </div>); })()}
+            </dd>
           </dl>
-          <BlockerView blocker={BLOCKERS.fmcsaAdapter} />
+          <BlockerView blocker={BLOCKERS.fmcsaRail} />
         </Part>
 
         <Part title="Notation · refer to exact evidence" testId="notation-card">

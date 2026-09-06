@@ -270,7 +270,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   background: var(--bg-void); border-bottom: 1px solid var(--border-default);
   display: flex; flex-direction: column; gap: 0;
 }
-.app-sidebar .nav-areas { display: flex; flex-direction: row; gap: 2px; padding: 4px 8px; overflow-x: auto; scrollbar-width: thin; }
+/* The strip is a horizontal scroll region: positioned, so nothing inside it (the draft marker included) can widen the document on a mobile viewport. */
+.app-sidebar .nav-areas { display: flex; flex-direction: row; gap: 2px; padding: 4px 8px; overflow-x: auto; scrollbar-width: thin; position: relative; }
 .app-sidebar .nav-area { display: flex; align-items: center; gap: 2px; flex: none; }
 .app-sidebar .nav-area + .nav-area::before { content: ''; display: inline-block; width: 1px; height: 16px; margin: 0 6px; background: var(--border-default); }
 .app-sidebar .nav-area-head { display: none; }
