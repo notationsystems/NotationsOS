@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Inspector } from '@/components/primitives/Inspector';
-import { ACCESS_MEANING, FAILURE_MEANING, REACHABILITY_MEANING, REACHABILITY_TONE, SPATIAL_NONCLAIMS, SPATIAL_REMEDY, NODE, changeText, depthText, formatSelection, graphLayout, isSpatialId, meanDepthText, parseSelection, passagesOf, planGeometry, readComparison, readInspection, spaceReadings, type Access, type Comparison, type InspectedAnalysis, type Reachability } from '@/domain/spatial';
+import { ACCESS_MEANING, FAILURE_MEANING, REACHABILITY_MEANING, REACHABILITY_TONE, GRAPH_RENDERING_LOSS, SPATIAL_NONCLAIMS, SPATIAL_REMEDY, NODE, changeText, depthText, formatSelection, graphLayout, isSpatialId, meanDepthText, parseSelection, passagesOf, planGeometry, readComparison, readInspection, spaceReadings, type Access, type Comparison, type InspectedAnalysis, type Reachability } from '@/domain/spatial';
 import { fmtUtc, shortHash } from '@/lib/format';
 
 export interface SpatialInquiryProps {
@@ -243,6 +243,9 @@ export function SpatialInquiry({ enabled, baselineId = 'spatial-demo-baseline', 
                 <span className="font-medium" style={{ color: 'var(--text-heading)' }}>Access graph</span>
                 <span style={muted}>spaces in columns by possible-graph depth from <span className="mono">{projection.result.parameters.rootSpaceId}</span>; positions are a reading order, not a distance</span>
               </figcaption>
+              <ul className="m-0 p-0 list-none flex flex-col gap-0.5 text-[11.5px]" style={faint} aria-label="What this drawing does not preserve" data-testid="spatial-graph-loss">
+                {GRAPH_RENDERING_LOSS.map((loss) => <li key={loss}><span aria-hidden="true">✕</span> {loss}</li>)}
+              </ul>
               <div className="overflow-x-auto">
                 <svg className="spatial-graph" viewBox={`0 0 ${graph.width} ${graph.height}`} width={graph.width} height={graph.height} role="group" aria-label={`Access graph: ${graph.nodes.length} spaces, ${graph.edges.length} passages; select a space`} data-testid="spatial-graph">
                   <defs>
@@ -251,13 +254,30 @@ export function SpatialInquiry({ enabled, baselineId = 'spatial-demo-baseline', 
                     ))}
                   </defs>
                   {graph.columns.map((column) => <text key={column.index} x={column.x + NODE.width / 2} y={NODE.margin} textAnchor="middle" fontSize={11} fill="var(--text-muted)" style={{ letterSpacing: '0.06em', textTransform: 'uppercase' }}>{column.label}</text>)}
-                  {graph.edges.map((edge) => (
-                    <g key={edge.id} data-graph-edge={edge.id} data-state={edge.effectiveState}>
-                      <line x1={edge.x1} y1={edge.y1} x2={edge.x2} y2={edge.y2} stroke={ACCESS_TONE[edge.effectiveState]} strokeWidth={edge.assumed ? 3 : 1.75} strokeDasharray={edge.effectiveState === 'UNKNOWN' ? '6 4' : undefined} markerEnd={`url(#spatial-arrow-${edge.effectiveState})`} markerStart={edge.direction === 'BOTH' ? `url(#spatial-arrow-${edge.effectiveState})` : undefined} />
-                      {edge.effectiveState === 'CLOSED' && <line x1={(edge.x1 + edge.x2) / 2} y1={(edge.y1 + edge.y2) / 2 - 9} x2={(edge.x1 + edge.x2) / 2} y2={(edge.y1 + edge.y2) / 2 + 9} stroke={ACCESS_TONE.CLOSED} strokeWidth={3} />}
-                      <text x={(edge.x1 + edge.x2) / 2} y={(edge.y1 + edge.y2) / 2 - 6} textAnchor="middle" fontSize={10} fill="var(--text-muted)">{edge.id}{edge.assumed ? ' · assumed' : ''}</text>
-                    </g>
-                  ))}
+                  {graph.edges.map((edge) => {
+                    // A passage between two spaces at the same depth is bowed clear of the
+                    // column: drawn straight it would run backwards through the band both
+                    // boxes occupy, and the boxes are painted after it.
+                    const midX = (edge.x1 + edge.x2) / 2, midY = (edge.y1 + edge.y2) / 2;
+                    const apexX = edge.x1 + NODE.bow / 2;
+                    const stroke = {
+                      stroke: ACCESS_TONE[edge.effectiveState], strokeWidth: edge.assumed ? 3 : 1.75,
+                      strokeDasharray: edge.effectiveState === 'UNKNOWN' ? '6 4' : undefined,
+                      markerEnd: `url(#spatial-arrow-${edge.effectiveState})`,
+                      markerStart: edge.direction === 'BOTH' ? `url(#spatial-arrow-${edge.effectiveState})` : undefined,
+                    };
+                    return (
+                      <g key={edge.id} data-graph-edge={edge.id} data-state={edge.effectiveState} data-same-column={edge.sameColumn ? 'true' : undefined}>
+                        {edge.sameColumn
+                          ? <path d={`M ${edge.x1} ${edge.y1} Q ${edge.x1 + NODE.bow} ${midY} ${edge.x2} ${edge.y2}`} fill="none" {...stroke} />
+                          : <line x1={edge.x1} y1={edge.y1} x2={edge.x2} y2={edge.y2} {...stroke} />}
+                        {edge.effectiveState === 'CLOSED' && (edge.sameColumn
+                          ? <line x1={apexX - 7} y1={midY} x2={apexX + 7} y2={midY} stroke={ACCESS_TONE.CLOSED} strokeWidth={3} />
+                          : <line x1={midX} y1={midY - 9} x2={midX} y2={midY + 9} stroke={ACCESS_TONE.CLOSED} strokeWidth={3} />)}
+                        <text x={edge.sameColumn ? apexX + 8 : midX} y={edge.sameColumn ? midY + 3 : Math.min(edge.y1, edge.y2) - NODE.height / 2 - 4} textAnchor={edge.sameColumn ? 'start' : 'middle'} fontSize={10} fill="var(--text-muted)">{edge.id}{edge.assumed ? ' · assumed' : ''}</text>
+                      </g>
+                    );
+                  })}
                   {graph.nodes.map((node) => {
                     const reading = readings.find((r) => r.id === node.id)!;
                     const depths = depthText(reading.confirmedDepth, reading.possibleDepth);

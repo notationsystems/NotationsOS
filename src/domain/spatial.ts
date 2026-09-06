@@ -213,9 +213,20 @@ export function planGeometry(layout: SpatialLayout): PlanGeometry {
 /* ═══ The graph: spaces in depth columns, passages as arcs ═══ */
 
 export interface GraphNode { id: string; label: string; column: number; row: number; x: number; y: number; status: Reachability }
-export interface GraphEdge { id: string; from: string; to: string; direction: 'BOTH' | 'FROM_TO'; effectiveState: Access; declaredState: Access; assumed: boolean; x1: number; y1: number; x2: number; y2: number }
+export interface GraphEdge { id: string; from: string; to: string; direction: 'BOTH' | 'FROM_TO'; effectiveState: Access; declaredState: Access; assumed: boolean; sameColumn: boolean; x1: number; y1: number; x2: number; y2: number }
 export interface GraphLayout { nodes: GraphNode[]; edges: GraphEdge[]; columns: { index: number; label: string; x: number }[]; width: number; height: number }
-export const NODE = { width: 116, height: 34, columnGap: 172, rowGap: 52, margin: 24 } as const;
+export const NODE = { width: 116, height: 34, columnGap: 172, rowGap: 52, margin: 24, bow: 44 } as const;
+
+/**
+ * What the drawing does and does not preserve. The analysis states its own
+ * non-claims in SPATIAL_NONCLAIMS; these are the picture's, because the graph is
+ * a second representation of the same result and owes its own statement of loss.
+ */
+export const GRAPH_RENDERING_LOSS = [
+  'Columns are possible-graph depth from the root and rows are an ordering by space id. Neither carries distance.',
+  'Every passage at a space attaches at a single point on that space’s box, so a space with many passages draws them as one fan.',
+  'Two spaces at the same depth are joined by a curve bowed clear of the column. The curve’s shape carries nothing; it exists so the passage is not drawn under a box.',
+] as const;
 
 /** Columns are possible-graph depths (the widest reading), disconnected spaces in a last column; positions are a reading order, never a distance. */
 export function graphLayout(projection: SpatialProjection): GraphLayout {
@@ -232,14 +243,24 @@ export function graphLayout(projection: SpatialProjection): GraphLayout {
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const edges: GraphEdge[] = projection.result.passages.map((p) => {
     const a = byId.get(p.from)!, b = byId.get(p.to)!;
-    const forward = a.x <= b.x;
-    return { id: p.id, from: p.from, to: p.to, direction: p.direction, effectiveState: p.effectiveState, declaredState: p.declaredState, assumed: p.assumed,
-      x1: a.x + (forward ? NODE.width : 0), y1: a.y + NODE.height / 2, x2: b.x + (forward ? 0 : NODE.width), y2: b.y + NODE.height / 2 };
+    // Two spaces at the same depth share a column. Joining them right-edge to
+    // left-edge would draw the passage backwards across the column and under at
+    // least one of the two boxes, which are painted over it. Such a passage
+    // leaves and enters on the same side instead, and the renderer bows it clear.
+    const sameColumn = a.column === b.column;
+    const base = { id: p.id, from: p.from, to: p.to, direction: p.direction, effectiveState: p.effectiveState, declaredState: p.declaredState, assumed: p.assumed, sameColumn };
+    if (sameColumn) return { ...base, x1: a.x + NODE.width, y1: a.y + NODE.height / 2, x2: b.x + NODE.width, y2: b.y + NODE.height / 2 };
+    const forward = a.x < b.x;
+    return { ...base, x1: a.x + (forward ? NODE.width : 0), y1: a.y + NODE.height / 2, x2: b.x + (forward ? 0 : NODE.width), y2: b.y + NODE.height / 2 };
   });
   const usedColumns = [...new Set(nodes.map((n) => n.column))].sort((a, b) => a - b);
   const columns = usedColumns.map((index) => ({ index, x: NODE.margin + index * NODE.columnGap, label: index === disconnectedColumn && readings.some((r) => r.possibleDepth === null) ? 'disconnected' : index === 0 ? 'depth 0 · root' : `depth ${index}` }));
   const maxRows = Math.max(1, ...rows.values());
-  return { nodes, edges, columns, width: NODE.margin * 2 + (usedColumns.length ? usedColumns[usedColumns.length - 1] : 0) * NODE.columnGap + NODE.width, height: NODE.margin + 18 + maxRows * NODE.rowGap + NODE.margin };
+  const columnsWidth = NODE.margin * 2 + (usedColumns.length ? usedColumns[usedColumns.length - 1] : 0) * NODE.columnGap + NODE.width;
+  // A bowed passage in the last column reaches past it; the viewBox has to hold it.
+  const bowed = edges.filter((edge) => edge.sameColumn);
+  const width = bowed.length ? Math.max(columnsWidth, Math.max(...bowed.map((edge) => edge.x1)) + NODE.bow + NODE.margin) : columnsWidth;
+  return { nodes, edges, columns, width, height: NODE.margin + 18 + maxRows * NODE.rowGap + NODE.margin };
 }
 
 /* ═══ A selection is a link ═══ */

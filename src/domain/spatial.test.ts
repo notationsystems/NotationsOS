@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { changeText, depthText, formatSelection, graphLayout, meanDepthText, parseSelection, passagesOf, planGeometry, readComparison, readInspection, spaceReadings, type InspectedAnalysis } from './spatial';
+import { GRAPH_RENDERING_LOSS, NODE, changeText, depthText, formatSelection, graphLayout, meanDepthText, parseSelection, passagesOf, planGeometry, readComparison, readInspection, spaceReadings, type InspectedAnalysis } from './spatial';
 
 const example = (name: string) => JSON.parse(readFileSync(join(process.cwd(), 'examples', 'spatial', `${name}.json`), 'utf8'));
 const baseline = () => readInspection(example('baselineAnalysis'));
@@ -94,6 +94,42 @@ describe('the spatial inquiry as data', () => {
     expect(after.nodes.filter((node) => node.column === 2).map((node) => node.row)).toEqual([0, 1, 2]);
     expect(after.width).toBeGreaterThan(after.nodes[4].x);
     expect(after.height).toBeGreaterThan(after.nodes[4].y);
+  });
+
+  it('draws no passage under a space box: two spaces at one depth are bowed clear of the column', () => {
+    // The drawn geometry, sampled: a straight segment for a cross-column passage,
+    // and the quadratic the renderer bows for a same-column one.
+    const drawn = (edge: ReturnType<typeof graphLayout>['edges'][number]) => {
+      const cx = edge.x1 + NODE.bow, cy = (edge.y1 + edge.y2) / 2;
+      return Array.from({ length: 81 }, (_, i) => {
+        const t = i / 80;
+        if (!edge.sameColumn) return [edge.x1 + (edge.x2 - edge.x1) * t, edge.y1 + (edge.y2 - edge.y1) * t] as const;
+        const u = 1 - t;
+        return [u * u * edge.x1 + 2 * u * t * cx + t * t * edge.x2, u * u * edge.y1 + 2 * u * t * cy + t * t * edge.y2] as const;
+      });
+    };
+    for (const name of ['baselineAnalysis', 'scenarioAnalysis']) {
+      const graph = graphLayout(readInspection(example(name)).projection);
+      const boxes = graph.nodes.map((n) => ({ id: n.id, x1: n.x, x2: n.x + NODE.width, y1: n.y, y2: n.y + NODE.height }));
+      for (const edge of graph.edges) {
+        for (const [x, y] of drawn(edge)) {
+          const under = boxes.find((b) => x > b.x1 && x < b.x2 && y > b.y1 && y < b.y2);
+          expect(under?.id, `${name}: ${edge.id} passes under ${under?.id} at ${Math.round(x)},${Math.round(y)}`).toBeUndefined();
+          expect(x, `${name}: ${edge.id} leaves the viewBox`).toBeLessThanOrEqual(graph.width);
+        }
+      }
+    }
+    // The baseline is a path, one space per column; the scenario strands three at one depth.
+    const baseline = graphLayout(readInspection(example('baselineAnalysis')).projection);
+    expect(baseline.edges.some((e) => e.sameColumn)).toBe(false);
+    const scenario = graphLayout(readInspection(example('scenarioAnalysis')).projection);
+    expect(scenario.edges.filter((e) => e.sameColumn).map((e) => e.id)).toEqual(['P-08', 'P-09']);
+    // A same-column passage leaves and enters on the same side, never right edge to left edge.
+    for (const edge of scenario.edges.filter((e) => e.sameColumn)) expect(edge.x1).toBe(edge.x2);
+    expect(scenario.width).toBeGreaterThan(Math.max(...scenario.edges.map((e) => e.x1)) + NODE.bow);
+    // The drawing states its own loss, separately from the analysis's non-claims.
+    expect(GRAPH_RENDERING_LOSS.join(' ')).toMatch(/bowed clear of the column/);
+    expect(GRAPH_RENDERING_LOSS.join(' ')).toMatch(/Neither carries distance/);
   });
 
   it('names the passages of a space and carries the selection in a link it ignores when malformed', () => {
