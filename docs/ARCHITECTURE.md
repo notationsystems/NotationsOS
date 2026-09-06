@@ -1,6 +1,6 @@
 # Doctrine binding
 
-[Synthesized architecture](SYNTHESIZED_ARCHITECTURE.md) is the prose of record for the five fabrics, the seven doctrine invariants, the projection instruments, the runtime allocation and the historical concept mapping. This document records only what that architecture binds in this repository: where each rule is enforced, which tests prove it, the three states of information as they exist here, the verification tier reached, and the identity chain. `src/domain/doctrine.ts` holds the same content as data; `/product` renders it; `src/domain/doctrine.test.ts` fails if a named test file disappears.
+An editable map of every part and its flows, for brainstorming in Obsidian, is in [`docs/architecture-map/`](architecture-map/Payload%20OS%20Architecture.md). [Synthesized architecture](SYNTHESIZED_ARCHITECTURE.md) is the prose of record for the five fabrics, the seven doctrine invariants, the projection instruments, the runtime allocation and the historical concept mapping. This document records only what that architecture binds in this repository: where each rule is enforced, which tests prove it, the three states of information as they exist here, the verification tier reached, and the identity chain. `src/domain/doctrine.ts` holds the same content as data; `/product` renders it; `src/domain/doctrine.test.ts` fails if a named test file disappears.
 
 ## Three states of information, here
 

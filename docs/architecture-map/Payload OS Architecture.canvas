@@ -1,0 +1,1129 @@
+{
+ "nodes": [
+  {
+   "id": "4045a6ee7751118b",
+   "type": "group",
+   "label": "World: sources, rights and recorded material",
+   "x": 0,
+   "y": 0,
+   "width": 1548,
+   "height": 592,
+   "color": "4"
+  },
+  {
+   "id": "8febd602ba49b3cb",
+   "type": "text",
+   "text": "## Source inventory and connection queue\n`21 INVENTORIED · 1 CONNECTED`\n\nTwenty-one historical registry entries ranked by expected market value, with readiness separate from rank. One source (FMCSA Company Census) is connected for internal qualification.\n\n[[Source inventory and connection queue]]",
+   "x": 40,
+   "y": 56,
+   "width": 340,
+   "height": 230,
+   "color": "4"
+  },
+  {
+   "id": "6fe8604766a40eee",
+   "type": "text",
+   "text": "## FMCSA Company Census connector\n`BOUNDED · LIVE-QUALIFIED · OPERATOR ONLY`\n\nThe first real source. One checked-in request (USDOT 80806, corporations, US) against dataset az4n-8mr2 under a declared policy window; original bytes and receipts are retained; no recurring ingestion, no customer feed.\n\n[[FMCSA Company Census connector]]",
+   "x": 416,
+   "y": 56,
+   "width": 340,
+   "height": 230,
+   "color": "4"
+  },
+  {
+   "id": "79e8388d13d5957b",
+   "type": "text",
+   "text": "## Samsara vehicle GPS connector\n`BOUNDED · CREDENTIAL-GATED · NOT RUN HERE`\n\nAn operator-only capture of vehicle GPS observations: collection is off unless the operator process sets the flag with a scoped token. Offline tests and a synthetic demo exist; no request has been made from this environment.\n\n[[Samsara vehicle GPS connector]]",
+   "x": 792,
+   "y": 56,
+   "width": 340,
+   "height": 230,
+   "color": "4"
+  },
+  {
+   "id": "6b6e16c599ae0988",
+   "type": "text",
+   "text": "## Recorded dataset candidate (Boreas)\n`CANDIDATE · NOT_IMPORTED`\n\nThe first qualification candidate for an independently checkable recorded-data case: Toronto traversals with camera, LiDAR, GNSS/inertial evidence and calibrations. Documentation reviewed, nothing downloaded, no receipts created.\n\n[[Recorded dataset candidate (Boreas)]]",
+   "x": 1168,
+   "y": 56,
+   "width": 340,
+   "height": 230,
+   "color": "4"
+  },
+  {
+   "id": "04bd0cf413052ab6",
+   "type": "text",
+   "text": "## Demonstration corpus and Carrier fixtures\n`FIXTURE · SYNTHETIC`\n\nThe Caravan specialty-cargo corpus (three releases, nineteen records, two retractions, seven sources with rights) and the synthetic Carrier JSON contract drive every screen and the local rail's demonstration.\n\n[[Demonstration corpus and Carrier fixtures]]",
+   "x": 40,
+   "y": 322,
+   "width": 340,
+   "height": 230,
+   "color": "4"
+  },
+  {
+   "id": "97f4f65824c85180",
+   "type": "group",
+   "label": "Acquisition Fabric — world → evidence",
+   "x": 0,
+   "y": 672,
+   "width": 1548,
+   "height": 326,
+   "color": "4"
+  },
+  {
+   "id": "a033456ef5f309ba",
+   "type": "text",
+   "text": "## Source rights and use evaluation\n`IMPLEMENTED`\n\nOne exact decision per purpose, operation and audience at one instant: ALLOWED, APPROVAL_REQUIRED or DENIED, with reasons. Every capture, normalization and build evaluates it before acting.\n\n[[Source rights and use evaluation]]",
+   "x": 40,
+   "y": 728,
+   "width": 340,
+   "height": 230,
+   "color": "4"
+  },
+  {
+   "id": "c2d81cd0754cffdd",
+   "type": "text",
+   "text": "## Evidence capture and receipts\n`IMPLEMENTED`\n\nBytes are bound to a source only under an allowed use, content-addressed, with a capture receipt and `sourceTruthClaimed: false`. The local evidence rail reopens an acquisition to recompute byte and receipt integrity.\n\n[[Evidence capture and receipts]]",
+   "x": 416,
+   "y": 728,
+   "width": 340,
+   "height": 230,
+   "color": "4"
+  },
+  {
+   "id": "c02868da91677311",
+   "type": "text",
+   "text": "## Source capture store and readback\n`IMPLEMENTED · READ-ONLY ROUTE`\n\nThe operator's qualification root holds real captures. A guarded loopback route reads one capture back without collection or provider contact, returning the store's own inspection or an exact not-found state.\n\n[[Source capture store and readback]]",
+   "x": 792,
+   "y": 728,
+   "width": 340,
+   "height": 230,
+   "color": "4"
+  },
+  {
+   "id": "0574eee251ec55cd",
+   "type": "text",
+   "text": "## Acquisition area of the workbench\n`SURFACE`\n\nThe navigation area for coverage, sources, collection attempts and failures: the acquisitions section of the candidates rail and the evidence list across cases.\n\n[[Acquisition area of the workbench]]",
+   "x": 1168,
+   "y": 728,
+   "width": 340,
+   "height": 230,
+   "color": "4"
+  },
+  {
+   "id": "9553f9aec629a11d",
+   "type": "group",
+   "label": "Corpus Fabric — evidence → candidates, releases, products",
+   "x": 0,
+   "y": 1078,
+   "width": 1548,
+   "height": 592,
+   "color": "3"
+  },
+  {
+   "id": "7b8561be5bd7230a",
+   "type": "text",
+   "text": "## Local production rail\n`IMPLEMENTED · OPT-IN · LOOPBACK`\n\nOne command contract drives registration, capture, fixed normalization and candidate-build assembly with structured stage receipts, historical retry, conflict detection, quarantine of invalid input and request-bound failed-run integrity.\n\n[[Local production rail]]",
+   "x": 40,
+   "y": 1134,
+   "width": 340,
+   "height": 230,
+   "color": "3"
+  },
+  {
+   "id": "8d048f25b1d57354",
+   "type": "text",
+   "text": "## Normalization adapters\n`TWO ADAPTERS`\n\nA fixed Caravan Carrier adapter and the FMCSA Census normalization turn captured bytes into typed candidates; every derived quantity names its method and version and every run carries the adapter digest.\n\n[[Normalization adapters]]",
+   "x": 416,
+   "y": 1134,
+   "width": 340,
+   "height": 230,
+   "color": "3"
+  },
+  {
+   "id": "a1082c2303c2cbcb",
+   "type": "text",
+   "text": "## Candidate builds and comparison\n`IMPLEMENTED · UNADMITTED`\n\nExact, inspectable candidate builds assembled from normalizations, each member carrying its derivation decision, source class and knowledge time; two builds can be compared by source-scoped membership and immutable references.\n\n[[Candidate builds and comparison]]",
+   "x": 792,
+   "y": 1134,
+   "width": 340,
+   "height": 230,
+   "color": "3"
+  },
+  {
+   "id": "aea369fb89a8cb9c",
+   "type": "text",
+   "text": "## Corpus object model\n`THE PRODUCT · FIXTURE-BACKED`\n\nReleases with knowledge cutoffs and build records; records with stable `notation://` identity, subject, predicate, value, unit, basis, uncertainty bounds, validity bounds, two clocks, evidence class and provenance; retractions; rights schedules; governance.\n\n[[Corpus object model]]",
+   "x": 1168,
+   "y": 1134,
+   "width": 340,
+   "height": 230,
+   "color": "3"
+  },
+  {
+   "id": "6b6f23e19e9f129a",
+   "type": "text",
+   "text": "## Certified release manifest and production record\n`COMMITTED · UNSIGNED`\n\nEach release carries a manifest (build, release digest, record count, retractions applied, sources with rights, certification, governance) whose commitment is the digest of its canonical JSON, and a production record across the twelve stages.\n\n[[Certified release manifest and production record]]",
+   "x": 40,
+   "y": 1400,
+   "width": 340,
+   "height": 230,
+   "color": "3"
+  },
+  {
+   "id": "06d3a865b8cd677d",
+   "type": "text",
+   "text": "## Information products\n`SPECIFIED · FIXTURE-COVERED`\n\nThe first information product: a customer question, subjects, fields with evidence requirements and the corpus's coverage of them, freshness by release, permitted uses, correction as the same question at two knowledge times, and the delivered-record contract.\n\n[[Information products]]",
+   "x": 416,
+   "y": 1400,
+   "width": 340,
+   "height": 230,
+   "color": "3"
+  },
+  {
+   "id": "65fac56b1d53da45",
+   "type": "group",
+   "label": "State Fabric — validation, admission and canonical versions",
+   "x": 0,
+   "y": 1750,
+   "width": 1172,
+   "height": 326,
+   "color": "1"
+  },
+  {
+   "id": "f4a7b5533bc2614e",
+   "type": "text",
+   "text": "## Admission authority\n`ABSENT · MILESTONE PRIORITY`\n\nThe explicit validation boundary that turns a candidate into an admitted canonical version. It does not exist yet, and every surface says so; the rails refuse what they cannot vouch for.\n\n[[Admission authority]]",
+   "x": 40,
+   "y": 1806,
+   "width": 340,
+   "height": 230,
+   "color": "1"
+  },
+  {
+   "id": "e30a5f30234154f4",
+   "type": "text",
+   "text": "## Notation state kernel (Rust)\n`PRESENT · LOCAL · AUTHORED STATE ONLY`\n\nA deterministic Rust command and history core for authored notation objects and explicit relationships: the frontend sends commands over a loopback API; Rust replays and validates; Save writes a versioned local snapshot.\n\n[[Notation state kernel (Rust)]]",
+   "x": 416,
+   "y": 1806,
+   "width": 340,
+   "height": 230,
+   "color": "1"
+  },
+  {
+   "id": "4075c3f89e28b39a",
+   "type": "text",
+   "text": "## Three states of information (E, K, I)\n`DOCTRINE AS DATA`\n\nEvidence (what was observed; append-only, content-addressed), Canonical (admitted under a schema as a version; immutable per version), Inquiry (what one investigation manipulates; allowed to be wrong; promotion crosses validation).\n\n[[Three states of information (E, K, I)]]",
+   "x": 792,
+   "y": 1806,
+   "width": 340,
+   "height": 230,
+   "color": "1"
+  },
+  {
+   "id": "13e06f6d3ed6d063",
+   "type": "group",
+   "label": "Compute / Decision Fabric — derived objects, never truth by default",
+   "x": 0,
+   "y": 2156,
+   "width": 1548,
+   "height": 592,
+   "color": "5"
+  },
+  {
+   "id": "64f09a77576b1c44",
+   "type": "text",
+   "text": "## Recorded observation replay\n`CONTRACT + COMPILER · SYNTHETIC MANIFEST`\n\nA strict manifest of frames, sessions, clocks with alignments, sensors, calibrations with validity, poses with stamps, operator associations and observations with point estimates; the compiler places each observation or states exactly why it is unplaced.\n\n[[Recorded observation replay]]",
+   "x": 40,
+   "y": 2212,
+   "width": 340,
+   "height": 230,
+   "color": "5"
+  },
+  {
+   "id": "fddf87d6f4ee6a0f",
+   "type": "text",
+   "text": "## Registration and access geometry\n`IMPLEMENTED · SYNTHETIC PREVIEW`\n\nA bounded 3D rigid weighted-least-squares estimator with local conditional covariance and held-out check points, plus explicit access geometry: Cartesian distance, permitted-network shortest paths and closure scenarios.\n\n[[Registration and access geometry]]",
+   "x": 416,
+   "y": 2212,
+   "width": 340,
+   "height": 230,
+   "color": "5"
+  },
+  {
+   "id": "8ef7c3af5183516b",
+   "type": "text",
+   "text": "## Spatial inquiry (floor access)\n`IMPLEMENTED · MANUAL ANNOTATION`\n\nHow does opening or closing one explicit passage change access through one floor? A validated layout with spaces and passages, a scenario, and a directed-room-access analysis with CONFIRMED, POSSIBLE_ONLY and DISCONNECTED reachability.\n\n[[Spatial inquiry (floor access)]]",
+   "x": 792,
+   "y": 2212,
+   "width": 340,
+   "height": 230,
+   "color": "5"
+  },
+  {
+   "id": "d28849cda49b8e38",
+   "type": "text",
+   "text": "## Clearance value-of-information experiment\n`IMPLEMENTED · SYNTHETIC PREVIEW`\n\nExact finite Bayesian decision analysis over a declared joint model: expected decision-loss reduction minus acquisition cost for a measurement, without executing any action.\n\n[[Clearance value-of-information experiment]]",
+   "x": 1168,
+   "y": 2212,
+   "width": 340,
+   "height": 230,
+   "color": "5"
+  },
+  {
+   "id": "4ac1ebaa9c20f147",
+   "type": "text",
+   "text": "## Scalar Gaussian benchmark\n`BASELINE · SYNTHETIC`\n\nOne conventional scalar linear-Gaussian estimator with an evidence-bound benchmark and held-out-reference metrics: the baseline every later model must beat on the same evidence.\n\n[[Scalar Gaussian benchmark]]",
+   "x": 40,
+   "y": 2478,
+   "width": 340,
+   "height": 230,
+   "color": "5"
+  },
+  {
+   "id": "7520e6a19921cce3",
+   "type": "text",
+   "text": "## GAT IFC audit instrument\n`PINNED ENGINE · SPECIALIST`\n\nA preserved IFC (Industry Foundation Classes) building-model artifact is audited by the exact pinned GAT engine; the original report, a separate safe projection and an immutable execution receipt keep distinct identities.\n\n[[GAT IFC audit instrument]]",
+   "x": 416,
+   "y": 2478,
+   "width": 340,
+   "height": 230,
+   "color": "5"
+  },
+  {
+   "id": "1f8813a458f1c4ce",
+   "type": "text",
+   "text": "## Scientific model roles\n`DOCTRINE`\n\nDifferent methods answer different questions: factor graphs first for estimation, then physics-informed and operator models where they earn their place; a prediction never grants canonical admission or distribution rights.\n\n[[Scientific model roles]]",
+   "x": 792,
+   "y": 2478,
+   "width": 340,
+   "height": 230,
+   "color": "5"
+  },
+  {
+   "id": "2750decbb534484e",
+   "type": "group",
+   "label": "Projection Fabric — representations, APIs and instruments",
+   "x": 0,
+   "y": 2828,
+   "width": 1548,
+   "height": 592,
+   "color": "6"
+  },
+  {
+   "id": "f8a888acca61118b",
+   "type": "text",
+   "text": "## Projection spec and compiler\n`IMPLEMENTED · READ-ONLY`\n\nOne closed spec (`payload.projection-spec.v1`) and one router; the compiler works over one exact fixture release, enforces rights, visibility and time bounds, returns detached copies and states `sourceMutated: false`.\n\n[[Projection spec and compiler]]",
+   "x": 40,
+   "y": 2884,
+   "width": 340,
+   "height": 230,
+   "color": "6"
+  },
+  {
+   "id": "7514238e91321af6",
+   "type": "text",
+   "text": "## Corpus feed API v1\n`IMPLEMENTED · FIXTURE-BACKED`\n\nReleases, records, manifests, as-of queries, retractions and rulings as JSON over the same payloads the screens use; the stream page shows the feed URL that reproduces every answer.\n\n[[Corpus feed API v1]]",
+   "x": 416,
+   "y": 2884,
+   "width": 340,
+   "height": 230,
+   "color": "6"
+  },
+  {
+   "id": "87a84f3f3fe04596",
+   "type": "text",
+   "text": "## MCP server and tools\n`IMPLEMENTED · STDIO`\n\nEight Model Context Protocol tools wrap the same payloads as the feed: list and get releases, manifests, records, as-of queries, retractions and rulings.\n\n[[MCP server and tools]]",
+   "x": 792,
+   "y": 2884,
+   "width": 340,
+   "height": 230,
+   "color": "6"
+  },
+  {
+   "id": "435e54a7d14701ec",
+   "type": "text",
+   "text": "## Earth Twin (CesiumJS)\n`PRESENT · KEYLESS · OFFLINE`\n\nA CesiumJS globe served from this origin with bundled imagery on the WGS84 ellipsoid, computed day and night at the twin's world time, and one point per geodetic position declared as a corpus record; the inspector names every layer's source and state.\n\n[[Earth Twin (CesiumJS)]]",
+   "x": 1168,
+   "y": 2884,
+   "width": 340,
+   "height": 230,
+   "color": "6"
+  },
+  {
+   "id": "32fc21c318d4eb12",
+   "type": "text",
+   "text": "## Ruling projections and result manifests\n`IMPLEMENTED · FIXTURE CASES`\n\nThe same case bundle projected for sponsor, internal reviewer, named counterparty or public; rulings commit to a result manifest with a commitment, evidence root and anchor, exported machine-readably with an API example.\n\n[[Ruling projections and result manifests]]",
+   "x": 40,
+   "y": 3150,
+   "width": 340,
+   "height": 230,
+   "color": "6"
+  },
+  {
+   "id": "cf8d0bd4b75e8c2c",
+   "type": "group",
+   "label": "Application layer — the Payload OS workbench (Next.js)",
+   "x": 0,
+   "y": 3500,
+   "width": 1548,
+   "height": 592,
+   "color": "2"
+  },
+  {
+   "id": "a6e7d9c56494d323",
+   "type": "text",
+   "text": "## App shell, navigation and design system\n`IMPLEMENTED`\n\nOne shell: a top bar that says where you are, the domain-product control, five activity areas (Acquisition, Corpus, Notations, Inquiry, Coordination) declared as data, a center surface and an inspector pattern with responsive sheets.\n\n[[App shell, navigation and design system]]",
+   "x": 40,
+   "y": 3556,
+   "width": 340,
+   "height": 230,
+   "color": "2"
+  },
+  {
+   "id": "ccae1cb858ce8029",
+   "type": "text",
+   "text": "## Production path workspace\n`IMPLEMENTED · REAL RAIL OR FIXTURE MODE`\n\nOne continuous path in seven stages (source, acquisition, normalization, candidate build, inspection, notation, release), each with a state from a closed vocabulary derived from what the rails produced, with recovery actions and an inspector.\n\n[[Production path workspace]]",
+   "x": 416,
+   "y": 3556,
+   "width": 340,
+   "height": 230,
+   "color": "2"
+  },
+  {
+   "id": "bfa7bf754eaf29fb",
+   "type": "text",
+   "text": "## Candidates rail\n`IMPLEMENTED`\n\nThe candidate-production rail before admission as an observable process: collection, extraction, normalization, candidate readiness; every metric names the field it is read from and every instant its clock; where coverage stops and what would change it.\n\n[[Candidates rail]]",
+   "x": 792,
+   "y": 3556,
+   "width": 340,
+   "height": 230,
+   "color": "2"
+  },
+  {
+   "id": "696072753bbd48a2",
+   "type": "text",
+   "text": "## Notation workspace\n`IMPLEMENTED · LOCAL AUTHORING`\n\nAuthor, relate and preserve interpretations against the Rust kernel: drafts survive navigation and reload, three states told apart (unapplied, previewed, saved), undo and redo, conflict recovery, capacity, and an evidence-reference panel whose persistence waits for the backend.\n\n[[Notation workspace]]",
+   "x": 1168,
+   "y": 3556,
+   "width": 340,
+   "height": 230,
+   "color": "2"
+  },
+  {
+   "id": "565bd02e920ff10d",
+   "type": "text",
+   "text": "## Case workbench\n`IMPLEMENTED · FIXTURE CASES`\n\nThe optional prescribed control over the corpus: CASE → USE → CLAIMS → EVIDENCE → CHECKS → RULING → REMEDIATION → RELEASE → MONITORING, with staged intake, a decision rail, lineage from artifact to ruling, bitemporal replay and admission profiles.\n\n[[Case workbench]]",
+   "x": 40,
+   "y": 3822,
+   "width": 340,
+   "height": 230,
+   "color": "2"
+  },
+  {
+   "id": "e919a95ef2acb341",
+   "type": "text",
+   "text": "## Observation replay surface\n`IMPLEMENTED · SYNTHETIC PREVIEW`\n\nThe recorded-observation contract made understandable: a linked frame diagram (sensor → calibration → body → pose → world), a timeline of clock alignments, calibration validity, stamps and pose mismatches, an observation register, and an inspector connecting a selection to its evidence, estimate, placement and comparisons.\n\n[[Observation replay surface]]",
+   "x": 416,
+   "y": 3822,
+   "width": 340,
+   "height": 230,
+   "color": "2"
+  },
+  {
+   "id": "024a44556ba0149f",
+   "type": "text",
+   "text": "## Inquiry instrument pages\n`IMPLEMENTED · SYNTHETIC PREVIEWS`\n\nSpatial Inquiry (/spatial), Registration and access (/compute/registration), Clearance (/compute/clearance) and the Earth Twin (/earth): each a page over one compute or projection contract, marked as synthetic preview where it is one.\n\n[[Inquiry instrument pages]]",
+   "x": 792,
+   "y": 3822,
+   "width": 340,
+   "height": 230,
+   "color": "2"
+  },
+  {
+   "id": "2578b0b767fd7fbe",
+   "type": "text",
+   "text": "## Corpus and product pages\n`IMPLEMENTED`\n\n/product (the operating model as data), /products, /releases and release detail with certification and rights, /stream (as-of), /retractions and /api (endpoints with live examples).\n\n[[Corpus and product pages]]",
+   "x": 1168,
+   "y": 3822,
+   "width": 340,
+   "height": 230,
+   "color": "2"
+  },
+  {
+   "id": "aabe841f8b95c5b6",
+   "type": "group",
+   "label": "Coordination layer — participants, requests, results",
+   "x": 0,
+   "y": 4172,
+   "width": 1172,
+   "height": 326,
+   "color": "6"
+  },
+  {
+   "id": "9da9c36804c1ece2",
+   "type": "text",
+   "text": "## Stable (agents and apparatus)\n`IMPLEMENTED · LOCAL REGISTRATION`\n\nDefinitions of each participant: purpose, authority, runtime, version, domains, input and output contracts, capabilities and references; synastry is the declared connections between contracts with missing inputs stated.\n\n[[Stable (agents and apparatus)]]",
+   "x": 40,
+   "y": 4228,
+   "width": 340,
+   "height": 230,
+   "color": "6"
+  },
+  {
+   "id": "25582aa8bf761e87",
+   "type": "text",
+   "text": "## Board (messages and acknowledgements)\n`IMPLEMENTED · LOCAL POSTING`\n\nShared messages by topic and kind: requests, handoffs, blockers, results and acknowledgements, directed or broadcast, with replies and release context.\n\n[[Board (messages and acknowledgements)]]",
+   "x": 416,
+   "y": 4228,
+   "width": 340,
+   "height": 230,
+   "color": "6"
+  },
+  {
+   "id": "444cbef7dd3afca1",
+   "type": "text",
+   "text": "## Coordination ledger and contract\n`IMPLEMENTED · payload.coordination.v1`\n\nThe contract behind stable and board: validated commands, references restricted to the current scope, directed contract connections, an inbox, a seed, and two thin clients (Python and JavaScript). Two manually started workers consume it: contract review and candidate-build review.\n\n[[Coordination ledger and contract]]",
+   "x": 792,
+   "y": 4228,
+   "width": 340,
+   "height": 230,
+   "color": "6"
+  },
+  {
+   "id": "e8a4d717d2f38275",
+   "type": "group",
+   "label": "Firm, domain products and customers",
+   "x": 1708,
+   "y": 0,
+   "width": 796,
+   "height": 592
+  },
+  {
+   "id": "fd1bb4656f4c6f0f",
+   "type": "text",
+   "text": "## Notation Systems and Payload OS\n`AUTHORITATIVE POSITIONING`\n\nA systems and intelligence firm for the physical economy. Payload OS is the shared information-production and operating platform; the corpora and their API are the product.\n\n[[Notation Systems and Payload OS]]",
+   "x": 1748,
+   "y": 56,
+   "width": 340,
+   "height": 230
+  },
+  {
+   "id": "598dbb16308bb7c5",
+   "type": "text",
+   "text": "## Domain products (Caravan, Tradewind, Landshark)\n`CARAVAN ACTIVE · TWO MODULE SLOTS`\n\nThree domain products over one platform. Caravan (logistics, freight, cargo, supply-chain movement) is the reference implementation; Tradewind (markets, pricing, risk) and Landshark (parcels, zoning, entitlements) are declared, disabled slots.\n\n[[Domain products (Caravan, Tradewind, Landshark)]]",
+   "x": 2124,
+   "y": 56,
+   "width": 340,
+   "height": 230
+  },
+  {
+   "id": "4d666d1998ff0e3c",
+   "type": "text",
+   "text": "## Customers and distribution channels\n`DECLARED`\n\nPhysical-economy brokers, asset and portfolio managers, insurance and financing firms. Distribution is by APIs, feeds, reports, workbenches and MCP tools; customer inference runs downstream over the stream.\n\n[[Customers and distribution channels]]",
+   "x": 1748,
+   "y": 322,
+   "width": 340,
+   "height": 230
+  },
+  {
+   "id": "a7e04a6f7b488292",
+   "type": "group",
+   "label": "Doctrine and governance (applies to every layer)",
+   "x": 1708,
+   "y": 672,
+   "width": 796,
+   "height": 592
+  },
+  {
+   "id": "d147e69699ac714d",
+   "type": "text",
+   "text": "## Five fabrics and the architectural cycle\n`DOCTRINE AS DATA`\n\nAcquire → Preserve evidence → Compile corpus → Establish state → Project → Compute → Investigate → Act → Observe. Five fabrics share provenance-bearing references over one substrate; feedback re-enters as evidence, never straight into canonical state.\n\n[[Five fabrics and the architectural cycle]]",
+   "x": 1748,
+   "y": 728,
+   "width": 340,
+   "height": 230
+  },
+  {
+   "id": "f6ce4cab28820a15",
+   "type": "text",
+   "text": "## Seven doctrine rules and their enforcement\n`BOUND · TESTED`\n\nEvidence is not state; canonical state is not the entire corpus; inquiry is allowed to be wrong; computation produces derived objects; projection never mutates its source; identity survives representation; every promoted result crosses an explicit validation boundary.\n\n[[Seven doctrine rules and their enforcement]]",
+   "x": 2124,
+   "y": 728,
+   "width": 340,
+   "height": 230
+  },
+  {
+   "id": "555be4b9aeb87db9",
+   "type": "text",
+   "text": "## Semantic separations kept in every surface\n`HOUSE VOCABULARY`\n\nEvidence ≠ assertion. Evaluation ≠ verification. Refused ≠ false. Valid time ≠ knowledge time. History stays visible. Visibility classes are explicit. Output is never called a warrant.\n\n[[Semantic separations kept in every surface]]",
+   "x": 1748,
+   "y": 994,
+   "width": 340,
+   "height": 230
+  },
+  {
+   "id": "cb9fd696c3751941",
+   "type": "text",
+   "text": "## Verification tiers V0–V5\n`V0, V1 REACHED`\n\nV0 provenance and V1 deterministic reproducibility are reached. V2 signed releases, V3 independent recomputation, V4 execution attestation and V5 formal proof are not, and are stated so.\n\n[[Verification tiers V0–V5]]",
+   "x": 2124,
+   "y": 994,
+   "width": 340,
+   "height": 230
+  },
+  {
+   "id": "84f8b8b442e074b7",
+   "type": "group",
+   "label": "Runtimes, local stores and verification",
+   "x": 1708,
+   "y": 1344,
+   "width": 796,
+   "height": 592
+  },
+  {
+   "id": "db2a6a4593ed7e5c",
+   "type": "text",
+   "text": "## Runtimes and local stores\n`NODE · RUST · PYTHON`\n\nNode.js/TypeScript is the facade and workbench; Rust is the deterministic notation state kernel; Python runs the pinned GAT engine. Everything local is retained under ignored `.payload/` roots.\n\n[[Runtimes and local stores]]",
+   "x": 1748,
+   "y": 1400,
+   "width": 340,
+   "height": 230
+  },
+  {
+   "id": "5217a6e86e6a13dc",
+   "type": "text",
+   "text": "## Verification harness\n`GREEN ON THE BRANCH`\n\nVitest unit and component tests, three Playwright configurations (regular desktop and Pixel 7, production rail with a real worker, real Rust kernel), axe accessibility checks, horizontal-overflow guards and regenerated screenshots.\n\n[[Verification harness]]",
+   "x": 2124,
+   "y": 1400,
+   "width": 340,
+   "height": 230
+  },
+  {
+   "id": "57b0e8a34c8ebffe",
+   "type": "text",
+   "text": "## Sibling repositories and vendored contracts\n`PINNED · READ-ONLY`\n\nThe control-plane result-manifest and canonical-URI code is vendored verbatim from Notations-Ecosystem at a pinned commit, used only by tests. Notations Kernel and the Payload Terminal V0 prototype were audited read-only.\n\n[[Sibling repositories and vendored contracts]]",
+   "x": 1748,
+   "y": 1666,
+   "width": 340,
+   "height": 230
+  },
+  {
+   "id": "a4097e080c550462",
+   "type": "text",
+   "text": "## How to read this canvas\n\nRows follow the architectural cycle from world to representation; the right column holds what applies everywhere. Each card is one part: its name, its present state in backticks, two sentences, and a link to its note. Solid arrows are the flows that exist; a red card is a declared absence. Edit freely: the notes carry the detail and the open questions.",
+   "x": 1708,
+   "y": -300,
+   "width": 796,
+   "height": 200
+  }
+ ],
+ "edges": [
+  {
+   "id": "496ef3ac084ab4e1",
+   "fromNode": "8febd602ba49b3cb",
+   "fromSide": "right",
+   "toNode": "6fe8604766a40eee",
+   "toSide": "left",
+   "toEnd": "arrow",
+   "label": "first connected source"
+  },
+  {
+   "id": "a4a288d64dbb57e4",
+   "fromNode": "8febd602ba49b3cb",
+   "fromSide": "right",
+   "toNode": "79e8388d13d5957b",
+   "toSide": "left",
+   "toEnd": "arrow",
+   "label": "second bounded connector"
+  },
+  {
+   "id": "d0af1dfb347bc683",
+   "fromNode": "6fe8604766a40eee",
+   "fromSide": "bottom",
+   "toNode": "c02868da91677311",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "retained bytes + receipts"
+  },
+  {
+   "id": "59772b8d9c573568",
+   "fromNode": "79e8388d13d5957b",
+   "fromSide": "bottom",
+   "toNode": "c02868da91677311",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "credential-gated capture (not run here)"
+  },
+  {
+   "id": "d9f31a1bbe49ddea",
+   "fromNode": "6b6e16c599ae0988",
+   "fromSide": "bottom",
+   "toNode": "64f09a77576b1c44",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "target recorded manifest (NOT_IMPORTED)"
+  },
+  {
+   "id": "d7251490000defbc",
+   "fromNode": "04bd0cf413052ab6",
+   "fromSide": "bottom",
+   "toNode": "7b8561be5bd7230a",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "Carrier bytes for the demonstration"
+  },
+  {
+   "id": "f3a0dcabe05ae280",
+   "fromNode": "04bd0cf413052ab6",
+   "fromSide": "bottom",
+   "toNode": "aea369fb89a8cb9c",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "demonstration releases"
+  },
+  {
+   "id": "bb5dc73d26666b92",
+   "fromNode": "a033456ef5f309ba",
+   "fromSide": "right",
+   "toNode": "c2d81cd0754cffdd",
+   "toSide": "left",
+   "toEnd": "arrow",
+   "label": "ALLOWED / APPROVAL_REQUIRED / DENIED"
+  },
+  {
+   "id": "bea5ffada3b8c565",
+   "fromNode": "c2d81cd0754cffdd",
+   "fromSide": "bottom",
+   "toNode": "7b8561be5bd7230a",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "ACQUIRE"
+  },
+  {
+   "id": "08724c1a221cae9a",
+   "fromNode": "c02868da91677311",
+   "fromSide": "bottom",
+   "toNode": "ccae1cb858ce8029",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "read-only readback"
+  },
+  {
+   "id": "6be9f64a696ccba7",
+   "fromNode": "c2d81cd0754cffdd",
+   "fromSide": "right",
+   "toNode": "0574eee251ec55cd",
+   "toSide": "left",
+   "toEnd": "arrow",
+   "label": "artifacts listed"
+  },
+  {
+   "id": "568df5002a27148d",
+   "fromNode": "7b8561be5bd7230a",
+   "fromSide": "right",
+   "toNode": "8d048f25b1d57354",
+   "toSide": "left",
+   "toEnd": "arrow",
+   "label": "NORMALIZE"
+  },
+  {
+   "id": "0b01b7adfc3287a8",
+   "fromNode": "8d048f25b1d57354",
+   "fromSide": "right",
+   "toNode": "a1082c2303c2cbcb",
+   "toSide": "left",
+   "toEnd": "arrow",
+   "label": "BUILD_CANDIDATES"
+  },
+  {
+   "id": "31dd6e878c89cdc4",
+   "fromNode": "6fe8604766a40eee",
+   "fromSide": "bottom",
+   "toNode": "8d048f25b1d57354",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "census normalization"
+  },
+  {
+   "id": "f7563a92c32bac19",
+   "fromNode": "a1082c2303c2cbcb",
+   "fromSide": "bottom",
+   "toNode": "f4a7b5533bc2614e",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "UNADMITTED candidates → (absent boundary)",
+   "color": "1"
+  },
+  {
+   "id": "528a3d458361702a",
+   "fromNode": "f4a7b5533bc2614e",
+   "fromSide": "top",
+   "toNode": "aea369fb89a8cb9c",
+   "toSide": "bottom",
+   "toEnd": "arrow",
+   "label": "admitted versions (target)",
+   "color": "1"
+  },
+  {
+   "id": "8e3065389e0354e5",
+   "fromNode": "aea369fb89a8cb9c",
+   "fromSide": "bottom",
+   "toNode": "6b6f23e19e9f129a",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "certified release"
+  },
+  {
+   "id": "407556c65d19b5d9",
+   "fromNode": "aea369fb89a8cb9c",
+   "fromSide": "bottom",
+   "toNode": "06d3a865b8cd677d",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "coverage computed"
+  },
+  {
+   "id": "e224a6ca0632b2ba",
+   "fromNode": "e30a5f30234154f4",
+   "fromSide": "bottom",
+   "toNode": "696072753bbd48a2",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "loopback command API"
+  },
+  {
+   "id": "a6f6a1fccfb7133d",
+   "fromNode": "696072753bbd48a2",
+   "fromSide": "top",
+   "toNode": "f4a7b5533bc2614e",
+   "toSide": "bottom",
+   "toEnd": "arrow",
+   "label": "evidence references → admission contract (next)"
+  },
+  {
+   "id": "ff7c5d99203d5e4c",
+   "fromNode": "4075c3f89e28b39a",
+   "fromSide": "left",
+   "toNode": "f4a7b5533bc2614e",
+   "toSide": "right",
+   "toEnd": "arrow",
+   "label": "I → K crosses validation"
+  },
+  {
+   "id": "7e2b9e7ca8a73d48",
+   "fromNode": "c2d81cd0754cffdd",
+   "fromSide": "bottom",
+   "toNode": "7520e6a19921cce3",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "audits preserved IFC artifacts"
+  },
+  {
+   "id": "de1ec96f2c986911",
+   "fromNode": "c2d81cd0754cffdd",
+   "fromSide": "bottom",
+   "toNode": "8ef7c3af5183516b",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "exact evidence references"
+  },
+  {
+   "id": "6b5aa0578c8fc71c",
+   "fromNode": "64f09a77576b1c44",
+   "fromSide": "bottom",
+   "toNode": "e919a95ef2acb341",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "rows and comparisons"
+  },
+  {
+   "id": "c3d5b6c6ba113a41",
+   "fromNode": "fddf87d6f4ee6a0f",
+   "fromSide": "bottom",
+   "toNode": "024a44556ba0149f",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "synthetic preview"
+  },
+  {
+   "id": "0a3ebce90d99894b",
+   "fromNode": "8ef7c3af5183516b",
+   "fromSide": "bottom",
+   "toNode": "024a44556ba0149f",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "retained analyses"
+  },
+  {
+   "id": "d3fac9435c76af4e",
+   "fromNode": "d28849cda49b8e38",
+   "fromSide": "bottom",
+   "toNode": "024a44556ba0149f",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "synthetic preview"
+  },
+  {
+   "id": "9eebcb1c312900be",
+   "fromNode": "1f8813a458f1c4ce",
+   "fromSide": "top",
+   "toNode": "64f09a77576b1c44",
+   "toSide": "bottom",
+   "toEnd": "arrow",
+   "label": "factor graphs first"
+  },
+  {
+   "id": "08b57a68d3180b31",
+   "fromNode": "4ac1ebaa9c20f147",
+   "fromSide": "right",
+   "toNode": "1f8813a458f1c4ce",
+   "toSide": "left",
+   "toEnd": "arrow",
+   "label": "baseline to beat"
+  },
+  {
+   "id": "064ea22a82b2fcfd",
+   "fromNode": "aea369fb89a8cb9c",
+   "fromSide": "bottom",
+   "toNode": "f8a888acca61118b",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "one exact release"
+  },
+  {
+   "id": "244f476c707d01d8",
+   "fromNode": "f8a888acca61118b",
+   "fromSide": "right",
+   "toNode": "435e54a7d14701ec",
+   "toSide": "left",
+   "toEnd": "arrow",
+   "label": "GLOBE spec, declared positions"
+  },
+  {
+   "id": "d3fc37b18988420f",
+   "fromNode": "6b6f23e19e9f129a",
+   "fromSide": "bottom",
+   "toNode": "7514238e91321af6",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "manifests and commitments"
+  },
+  {
+   "id": "3bf01cfbd75e8de9",
+   "fromNode": "aea369fb89a8cb9c",
+   "fromSide": "bottom",
+   "toNode": "7514238e91321af6",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "releases, records, as-of, retractions"
+  },
+  {
+   "id": "a7333ceebca73adc",
+   "fromNode": "7514238e91321af6",
+   "fromSide": "right",
+   "toNode": "87a84f3f3fe04596",
+   "toSide": "left",
+   "toEnd": "arrow",
+   "label": "same payloads"
+  },
+  {
+   "id": "d06cbf974ee31993",
+   "fromNode": "aea369fb89a8cb9c",
+   "fromSide": "bottom",
+   "toNode": "565bd02e920ff10d",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "evaluated against release and build"
+  },
+  {
+   "id": "6cc8faea2baef9d6",
+   "fromNode": "565bd02e920ff10d",
+   "fromSide": "top",
+   "toNode": "32fc21c318d4eb12",
+   "toSide": "bottom",
+   "toEnd": "arrow",
+   "label": "projected per viewer"
+  },
+  {
+   "id": "77745d03c6cee1ee",
+   "fromNode": "435e54a7d14701ec",
+   "fromSide": "bottom",
+   "toNode": "024a44556ba0149f",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "/earth"
+  },
+  {
+   "id": "02d7f134adfb98bd",
+   "fromNode": "7b8561be5bd7230a",
+   "fromSide": "bottom",
+   "toNode": "ccae1cb858ce8029",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "run.stages, receipts, inspect"
+  },
+  {
+   "id": "cdabb633fef6b36b",
+   "fromNode": "a1082c2303c2cbcb",
+   "fromSide": "bottom",
+   "toNode": "bfa7bf754eaf29fb",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "process view"
+  },
+  {
+   "id": "56064208e0f5caf9",
+   "fromNode": "7514238e91321af6",
+   "fromSide": "bottom",
+   "toNode": "2578b0b767fd7fbe",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "the same payloads on screen"
+  },
+  {
+   "id": "7ad8a220cac1a66c",
+   "fromNode": "a6e7d9c56494d323",
+   "fromSide": "right",
+   "toNode": "ccae1cb858ce8029",
+   "toSide": "left",
+   "toEnd": "arrow",
+   "label": "Corpus area"
+  },
+  {
+   "id": "c5210b36dfa04874",
+   "fromNode": "a6e7d9c56494d323",
+   "fromSide": "right",
+   "toNode": "696072753bbd48a2",
+   "toSide": "left",
+   "toEnd": "arrow",
+   "label": "Notations area"
+  },
+  {
+   "id": "087afb5042e16f76",
+   "fromNode": "a6e7d9c56494d323",
+   "fromSide": "bottom",
+   "toNode": "565bd02e920ff10d",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "Inquiry area"
+  },
+  {
+   "id": "71b6aa5472abc3bb",
+   "fromNode": "a6e7d9c56494d323",
+   "fromSide": "bottom",
+   "toNode": "9da9c36804c1ece2",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "Coordination area"
+  },
+  {
+   "id": "07d390807224db75",
+   "fromNode": "444cbef7dd3afca1",
+   "fromSide": "left",
+   "toNode": "9da9c36804c1ece2",
+   "toSide": "right",
+   "toEnd": "arrow",
+   "label": "definitions"
+  },
+  {
+   "id": "58f31e9df27b7649",
+   "fromNode": "444cbef7dd3afca1",
+   "fromSide": "left",
+   "toNode": "25582aa8bf761e87",
+   "toSide": "right",
+   "toEnd": "arrow",
+   "label": "messages"
+  },
+  {
+   "id": "e5c6ffdf69f91bae",
+   "fromNode": "25582aa8bf761e87",
+   "fromSide": "top",
+   "toNode": "a1082c2303c2cbcb",
+   "toSide": "bottom",
+   "toEnd": "arrow",
+   "label": "review worker inspects one exact build"
+  },
+  {
+   "id": "68ea44da7114ccd2",
+   "fromNode": "024a44556ba0149f",
+   "fromSide": "top",
+   "toNode": "c2d81cd0754cffdd",
+   "toSide": "bottom",
+   "toEnd": "arrow",
+   "label": "feedback re-enters as evidence, never as state",
+   "color": "4"
+  },
+  {
+   "id": "0edeee1a46ff1600",
+   "fromNode": "fd1bb4656f4c6f0f",
+   "fromSide": "right",
+   "toNode": "598dbb16308bb7c5",
+   "toSide": "left",
+   "toEnd": "arrow",
+   "label": "one platform, three domains"
+  },
+  {
+   "id": "96bb5c503fc0067f",
+   "fromNode": "598dbb16308bb7c5",
+   "fromSide": "bottom",
+   "toNode": "4d666d1998ff0e3c",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "distribution"
+  },
+  {
+   "id": "d4cda1e3453fc21e",
+   "fromNode": "7514238e91321af6",
+   "fromSide": "top",
+   "toNode": "4d666d1998ff0e3c",
+   "toSide": "bottom",
+   "toEnd": "arrow",
+   "label": "APIs, feeds, MCP tools"
+  },
+  {
+   "id": "7574488492d8c70c",
+   "fromNode": "f6ce4cab28820a15",
+   "fromSide": "bottom",
+   "toNode": "5217a6e86e6a13dc",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "architecture tests"
+  },
+  {
+   "id": "97c26e06ed8bad7b",
+   "fromNode": "d147e69699ac714d",
+   "fromSide": "bottom",
+   "toNode": "4075c3f89e28b39a",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "E / K / I"
+  },
+  {
+   "id": "ae30899f1d51ae84",
+   "fromNode": "57b0e8a34c8ebffe",
+   "fromSide": "top",
+   "toNode": "6b6f23e19e9f129a",
+   "toSide": "bottom",
+   "toEnd": "arrow",
+   "label": "vendored parser pins the contract"
+  },
+  {
+   "id": "3fb03e70ec20e593",
+   "fromNode": "db2a6a4593ed7e5c",
+   "fromSide": "bottom",
+   "toNode": "e30a5f30234154f4",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "Rust"
+  },
+  {
+   "id": "a8ca02ee266d6f6a",
+   "fromNode": "db2a6a4593ed7e5c",
+   "fromSide": "bottom",
+   "toNode": "7520e6a19921cce3",
+   "toSide": "top",
+   "toEnd": "arrow",
+   "label": "Python, pinned"
+  }
+ ]
+}
