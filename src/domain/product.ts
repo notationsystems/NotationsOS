@@ -92,6 +92,9 @@ export const ENGINES: readonly Engine[] = [
     description: 'Customer models, simulations, agents and workloads executed against authorized releases without losing lineage, policy or recallability.',
     inThisRepository: [
       { item: 'Release-bound execution context: every answer names its release, build, both clocks and bounds so a workload can cite them', presence: 'FIXTURE', where: '/api' },
+      { item: 'Local instruments only: pinned GAT IFC audit and evidence-bound observation replay; not managed customer workloads', presence: 'PRESENT' },
+      { item: 'Local scalar linear-Gaussian benchmark: evidence-linked model results and separate held-out-reference metrics; synthetic demonstration, not field validation', presence: 'PRESENT' },
+      { item: 'Trained neural models and independently validated physical prediction', presence: 'ABSENT' },
       { item: 'Managed execution of customer workloads', presence: 'ABSENT' },
     ],
   },

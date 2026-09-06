@@ -19,6 +19,7 @@
     "prebuild": "node scripts/earth-assets.mjs",
     "source": "esbuild scripts/source.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/source.mjs --log-level=warning && node .stamp/source.mjs",
     "replay": "esbuild scripts/replay.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/replay.mjs --log-level=warning && node .stamp/replay.mjs",
+    "benchmark": "esbuild scripts/benchmark.entry.ts --bundle --platform=node --format=esm --outfile=.stamp/benchmark.mjs --log-level=warning && node .stamp/benchmark.mjs",
     "build": "next build && node scripts/check-state-kernel-traces.mjs",
     "start": "next start",
     "lint": "eslint",

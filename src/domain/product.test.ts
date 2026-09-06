@@ -23,4 +23,12 @@ describe('honest live source presence', () => {
     });
     expect(data.inThisRepository.find((entry) => entry.item === 'Feed API')?.presence).toBe('FIXTURE');
   });
+  it('labels the scalar baseline as local and synthetic without claiming hosted or validated prediction', () => {
+    const compute = ENGINES.find((e) => e.id === 'compute')!;
+    expect(compute.inThisRepository.find((e) => e.item.startsWith('Local scalar linear-Gaussian'))).toMatchObject({
+      presence: 'PRESENT', item: expect.stringContaining('synthetic demonstration, not field validation'),
+    });
+    expect(compute.inThisRepository.find((e) => e.item.startsWith('Trained neural models'))?.presence).toBe('ABSENT');
+    expect(compute.inThisRepository.find((e) => e.item === 'Managed execution of customer workloads')?.presence).toBe('ABSENT');
+  });
 });

@@ -81,6 +81,8 @@ test('the product page states the firm, the twelve stages, the three customer ca
   await expect(page.getByLabel('Product architecture tree')).toContainText('Landshark — parcels, zoning, entitlements, development state');
   await expect(page.locator('[data-fabric]')).toHaveCount(5);
   await expect(page.locator('[data-fabric="state"][data-presence="PRESENT"]')).toHaveCount(1);
+  await expect(page.locator('[data-fabric="compute"][data-presence="PRESENT"]')).toContainText('benchmark demonstration is synthetic');
+  await expect(page.locator('[data-fabric="compute"]')).toContainText('Managed customer workloads, trained neural models and automatic canonical admission remain absent');
   await expect(page.locator('[data-information-state]')).toHaveCount(3);
   await expect(page.locator('[data-doctrine-rule]')).toHaveCount(7);
   await expect(page.getByTestId('operational-rule')).toContainText('shared information');
