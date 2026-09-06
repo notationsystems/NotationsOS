@@ -110,6 +110,14 @@ describe('the production path as data', () => {
     expect(found[0].detail).toContain('CAPTURED, 1 record, 0 not returned. Operator normalization not on this machine; candidate build not on this machine. Not on the HTTP rail.');
     const continued = deriveStages({ mode: 'LOCAL', session, sourceReadback: { status: 'FOUND', summary, continuation: { normalization: { status: 'FOUND', state: 'NORMALIZED', id: 'n' }, build: { status: 'FOUND', state: 'UNADMITTED', id: 'b', recordCount: 1 } } }, demo });
     expect(continued[0].detail).toContain('Operator normalization NORMALIZED; candidate build UNADMITTED, 1 member. Not on the HTTP rail.');
+    // A refused or unreachable readback is not a missing record: the summary names the refusal and its code, and keeps not-found as not found.
+    const refusedReadback = deriveStages({ mode: 'LOCAL', session, sourceReadback: { status: 'FOUND', summary, continuation: { normalization: { status: 'ERROR', code: 'SOURCE_HISTORY_INVALID' }, build: { status: 'NOT_FOUND', code: 'CENSUS_BUILD_NOT_FOUND' } } }, demo })[0].detail;
+    expect(refusedReadback).toContain('Operator normalization readback refused (SOURCE_HISTORY_INVALID)');
+    expect(refusedReadback).toContain('candidate build not on this machine');
+    expect(refusedReadback).not.toContain('normalization not on this machine');
+    const unreachable = deriveStages({ mode: 'LOCAL', session, sourceReadback: { status: 'ERROR', code: 'UNREACHABLE' }, demo })[0].detail;
+    expect(unreachable).toContain('refused: UNREACHABLE');
+    expect(unreachable).not.toContain('not in this machine');
     expect(ERROR_MEANING.CENSUS_NORMALIZATION_NOT_FOUND.text).toMatch(/not on this machine|on this machine/);
     expect(ERROR_MEANING.CENSUS_BUILD_NOT_FOUND).toBeDefined();
     session.build = { ...session.build, status: 'DONE', error: undefined, result: done('p-build', 'CANDIDATE_BUILD') };

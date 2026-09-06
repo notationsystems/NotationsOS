@@ -282,7 +282,10 @@ export function deriveStages(context: PathContext): StageView[] {
   const registered = session.corpus.result && session.source.result;
   const readback = context.sourceReadback;
   const continuation = readback?.continuation;
-  const continued = continuation ? ` Operator normalization ${continuation.normalization.status === 'FOUND' ? continuation.normalization.state : continuation.normalization.status === 'LOADING' ? 'reading' : 'not on this machine'}; candidate build ${continuation.build.status === 'FOUND' ? `${continuation.build.state}, ${continuation.build.recordCount} member${continuation.build.recordCount === 1 ? '' : 's'}` : continuation.build.status === 'LOADING' ? 'reading' : 'not on this machine'}. Not on the HTTP rail.` : ' Not on the HTTP rail.';
+  // A readback that was refused or could not be reached is not a missing record: the summary keeps the three apart, as the card does.
+  const word = (entry: { status: 'FOUND' | 'NOT_FOUND' | 'ERROR' | 'LOADING'; code?: string }, found: string) =>
+    entry.status === 'FOUND' ? found : entry.status === 'LOADING' ? 'reading' : entry.status === 'NOT_FOUND' ? 'not on this machine' : `readback refused (${entry.code ?? 'error'})`;
+  const continued = continuation ? ` Operator normalization ${word(continuation.normalization, continuation.normalization.status === 'FOUND' ? continuation.normalization.state : '')}; candidate build ${word(continuation.build, continuation.build.status === 'FOUND' ? `${continuation.build.state}, ${continuation.build.recordCount} member${continuation.build.recordCount === 1 ? '' : 's'}` : '')}. Not on the HTTP rail.` : ' Not on the HTTP rail.';
   const sourceDetail = readback?.status === 'FOUND' && readback.summary
     ? `FMCSA capture ${readback.summary.requestId}: ${readback.summary.state}, ${readback.summary.records} record${readback.summary.records === 1 ? '' : 's'}, ${readback.summary.notReturned} not returned.${continued}`
     : readback?.status === 'NOT_FOUND' ? 'The synthetic Carrier bytes are ready to capture. The FMCSA capture is not in this machine’s qualification root.'
