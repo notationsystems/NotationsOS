@@ -1,5 +1,7 @@
 # Payload OS Earth Twin
 
+Related backend increment (2026-09-06): [local recorded-observation replay](RECORDED_OBSERVATION_REPLAY.md) verifies declared clocks, local Cartesian transforms and exact evidence references through a separate operator CLI. Its synthetic tests and unadmitted estimates do not enter this globe or establish geographic registration. [Boreas qualification](RECORDED_DATASET_QUALIFICATION.md) records the real-data adapter and acceptance work still absent.
+
 The Earth Twin is the projection fabric's geodetic instrument: the surface on which Payload OS realizes, on the Earth, whatever it can honestly place there. It is the CesiumJS role the [synthesized architecture](SYNTHESIZED_ARCHITECTURE.md) assigns ("where does this exist, and how does it move through geographic space and time?"), built on the globe stack of [God's Eye View](https://github.com/notationsystems/gods-eye-view) and held to Payload OS's rules: every layer names its source and its state, nothing is invented, nothing is acquired that has not been registered and decided, and a fixture is called a fixture. It lives at `/earth`, under Inquiry.
 
 This document records what the twin is, what it accompanies, what was taken from God's Eye View and what was deliberately not, the staged plan, the truths the design does not bend, and the verification receipt. Present tense throughout: what the code does today.
