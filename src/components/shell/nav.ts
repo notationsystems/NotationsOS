@@ -13,6 +13,8 @@ export const NAV_AREAS: readonly NavArea[] = [
     { href: '/evidence', label: 'Evidence', match: /^\/evidence/ },
   ] },
   { id: 'corpus', label: 'Corpus', activity: 'Candidates, builds, releases and changes', items: [
+    // Anchored: /product is the operating model, /production and /products are different pages.
+    { href: '/product', label: 'Operating model', match: /^\/product$/ },
     { href: '/production', label: 'Production', match: /^\/production/ },
     { href: '/candidates', label: 'Candidates', match: /^\/candidates/ },
     { href: '/products', label: 'Products', match: /^\/products/ },
@@ -32,6 +34,8 @@ export const NAV_AREAS: readonly NavArea[] = [
     { href: '/earth', label: 'Earth Twin', match: /^\/earth/ },
     { href: '/spatial', label: 'Spatial Inquiry', match: /^\/spatial/ },
     { href: '/compute/observations', label: 'Observations', match: /^\/compute\/observations/ },
+    { href: '/compute/registration', label: 'Registration and access', match: /^\/compute\/registration/ },
+    { href: '/compute/clearance', label: 'Clearance', match: /^\/compute\/clearance/ },
   ] },
   { id: 'coordination', label: 'Coordination', activity: 'Participants, requests, results and blockers', items: [
     { href: '/agents', label: 'Stable', match: /^\/agents/ },
